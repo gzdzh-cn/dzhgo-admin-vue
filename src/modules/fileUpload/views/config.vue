@@ -324,6 +324,10 @@ const taskDo = async (row: any, action: string) => {
 				});
 			});
 	}
+
+	setTimeout(() => {
+		Crud.value?.refresh();
+	}, 1000);
 };
 
 // 监听定时刷新
@@ -363,5 +367,9 @@ const multiDo = (v: string) => {
 			type: "success"
 		});
 	}
+
+	setTimeout(() => {
+		Crud.value?.refresh();
+	}, 1000);
 };
 </script>
