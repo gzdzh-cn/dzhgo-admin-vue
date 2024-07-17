@@ -1,6 +1,10 @@
 # dzhgo-admin-vue
 
 
+## 扫码加好友拉群
+<img src="dzh/weixin.jpg" alt="Description of image" width="200" height="280">
+
+
 ## 更新日志
 
 ### v1.1.0
