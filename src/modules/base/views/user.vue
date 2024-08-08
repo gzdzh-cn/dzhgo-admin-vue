@@ -48,6 +48,24 @@
 								>转移</el-button
 							>
 						</template>
+
+						<template #slot-delete="{ scope }">
+							<el-popconfirm title="确定删除会员吗?" @confirm="userDelete(scope.row)">
+								<template #reference>
+									<el-button
+										v-permission="
+											service.base.sys.user.permission.delete &&
+											scope.row.roleIdList.length > 0 &&
+											!scope.row.roleIdList.includes('1')
+										"
+										text
+										bg
+										type="danger"
+										>删除</el-button
+									>
+								</template>
+							</el-popconfirm>
+						</template>
 					</cl-table>
 				</cl-row>
 
@@ -69,17 +87,176 @@
 <script lang="ts" name="sys-user" setup>
 import { useTable, useUpsert, useCrud } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { useBase } from "/$/base";
-import { useViewGroup } from "../hooks";
+import { useBase, checkPerm, useViewGroup } from "/$/base";
 import DeptMove from "./components/dept/move.vue";
 import DeptTree from "./components/dept/tree.vue";
 
 const { service, refs, setRefs } = useCool();
 const { ViewGroup } = useViewGroup();
 const { user } = useBase();
-// cl-crud 配置
-const Crud = useCrud({
-	service: service.base.sys.user
+
+const perm = service.base.sys.role.permission;
+
+// cl-upsert 配置
+const Upsert = useUpsert({
+	dialog: {
+		width: "800px"
+	},
+
+	items: [
+		{
+			prop: "headImg",
+			label: "头像",
+			component: {
+				name: "cl-upload",
+				props: {
+					text: "选择头像"
+				}
+			}
+		},
+		() => {
+			return {
+				prop: "name",
+				label: "姓名",
+				span: 12,
+				required: true,
+				component: {
+					name: "el-input"
+				}
+			};
+		},
+		{
+			prop: "nickName",
+			label: "昵称",
+			required: true,
+			span: 12,
+			component: {
+				name: "el-input"
+			}
+		},
+		{
+			prop: "username",
+			label: "用户名",
+			required: true,
+			span: 12,
+			component: {
+				name: "el-input"
+			}
+		},
+		() => {
+			return {
+				prop: "password",
+				label: "密码",
+				span: 12,
+				required: Upsert.value?.mode == "add",
+				component: {
+					name: "el-input",
+					props: {
+						type: "password"
+					}
+				},
+				rules: [
+					{
+						min: 6,
+						max: 16,
+						message: "密码长度在 6 到 16 个字符"
+					}
+				]
+			};
+		},
+		() => {
+			return {
+				prop: "roleIdList",
+				label: "角色",
+				value: [],
+				required: true,
+				hidden: ({ scope }) => {
+					//超管角色不可更改
+					return (
+						!checkPerm(perm.list) ||
+						(scope.roleIdList.length > 0 && scope.roleIdList.includes("1"))
+					);
+				},
+				component: {
+					name: "el-select",
+					options: [],
+					props: {
+						multiple: true,
+						"multiple-limit": 3
+					}
+				}
+			};
+		},
+		{
+			prop: "phone",
+			label: "手机号码",
+			span: 12,
+			component: {
+				name: "el-input"
+			}
+		},
+		{
+			prop: "email",
+			label: "邮箱",
+			span: 12,
+			component: {
+				name: "el-input"
+			}
+		},
+		{
+			prop: "remark",
+			label: "备注",
+			component: {
+				name: "el-input",
+				props: {
+					type: "textarea",
+					rows: 4
+				}
+			}
+		},
+		{
+			prop: "status",
+			label: "状态",
+			value: 1,
+			component: {
+				name: "el-radio-group",
+				options: [
+					{
+						label: "开启",
+						value: 1
+					},
+					{
+						label: "关闭",
+						value: 0
+					}
+				]
+			}
+		}
+	],
+
+	onSubmit(data, { next }) {
+		next({
+			...data,
+			departmentId: ViewGroup.value?.selected?.id
+		});
+	},
+
+	async onOpen() {
+		if (checkPerm(perm.list)) {
+			// 设置权限列表
+			service.base.sys.role.list().then((res) => {
+				Upsert.value?.setOptions(
+					"roleIdList",
+					res.map((e) => {
+						return {
+							label: e.name || "",
+							value: e.id
+						};
+					})
+				);
+			});
+		}
+	}
 });
 
 // cl-table 配置
@@ -151,162 +328,14 @@ const Table = useTable({
 		},
 		{
 			type: "op",
-			buttons: ["slot-btn", "edit", "delete"],
+			buttons: ["slot-btn", "edit", "slot-delete"],
 			width: 240
 		}
 	]
 });
-
-// cl-upsert 配置
-const Upsert = useUpsert({
-	dialog: {
-		width: "800px"
-	},
-
-	items: [
-		{
-			prop: "headImg",
-			label: "头像",
-			component: {
-				name: "cl-upload",
-				props: {
-					text: "选择头像"
-				}
-			}
-		},
-		{
-			prop: "name",
-			label: "姓名",
-			span: 12,
-			required: true,
-			component: {
-				name: "el-input"
-			}
-		},
-		{
-			prop: "nickName",
-			label: "昵称",
-			required: true,
-			span: 12,
-			component: {
-				name: "el-input"
-			}
-		},
-		{
-			prop: "username",
-			label: "用户名",
-			required: true,
-			span: 12,
-			component: {
-				name: "el-input"
-			}
-		},
-		() => {
-			return {
-				prop: "password",
-				label: "密码",
-				span: 12,
-				required: Upsert.value?.mode == "add",
-				component: {
-					name: "el-input",
-					props: {
-						type: "password"
-					}
-				},
-				rules: [
-					{
-						min: 6,
-						max: 16,
-						message: "密码长度在 6 到 16 个字符"
-					}
-				]
-			};
-		},
-		() => {
-			return {
-				prop: "roleIdList",
-				label: "角色",
-				value: [],
-				required: true,
-				hidden: user.info?.id == 1 && Upsert.value?.mode !== "add",
-				component: {
-					name: "el-select",
-					options: [],
-					props: {
-						multiple: true,
-						"multiple-limit": 3
-					}
-				}
-			};
-		},
-		{
-			prop: "phone",
-			label: "手机号码",
-			span: 12,
-			component: {
-				name: "el-input"
-			}
-		},
-		{
-			prop: "email",
-			label: "邮箱",
-			span: 12,
-			component: {
-				name: "el-input"
-			}
-		},
-		{
-			prop: "remark",
-			label: "备注",
-			component: {
-				name: "el-input",
-				props: {
-					type: "textarea",
-					rows: 4
-				}
-			}
-		},
-		{
-			prop: "status",
-			label: "状态",
-			value: 1,
-			component: {
-				name: "el-radio-group",
-				options: [
-					{
-						label: "开启",
-						value: 1
-					},
-					{
-						label: "关闭",
-						value: 0
-					}
-				]
-			}
-		}
-	],
-
-	onSubmit(data, { next }) {
-		next({
-			...data,
-			departmentId: ViewGroup.value?.selected?.id
-		});
-	},
-
-	async onOpen() {
-		// 设置权限列表
-		service.base.sys.role.list().then((res) => {
-			Upsert.value?.setOptions(
-				"roleIdList",
-				res.map((e) => {
-					return {
-						label: e.name || "",
-						value: e.id
-					};
-				})
-			);
-		});
-	}
+// cl-crud 配置
+const Crud = useCrud({
+	service: service.base.sys.user
 });
 
 // 刷新列表
@@ -333,4 +362,11 @@ async function toMove(item?: any) {
 
 	refs.deptMove.open(ids);
 }
+
+// 删除成员
+const userDelete = (item?: any) => {
+	let ids = [item.id];
+	service.base.sys.user.delete({ ids });
+	refresh();
+};
 </script>

@@ -20,13 +20,13 @@
 
 		<!-- 工具栏 -->
 		<ul class="app-topbar__tools">
-			<li>
+			<!-- <li>
 				<cl-chat />
-			</li>
+			</li> -->
 
-<!--			<li>-->
-<!--				<cl-theme />-->
-<!--			</li>-->
+			<!--			<li>-->
+			<!--				<cl-theme />-->
+			<!--			</li>-->
 		</ul>
 
 		<!-- 用户信息 -->
@@ -61,7 +61,7 @@ import RouteNav from "./route-nav.vue";
 import AMenu from "./amenu.vue";
 import { Operation } from "@element-plus/icons-vue";
 
-const { router, service,browser } = useCool();
+const { router, service, browser } = useCool();
 const { user, app } = useBase();
 
 // 跳转

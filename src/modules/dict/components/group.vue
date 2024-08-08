@@ -73,7 +73,7 @@ async function refresh() {
 		list.value = res;
 
 		if (!ViewGroup.value?.selected) {
-			select();
+			rowClick();
 		}
 	});
 
@@ -81,7 +81,7 @@ async function refresh() {
 }
 
 // 选择
-function select(item?: Eps.DictTypeEntity) {
+function rowClick(item?: Eps.DictTypeEntity) {
 	if (!item) {
 		item = list.value[0];
 	}

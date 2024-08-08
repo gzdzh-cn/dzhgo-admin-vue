@@ -146,7 +146,7 @@ const Table = useTable({
 			prop: "name",
 			label: "名称",
 			align: "left",
-			width: 200
+			width: 300
 		},
 		{
 			prop: "icon",

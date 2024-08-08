@@ -73,7 +73,7 @@ const Table = useTable({
 		{
 			prop: "action",
 			label: "请求地址",
-			minWidth: 200,
+			minWidth: 250,
 			showOverflowTooltip: true
 		},
 		{
@@ -87,11 +87,11 @@ const Table = useTable({
 			label: "ip",
 			minWidth: 150
 		},
-		{
-			prop: "ipAddr",
-			label: "ip地址",
-			minWidth: 150
-		},
+		// {
+		// 	prop: "ipAddr",
+		// 	label: "ip地址",
+		// 	minWidth: 150
+		// },
 		{
 			prop: "createTime",
 			label: "创建时间",

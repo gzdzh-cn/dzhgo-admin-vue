@@ -1,127 +1,3 @@
-<script lang="ts" name="base-setting" setup>
-import { useCool } from "/@/cool";
-import { onMounted, reactive, ref, watch } from "vue";
-import { ElMessage, ElLoading } from "element-plus";
-import { Plus, Minus, Upload } from "@element-plus/icons-vue";
-
-const { service } = useCool();
-const payType = ref([1, 2]);
-// 获取资料
-const getInfo = async () => {
-	basicForm.value = await service.base.sys.setting.info({ id: 1 });
-	contactArr.value = basicForm.value.contactList
-		? JSON.parse(basicForm.value.contactList)
-		: contactArr.value;
-};
-// 保存状态
-const loading = ref(false);
-const loadingPage = ref();
-
-interface Contact {
-	contactName: string;
-	imgUrl: string;
-}
-
-const contactArr = ref<Contact[]>([{ contactName: "", imgUrl: "" }]);
-
-const add = () => {
-	contactArr.value.push({ contactName: "", imgUrl: "" });
-};
-
-const del = (index: number) => {
-	if (contactArr.value.length == 1) {
-		ElMessage.warning("至少保留一个");
-	} else {
-		contactArr.value.splice(index, 1);
-	}
-};
-
-const success = (item: any) => {
-	contactArr.value[contactArr.value.length - 1].imgUrl = item.url;
-	loading.value = false;
-	loadingPage.value.close();
-};
-
-const currentIndex = ref(0);
-const getIndex = (index: number) => {
-	loadingPage.value = ElLoading.service({
-		lock: true,
-		text: "上传中",
-		background: "rgba(0, 0, 0, 0.7)"
-	});
-	loading.value = true;
-	currentIndex.value = index;
-};
-
-watch(
-	() => contactArr.value,
-	(n) => {
-		console.log("contactArr", contactArr.value);
-	},
-	{
-		immediate: true,
-		deep: true
-	}
-);
-
-// 表单数据
-const basicForm: any = ref({
-	sitename: "",
-	notic: "",
-	image: "",
-	contact: "",
-	mobile: "",
-	contactList: [],
-	// domainName: "",
-	// logo: "",
-	// company: "",
-	// contact: "",
-	// contactWay: "",
-	// mobile: "",
-	// address: "",
-	// keyword: "",
-	// description: "",
-	// fieldJson: "",
-
-	remindDay: 0,
-	isRemindEmail: 0,
-	isRemindSms: 0
-	// sendEmail: "",
-	// requestEmail: "",
-	// smtp: "",
-	// pass: "", //邮箱授权码
-
-	// accessKeyId: "",
-	// accessKeySecret: "",
-	// signName: "",
-	// templateCode: "",
-	// endpoint: "",
-	// remindMobile: ""
-});
-
-const switchV = reactive({
-	active: 1,
-	inactiv: 0
-});
-
-// 保存
-const save = () => {
-	loading.value = false;
-	basicForm.value.contactList = contactArr.value;
-	service.base.sys.setting
-		.update({
-			id: 1,
-			...basicForm.value
-		})
-		.then(() => {
-			ElMessage.success("更新成功");
-		});
-};
-
-onMounted(() => {
-	getInfo();
-});
-</script>
 <template>
 	<div class="view-my">
 		<el-tabs type="border-card">
@@ -442,7 +318,130 @@ onMounted(() => {
 		</el-form-item>
 	</div>
 </template>
+<script lang="ts" name="base-setting" setup>
+import { useCool } from "/@/cool";
+import { onMounted, reactive, ref, watch } from "vue";
+import { ElMessage, ElLoading } from "element-plus";
+import { Plus, Minus, Upload } from "@element-plus/icons-vue";
 
+const { service } = useCool();
+const payType = ref([1, 2]);
+// 获取资料
+const getInfo = async () => {
+	basicForm.value = await service.base.sys.setting.info({ id: 1 });
+	contactArr.value = basicForm.value.contactList
+		? JSON.parse(basicForm.value.contactList)
+		: contactArr.value;
+};
+// 保存状态
+const loading = ref(false);
+const loadingPage = ref();
+
+interface Contact {
+	contactName: string;
+	imgUrl: string;
+}
+
+const contactArr = ref<Contact[]>([{ contactName: "", imgUrl: "" }]);
+
+const add = () => {
+	contactArr.value.push({ contactName: "", imgUrl: "" });
+};
+
+const del = (index: number) => {
+	if (contactArr.value.length == 1) {
+		ElMessage.warning("至少保留一个");
+	} else {
+		contactArr.value.splice(index, 1);
+	}
+};
+
+const success = (item: any) => {
+	contactArr.value[contactArr.value.length - 1].imgUrl = item.url;
+	loading.value = false;
+	loadingPage.value.close();
+};
+
+const currentIndex = ref(0);
+const getIndex = (index: number) => {
+	loadingPage.value = ElLoading.service({
+		lock: true,
+		text: "上传中",
+		background: "rgba(0, 0, 0, 0.7)"
+	});
+	loading.value = true;
+	currentIndex.value = index;
+};
+
+watch(
+	() => contactArr.value,
+	(n) => {
+		console.log("contactArr", contactArr.value);
+	},
+	{
+		immediate: true,
+		deep: true
+	}
+);
+
+// 表单数据
+const basicForm: any = ref({
+	sitename: "",
+	notic: "",
+	image: "",
+	contact: "",
+	mobile: "",
+	contactList: [],
+	// domainName: "",
+	// logo: "",
+	// company: "",
+	// contact: "",
+	// contactWay: "",
+	// mobile: "",
+	// address: "",
+	// keyword: "",
+	// description: "",
+	// fieldJson: "",
+
+	remindDay: 0,
+	isRemindEmail: 0,
+	isRemindSms: 0
+	// sendEmail: "",
+	// requestEmail: "",
+	// smtp: "",
+	// pass: "", //邮箱授权码
+
+	// accessKeyId: "",
+	// accessKeySecret: "",
+	// signName: "",
+	// templateCode: "",
+	// endpoint: "",
+	// remindMobile: ""
+});
+
+const switchV = reactive({
+	active: 1,
+	inactiv: 0
+});
+
+// 保存
+const save = () => {
+	loading.value = false;
+	basicForm.value.contactList = contactArr.value;
+	service.base.sys.setting
+		.update({
+			id: 1,
+			...basicForm.value
+		})
+		.then(() => {
+			ElMessage.success("更新成功");
+		});
+};
+
+onMounted(() => {
+	getInfo();
+});
+</script>
 <style lang="scss">
 .view-my {
 	background-color: var(--el-bg-color);

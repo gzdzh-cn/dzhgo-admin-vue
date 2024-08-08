@@ -8,13 +8,16 @@ import { router } from "../router";
 import ElementPlus from "element-plus";
 import "element-plus/theme-chalk/src/index.scss";
 import { Loading } from "../utils";
+import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 export async function bootstrap(app: App) {
 	// pinia
 	app.use(createPinia());
 
 	// element-plus
-	app.use(ElementPlus);
+	app.use(ElementPlus, {
+		locale: zhCn
+	});
 
 	// mitt
 	app.provide("mitt", mitt());
