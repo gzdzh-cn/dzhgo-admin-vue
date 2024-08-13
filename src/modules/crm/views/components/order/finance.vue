@@ -33,7 +33,7 @@ import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { Money } from "@element-plus/icons-vue";
 import { dayjs } from "element-plus";
-import { useDict } from "/$/dict";
+import { useDict } from "../../../../dict";
 import { useBase } from "/$/base";
 import { filterHtml, subString } from "/@/dzh";
 import { onMounted, ref, watch } from "vue";

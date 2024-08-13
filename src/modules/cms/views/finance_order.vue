@@ -31,20 +31,42 @@
 <script lang="ts" name="dzhchatgpt-order" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 
 const { service } = useCool();
 const { dict } = useDict();
 
-
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
-		{ label: "名称", prop: "name", required: true, component: { name: "el-input", props: { disabled: true } } },
-		{ label: "订单编号", prop: "tradeNo", component: { name: "el-input", props: { disabled: true } } },
-		{ label: "价格", prop: "price", component: { name: "el-input", props: { disabled: true } } },
-		{ label: "sku", prop: "sku", required: true, component: { name: "el-input", props: { disabled: true } } },
-		{ label: "会员", prop: "userId", required: true, component: { name: "el-select", props: { disabled: true } } },
+		{
+			label: "名称",
+			prop: "name",
+			required: true,
+			component: { name: "el-input", props: { disabled: true } }
+		},
+		{
+			label: "订单编号",
+			prop: "tradeNo",
+			component: { name: "el-input", props: { disabled: true } }
+		},
+		{
+			label: "价格",
+			prop: "price",
+			component: { name: "el-input", props: { disabled: true } }
+		},
+		{
+			label: "sku",
+			prop: "sku",
+			required: true,
+			component: { name: "el-input", props: { disabled: true } }
+		},
+		{
+			label: "会员",
+			prop: "userId",
+			required: true,
+			component: { name: "el-select", props: { disabled: true } }
+		},
 
 		{
 			label: "支付状态",
@@ -62,28 +84,26 @@ const Upsert = useUpsert({
 					}
 				],
 				props: { disabled: true }
-			},
-
+			}
 		},
 		{
 			label: "备注",
 			prop: "remark",
 			component: { name: "el-input", props: { type: "textarea", rows: 4 } }
-		},
+		}
 	],
 	async onOpen() {
-
-		const memberList = await service.cms.memberUser.list()
-		Upsert.value?.setOptions("userId",
+		const memberList = await service.cms.memberUser.list();
+		Upsert.value?.setOptions(
+			"userId",
 
 			memberList.map((e) => {
 				return {
 					label: e.username,
 					value: e.id
-				}
+				};
 			})
-		)
-
+		);
 	}
 });
 

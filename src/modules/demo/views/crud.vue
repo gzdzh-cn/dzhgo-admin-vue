@@ -36,7 +36,7 @@
 
 <script lang="tsx" setup name="crud">
 import { useCrud, useUpsert, useTable, useAdvSearch } from "@cool-vue/crud";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 import FormBtn from "../components/form.vue";
 import { reactive } from "vue";
 

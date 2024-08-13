@@ -16,7 +16,11 @@
 				>分配</el-button
 			>
 
-			<cl-import-btn tips="请按照模版填写信息，姓名不能重复" />
+			<!-- <cl-export-btn
+				:columns="Table?.columns"
+				:data="onExportData"
+				:disabled="Table?.selection.length == 0"
+			/> -->
 
 			<cl-flex1 />
 			<!-- 关键字搜索 -->
@@ -162,7 +166,7 @@
 						v-for="item in kfList"
 						:key="item.value"
 						:label="item.name"
-						:value="item.id"
+						:value="item.userId"
 					/>
 				</el-select>
 			</template>
@@ -562,6 +566,11 @@ const Crud = useCrud(
 // 刷新
 const refresh = (params?: any) => {
 	Crud.value?.refresh(params);
+};
+
+// 导出
+const onExportData = async (params: any) => {
+	return Table.value?.selection;
 };
 
 // 切换类型

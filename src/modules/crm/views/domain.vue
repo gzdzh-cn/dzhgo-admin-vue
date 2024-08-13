@@ -47,7 +47,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 import { ref } from "vue";
 import { dayjs } from "element-plus";
 

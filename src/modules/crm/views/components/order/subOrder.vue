@@ -76,7 +76,7 @@ import { reactive, ref, watch, onMounted } from "vue";
 
 import { Money } from "@element-plus/icons-vue";
 import { dayjs } from "element-plus";
-import { useDict } from "/$/dict";
+import { useDict } from "../../../../dict";
 
 const { service } = useCool();
 const { user } = useBase();

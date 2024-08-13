@@ -9,12 +9,12 @@
 
 			<div class="login-box">
 				<div class="login-form">
-					<img class="avatar" src="/logo.png" alt="Logo" />
+					<img class="avatar" :src="logo" alt="Logo" />
 
 					<h2 class="outline-none">
 						<div>
 							<span class="type-it" data-typeit-id="0904744">
-								{{ app.info.name }}
+								{{ siteName }}
 							</span>
 						</div>
 					</h2>
@@ -130,13 +130,15 @@
 		</div>
 		<div class="bottom-text">
 			Copyright © 2023-永久
-			<a class="hover:text-primary"> &nbsp; 广州大智汇信息科技有限公司 </a>
+			<a href="https://www.gzdzh.cn" target="_blank" class="hover:text-primary">
+				&nbsp; 技术支持：广州大智汇信息科技有限公司
+			</a>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" name="login" setup>
-import { reactive, ref, toRaw } from "vue";
+import { onMounted, reactive, ref, toRaw } from "vue";
 import { ElMessage } from "element-plus";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
@@ -170,6 +172,20 @@ const loginChange = (model: string) => {
 
 const show = ref(true);
 const count = ref(0);
+
+const logo = ref("/logo.png");
+const siteName = ref(app.info.name);
+
+const getSetting = async () => {
+	const result = await service.base.open.getSetting();
+
+	if (result.logo) {
+		logo.value = result.logo;
+	}
+	if (result.siteName) {
+		siteName.value = result.siteName;
+	}
+};
 
 // 获取验证码
 // const getCode = async () => {
@@ -264,6 +280,10 @@ async function toLogin() {
 	}
 	saving.value = false;
 }
+
+onMounted(() => {
+	getSetting();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -320,6 +340,10 @@ async function toLogin() {
 	color: #999;
 	position: absolute;
 	bottom: 20px;
+	a {
+		text-align: center;
+		color: #999;
+	}
 }
 .active {
 	background-color: var(--color-primary);

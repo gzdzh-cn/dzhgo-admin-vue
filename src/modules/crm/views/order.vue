@@ -188,7 +188,7 @@ import { ElDrawer, dayjs } from "element-plus";
 import OrderSub from "./components/order/sub.vue";
 import OrderFinance from "./components/order/finance.vue";
 import OrderDohistory from "./components/order/doHistory.vue";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 import { useCrm } from "..";
 import { Money } from "@element-plus/icons-vue";
 import { ElNotification } from "element-plus";

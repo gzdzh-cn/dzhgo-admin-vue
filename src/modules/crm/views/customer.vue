@@ -40,7 +40,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 import { ElMessage } from "element-plus";
 
 const { service } = useCool();

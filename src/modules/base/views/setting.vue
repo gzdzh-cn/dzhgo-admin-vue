@@ -10,14 +10,14 @@
 				>
 					<el-form-item label="站点名称">
 						<el-input
-							v-model="basicForm.sitename"
+							v-model="basicForm.siteName"
 							placeholder="请填写站点名称"
 							clearable
 						/>
 					</el-form-item>
 
-					<el-form-item label="明信片">
-						<cl-upload v-model="basicForm.image" text="明信片" type="image" />
+					<el-form-item label="Logo">
+						<cl-upload v-model="basicForm.logo" text="Logo" type="image" />
 					</el-form-item>
 
 					<el-form-item label="联系人">
@@ -33,6 +33,50 @@
 							v-model="basicForm.mobile"
 							placeholder="请填写手机号码"
 							clearable
+						/>
+					</el-form-item>
+				</el-form>
+			</el-tab-pane>
+
+			<el-tab-pane label="公众号">
+				<el-form
+					class="card-form"
+					label-width="160px"
+					:model="basicForm"
+					:disabled="loading"
+				>
+					<el-form-item label="公众号名称">
+						<el-input
+							v-model="basicForm.mpName"
+							placeholder="请填写公众号名称"
+							clearable
+						/>
+					</el-form-item>
+
+					<el-form-item label="公众号appId">
+						<el-input
+							v-model="basicForm.wxAppId"
+							placeholder="请填写公众号app_id"
+							clearable
+						/>
+					</el-form-item>
+
+					<el-form-item label="微信secret">
+						<el-input
+							v-model="basicForm.wxSecret"
+							placeholder="请填写微信secret"
+							clearable
+						/>
+					</el-form-item>
+
+					<el-form-item label="通知">
+						<el-switch
+							v-model="basicForm.isWpNotice"
+							:active-value="switchV.active"
+							:inactiv-value="switchV.inactiv"
+							activeText="开启"
+							inactiveText="关闭"
+							:inlinePrompt="true"
 						/>
 					</el-form-item>
 				</el-form>
@@ -56,14 +100,14 @@
 					<div v-show="basicForm.payType == 1">
 						<el-form-item label="普通商户号">
 							<el-input
-								v-model="basicForm.mchId"
+								v-model="basicForm.wxPayMchId"
 								placeholder="请填写普通商户号"
 								clearable
 							/>
 						</el-form-item>
 						<el-form-item label="普通商户appid">
 							<el-input
-								v-model="basicForm.appid"
+								v-model="basicForm.wxPayAppid"
 								placeholder="请填写普通商户appid"
 								clearable
 							/>
@@ -200,7 +244,7 @@
 				</div>
 			</el-tab-pane>
 
-			<el-tab-pane label="配置">
+			<el-tab-pane label="通知配置">
 				<el-form label-width="100px" :model="basicForm" :disabled="loading">
 					<el-tabs model-value="basicConfig">
 						<el-tab-pane label="通知设置" name="basicConfig">
@@ -320,12 +364,23 @@
 </template>
 <script lang="ts" name="base-setting" setup>
 import { useCool } from "/@/cool";
-import { onMounted, reactive, ref, watch } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElLoading } from "element-plus";
 import { Plus, Minus, Upload } from "@element-plus/icons-vue";
 
+interface Contact {
+	contactName: string;
+	imgUrl: string;
+}
+
 const { service } = useCool();
 const payType = ref([1, 2]);
+const basicForm: any = ref({}); // 表单数据
+const switchV = reactive({
+	active: 1,
+	inactiv: 0
+});
+
 // 获取资料
 const getInfo = async () => {
 	basicForm.value = await service.base.sys.setting.info({ id: 1 });
@@ -337,17 +392,15 @@ const getInfo = async () => {
 const loading = ref(false);
 const loadingPage = ref();
 
-interface Contact {
-	contactName: string;
-	imgUrl: string;
-}
-
+// 客户列表
 const contactArr = ref<Contact[]>([{ contactName: "", imgUrl: "" }]);
 
+// 添加客服
 const add = () => {
 	contactArr.value.push({ contactName: "", imgUrl: "" });
 };
 
+// 删除客服
 const del = (index: number) => {
 	if (contactArr.value.length == 1) {
 		ElMessage.warning("至少保留一个");
@@ -356,6 +409,7 @@ const del = (index: number) => {
 	}
 };
 
+//
 const success = (item: any) => {
 	contactArr.value[contactArr.value.length - 1].imgUrl = item.url;
 	loading.value = false;
@@ -372,57 +426,6 @@ const getIndex = (index: number) => {
 	loading.value = true;
 	currentIndex.value = index;
 };
-
-watch(
-	() => contactArr.value,
-	(n) => {
-		console.log("contactArr", contactArr.value);
-	},
-	{
-		immediate: true,
-		deep: true
-	}
-);
-
-// 表单数据
-const basicForm: any = ref({
-	sitename: "",
-	notic: "",
-	image: "",
-	contact: "",
-	mobile: "",
-	contactList: [],
-	// domainName: "",
-	// logo: "",
-	// company: "",
-	// contact: "",
-	// contactWay: "",
-	// mobile: "",
-	// address: "",
-	// keyword: "",
-	// description: "",
-	// fieldJson: "",
-
-	remindDay: 0,
-	isRemindEmail: 0,
-	isRemindSms: 0
-	// sendEmail: "",
-	// requestEmail: "",
-	// smtp: "",
-	// pass: "", //邮箱授权码
-
-	// accessKeyId: "",
-	// accessKeySecret: "",
-	// signName: "",
-	// templateCode: "",
-	// endpoint: "",
-	// remindMobile: ""
-});
-
-const switchV = reactive({
-	active: 1,
-	inactiv: 0
-});
 
 // 保存
 const save = () => {

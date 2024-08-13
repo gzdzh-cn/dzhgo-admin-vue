@@ -56,7 +56,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { useDict } from "/$/dict";
+import { useDict } from "../../../../dict";
 import { reactive, ref, watch } from "vue";
 import { ElNotification } from "element-plus";
 import OrderHistoryReply from "./history/reply.vue";

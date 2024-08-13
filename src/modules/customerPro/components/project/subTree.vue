@@ -60,13 +60,42 @@
 			</el-scrollbar>
 		</div>
 
-		<cl-form ref="Form" />
+		<cl-form ref="Form">
+			<template #slot-projectUserId="{ scope }">
+				<div style="display: flex; flex-direction: row; justify-content: space-between">
+					<el-select
+						v-model="scope.projectUserId"
+						filterable
+						placeholder="选择成员"
+						style="width: 80%"
+						@change="selectChange"
+						:disabled="mode == 'update' ? true : false"
+					>
+						<el-option
+							v-for="item in selectOptions"
+							:key="item.value"
+							:label="item.label"
+							:value="item.value"
+						/>
+					</el-select>
+
+					<el-switch
+						v-model="kfStatus"
+						inline-prompt
+						active-text="推送"
+						inactive-text="关闭"
+						:active-value="statusMap.active"
+						:inactive-value="statusMap.inactive"
+					/>
+				</div>
+			</template>
+		</cl-form>
 	</div>
 </template>
 
 <script lang="ts" name="dept-tree" setup>
-import { onMounted, ref } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { onMounted, reactive, ref } from "vue";
+import { ElMessage, ElMessageBox, MessageParamsWithType } from "element-plus";
 import { useCool } from "/@/cool";
 import { ContextMenu, useForm } from "@cool-vue/crud";
 import { MoreFilled } from "@element-plus/icons-vue";
@@ -91,6 +120,23 @@ const { service, browser } = useCool();
 const { ViewGroup } = useViewGroup();
 const Form = useForm();
 const userMap = ref<{ [key: string]: string }>({});
+const kfMap = ref<{ [key: string]: number }>({});
+const kfStatus = ref(0); //通知状态
+const statusMap = ref({
+	active: 1,
+	inactive: 0
+});
+
+// 客服列表下拉
+const selectOptions = ref<
+	{
+		label: string;
+		value: string;
+	}[]
+>([]);
+const kf = reactive({
+	status: 1
+});
 
 // 树形列表
 const list = ref<any[]>([
@@ -155,8 +201,10 @@ function rowClick(item?: any) {
 }
 
 // 编辑
+const mode = ref<string>("update");
 function rowEdit(item: any) {
 	const method = item.id ? "update" : "add";
+	mode.value = method;
 	Form.value?.open({
 		title: `${method == "add" ? "新增" : "编辑"}项目`,
 		width: "550px",
@@ -176,21 +224,7 @@ function rowEdit(item: any) {
 				label: "项目主管",
 				prop: "projectUserId",
 				component: {
-					name: "el-select",
-					options: []
-				}
-			},
-			{
-				label: "排序",
-				prop: "orderNum",
-				value: 99,
-				component: {
-					name: "el-input-number",
-					props: {
-						"controls-position": "right",
-						min: 0,
-						max: 100
-					}
+					name: "slot-projectUserId"
 				}
 			}
 		],
@@ -199,29 +233,26 @@ function rowEdit(item: any) {
 		},
 		on: {
 			async open(data) {
-				if (method == "update") {
-					// Form.value?.setProps("parentId", { disabled: true });
-					if (Form.value?.getForm("projectUserId")) {
-						Form.value?.setProps("projectUserId", { disabled: true });
-					}
-				}
-
 				const kfList = await service.customer_pro.kf.getList({
 					roleId: "1815245038695747584",
 					userId: data.projectUserId,
 					mode: method,
 					type: "project"
 				});
-				Form.value?.setOptions(
-					"projectUserId",
-					kfList.map((e: { name: any; id: any }) => {
-						userMap.value[e.id] = e.name;
-						return {
-							label: e.name,
-							value: e.id
-						};
-					})
-				);
+				selectOptions.value = kfList.map((e: { name: any; id: any; kfStatus: any }) => {
+					userMap.value[e.id] = e.name; //会员id：name集合
+					kfMap.value[e.id] = e.kfStatus; //会员id：status集合
+					if (method == "update") {
+						kfStatus.value = kfMap.value[data.projectUserId];
+					}
+					if (method == "add") {
+						kfStatus.value = 1;
+					}
+					return {
+						label: e.name,
+						value: e.id
+					};
+				});
 			},
 			submit(data, { done, close }) {
 				service.customer_pro.project[method]({
@@ -229,7 +260,8 @@ function rowEdit(item: any) {
 					projectUserId: data.projectUserId,
 					name: data.name,
 					orderNum: data.orderNum,
-					userName: userMap.value[data.projectUserId]
+					userName: userMap.value[data.projectUserId],
+					kfStatus: kfStatus.value
 				})
 					.then(() => {
 						ElMessage.success(
@@ -238,7 +270,7 @@ function rowEdit(item: any) {
 						close();
 						refresh();
 					})
-					.catch((err) => {
+					.catch((err: { message: MessageParamsWithType }) => {
 						ElMessage.error(err.message);
 						done();
 					});
@@ -404,6 +436,7 @@ function edit() {
 	rowEdit(item);
 }
 
+// 设置主管
 const setProjectRole = (item: any) => {
 	service.customer_pro.project
 		.delProjectRole({
@@ -417,6 +450,13 @@ const setProjectRole = (item: any) => {
 		.catch((e) => {
 			ElMessage.error(e.message);
 		});
+};
+
+// 选项改变
+const selectChange = (e: any) => {
+	if (mode.value == "update") {
+		kfStatus.value = kfMap.value[e];
+	}
 };
 
 onMounted(function () {

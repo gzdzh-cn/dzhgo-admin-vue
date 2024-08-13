@@ -6,6 +6,24 @@
 
 <script lang="ts" setup>
 import { ElConfigProvider } from "element-plus";
+
+import { onMounted } from "vue";
+import { useCool } from "/@/cool";
+
+const { service } = useCool();
+
+let siteName = "默认标题";
+const getSetting = async () => {
+	const result = await service.base.open.getSetting();
+	if (result.siteName) {
+		siteName = result.siteName;
+	}
+	window.document.title = siteName;
+};
+
+onMounted(() => {
+	getSetting();
+});
 </script>
 
 <style lang="scss">

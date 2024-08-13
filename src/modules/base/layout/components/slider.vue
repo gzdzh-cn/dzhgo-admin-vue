@@ -1,8 +1,8 @@
 <template>
 	<div class="app-slider">
 		<div class="app-slider__logo" @click="toHome">
-			<img src="/logo.png" />
-			<span v-if="!app.isFold || browser.isMini">{{ app.info.name }}</span>
+			<img :src="logo" />
+			<span v-if="!app.isFold || browser.isMini">{{ siteName }}</span>
 		</div>
 
 		<div class="app-slider__container">
@@ -13,13 +13,33 @@
 
 <script lang="ts" setup>
 import { useBase } from "/$/base";
-import { useBrowser } from "/@/cool";
+import { useBrowser, useCool } from "/@/cool";
 import BMenu from "./bmenu";
+import { onMounted, ref } from "vue";
 
 const { browser } = useBrowser();
 const { app } = useBase();
+const { service } = useCool();
+
+const logo = ref("/logo.png");
+const siteName = ref(app.info.name);
+
+const getSetting = async () => {
+	const result = await service.base.open.getSetting();
+
+	if (result.logo) {
+		logo.value = result.logo;
+	}
+	if (result.siteName) {
+		siteName.value = result.siteName;
+	}
+};
 
 function toHome() {}
+
+onMounted(() => {
+	getSetting();
+});
 </script>
 
 <style lang="scss">

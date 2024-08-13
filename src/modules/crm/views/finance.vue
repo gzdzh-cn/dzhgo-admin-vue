@@ -75,7 +75,7 @@
 <script lang="ts" name="crm-finance" setup>
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { useDict } from "/$/dict";
+import { useDict } from "../../dict";
 import { TableColumnCtx, dayjs } from "element-plus";
 import { Money } from "@element-plus/icons-vue";
 import { onMounted, ref } from "vue";

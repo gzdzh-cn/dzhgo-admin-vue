@@ -17,11 +17,8 @@
 		<cl-row>
 			<!-- 数据表格 -->
 			<cl-table ref="Table">
-				<template #column-nickName="{ scope }">
-					<div class="nickName">
-						<div>
-							{{ scope.row.nickName }}
-						</div>
+				<template #column-levelName="{ scope }">
+					<div class="levelName">
 						<el-button type="warning" plain>{{ scope.row.levelName }}</el-button>
 					</div>
 				</template>
@@ -51,20 +48,80 @@ const { service } = useCool();
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
-		{ label: "会员账号", prop: "username", required: true, component: { name: "el-input" } },
+		{
+			type: "tabs",
+			props: {
+				labels: [
+					{
+						label: "基础信息",
+						value: "base"
+					},
+					{
+						label: "更多信息",
+						value: "more"
+					},
+					{
+						label: "其他信息",
+						value: "other"
+					}
+				]
+			}
+		},
+		{
+			label: "会员账号",
+			prop: "username",
+			span: 12,
+			required: true,
+			component: { name: "el-input" },
+			group: "base"
+		},
 		() => {
 			return {
 				label: "会员密码",
 				prop: "password",
+				span: 12,
 				required: Upsert.value?.mode == "add" ? true : false,
 				value: "",
-				component: { name: "el-input", props: { type: "password" } }
+				component: { name: "el-input", props: { type: "password" } },
+				group: "base"
 			};
 		},
-		{ label: "会员昵称", prop: "nickName", component: { name: "el-input" } },
+		{
+			label: "会员昵称",
+			prop: "nickname",
+			span: 12,
+			component: { name: "el-input" },
+			group: "base"
+		},
+
+		{
+			label: "手机号码",
+			prop: "mobile",
+			span: 12,
+			component: { name: "el-input" },
+			group: "base"
+		},
+		{
+			label: "状态",
+			prop: "status",
+			span: 12,
+			value: 1,
+			component: {
+				name: "cl-switch",
+				props: {
+					activeValue: 1,
+					inactiveValue: 0,
+					activeText: "开启",
+					inactiveText: "关闭",
+					inlinePrompt: true
+				}
+			},
+			group: "base"
+		},
 		{
 			label: "会员等级",
 			prop: "level",
+			span: 24,
 			value: 1,
 			component: {
 				name: "el-select",
@@ -82,11 +139,13 @@ const Upsert = useUpsert({
 						value: 3
 					}
 				]
-			}
+			},
+			group: "more"
 		},
 		{
 			label: "性别",
 			prop: "sex",
+			span: 12,
 			value: 0,
 			component: {
 				name: "el-select",
@@ -104,23 +163,83 @@ const Upsert = useUpsert({
 						value: 2
 					}
 				]
-			}
+			},
+			group: "more"
 		},
-		{ label: "手机号码", prop: "mobile", component: { name: "el-input" } },
-		{ label: "qq", prop: "qq", component: { name: "el-input" } },
-		{ label: "微信", prop: "wx", component: { name: "el-input" } },
-		{ label: "微信二维码", prop: "wxImg", component: { name: "cl-upload" } },
-		{ label: "email", prop: "email", component: { name: "el-input" } },
+		{
+			label: "qq",
+			prop: "qq",
+			span: 12,
+			component: { name: "el-input" },
+			group: "more"
+		},
+		{
+			label: "微信",
+			prop: "wx",
+			span: 12,
+			component: { name: "el-input" },
+			group: "more"
+		},
+		{
+			label: "email",
+			prop: "email",
+			span: 12,
+			component: { name: "el-input" },
+			group: "more"
+		},
+		{
+			label: "微信二维码",
+			prop: "wxImg",
+			component: { name: "cl-upload" },
+			group: "more"
+		},
 		{
 			label: "备注",
 			prop: "remark",
-			component: { name: "el-input", props: { type: "textarea", rows: 4 } }
+			component: { name: "el-input", props: { type: "textarea", rows: 4 } },
+			group: "more"
 		},
 		{
-			label: "状态",
-			prop: "status",
+			label: "类型",
+			prop: "type",
 			value: 1,
-			component: { name: "el-switch", props: { activeValue: 1, inactiveValue: 0 } }
+			component: {
+				name: "el-radio-group",
+				options: [
+					{
+						label: "公众号",
+						value: 1
+					},
+					{
+						label: "小程序",
+						value: 2
+					}
+				]
+			},
+			group: "other"
+		},
+		{
+			label: "头像",
+			prop: "headimgurl",
+			component: { name: "cl-upload", props: { listType: "text", limit: 1 } },
+			group: "other"
+		},
+		{
+			label: "订阅通知",
+			prop: "notify",
+			value: 0,
+			span: 12,
+			component: {
+				name: "cl-switch",
+				props: {
+					activeValue: 1,
+					inactiveValue: 0,
+					activeText: "开启",
+					inactiveText: "关闭",
+					inlinePrompt: true
+				}
+			},
+			group: "other"
 		}
 	],
 	onSubmit(data, { done, close, next }) {
@@ -137,7 +256,8 @@ const Table = useTable({
 		{ type: "selection" },
 		{ label: "id", prop: "id" },
 		{ label: "会员账号", prop: "username" },
-		{ label: "会员昵称", prop: "nickName" },
+		{ label: "会员昵称", prop: "nickname" },
+		{ label: "会员等级", prop: "levelName" },
 		{ label: "手机号码", prop: "mobile" },
 		{ label: "创建时间", prop: "createTime" },
 		{ type: "op", buttons: ["edit", "delete"] }
@@ -185,7 +305,7 @@ const AdvSearch = useAdvSearch({
 </script>
 
 <style scoped lang="scss">
-.nickName {
+.levelName {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
