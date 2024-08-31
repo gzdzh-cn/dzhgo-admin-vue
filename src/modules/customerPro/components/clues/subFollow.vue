@@ -115,7 +115,6 @@
 							v-if="chatContent && chatContent?.chat_content"
 							:active="strToJson(chatContent?.chat_content).length"
 							direction="vertical"
-							finish-status=""
 						>
 							<el-step
 								:icon="

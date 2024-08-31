@@ -79,6 +79,10 @@ const Upsert = useUpsert({
 				name: "el-select",
 				options: [
 					{
+						label: "不分配",
+						value: 0
+					},
+					{
 						label: "按顺序分配",
 						value: 1
 					},
@@ -184,6 +188,10 @@ const Table = useTable({
 			label: "分配方式",
 			prop: "allotType",
 			dict: [
+				{
+					label: "不分配",
+					value: 0
+				},
 				{
 					label: "按顺序分配",
 					value: 1

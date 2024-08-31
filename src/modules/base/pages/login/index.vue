@@ -128,12 +128,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="bottom-text">
-			Copyright © 2023-永久
-			<a href="https://www.gzdzh.cn" target="_blank" class="hover:text-primary">
-				&nbsp; 技术支持：广州大智汇信息科技有限公司
-			</a>
-		</div>
+		<div class="bottom-text" v-html="setting?.copyright"></div>
 	</div>
 </template>
 
@@ -175,15 +170,16 @@ const count = ref(0);
 
 const logo = ref("/logo.png");
 const siteName = ref(app.info.name);
+const setting = ref();
 
 const getSetting = async () => {
-	const result = await service.base.open.getSetting();
+	setting.value = await service.base.open.getSetting();
 
-	if (result.logo) {
-		logo.value = result.logo;
+	if (setting.value.logo) {
+		logo.value = setting.value.logo;
 	}
-	if (result.siteName) {
-		siteName.value = result.siteName;
+	if (setting.value.siteName) {
+		siteName.value = setting.value.siteName;
 	}
 };
 
@@ -340,9 +336,9 @@ onMounted(() => {
 	color: #999;
 	position: absolute;
 	bottom: 20px;
-	a {
+	::v-deep a {
 		text-align: center;
-		color: #999;
+		color: #999 !important;
 	}
 }
 .active {

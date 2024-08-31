@@ -129,7 +129,7 @@
 						v-for="item in kfList"
 						:key="item.value"
 						:label="item.name"
-						:value="item.id"
+						:value="item.userId"
 					/>
 				</el-select>
 			</template>
@@ -346,8 +346,7 @@ const Upsert = useUpsert({
 				value: "5"
 			}
 		]);
-	},
-	onOpened(data) {}
+	}
 });
 
 // cl-table 配置
@@ -361,7 +360,7 @@ const Table = useTable({
 				prop: "detail"
 			};
 		},
-
+		{ label: "序号", prop: "id" },
 		{ label: "项目", prop: "project_name" },
 		{
 			label: "姓名",
@@ -406,7 +405,18 @@ const Table = useTable({
 				}
 			]
 		},
-
+		{
+			label: "跟进状态",
+			prop: "followupType",
+			dict: [
+				{ label: "待跟进", value: "1" },
+				{ label: "电话访谈", value: "2" },
+				{ label: "微信沟通", value: "3" },
+				{ label: "视频参观", value: "4" },
+				{ label: "预约参观", value: "5" },
+				{ label: "已参观", value: "6" }
+			]
+		},
 		{
 			label: "状态",
 			prop: "status"

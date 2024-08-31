@@ -120,7 +120,31 @@
 		</cl-row>
 
 		<!-- 新增、编辑 -->
-		<cl-upsert ref="Upsert" />
+		<cl-upsert ref="Upsert">
+			<template #slot-school_id="{ scope }">
+				<!-- 学校 -->
+				<el-select v-model="scope.school_id" @change="schoolChange">
+					<el-option
+						v-for="item in schoolList"
+						:key="item.value"
+						:label="item.name"
+						:value="item.id"
+					/>
+				</el-select>
+			</template>
+
+			<!-- 专业 -->
+			<template #slot-majors_id="{ scope }">
+				<el-select v-model="scope.majors_id">
+					<el-option
+						v-for="item in majorsList"
+						:key="item.value"
+						:label="item.name"
+						:value="item.id"
+					/>
+				</el-select>
+			</template>
+		</cl-upsert>
 
 		<!-- 轨迹弹窗 -->
 		<cl-dialog title="轨迹" v-model="trackVisible">
@@ -248,11 +272,11 @@ const Upsert = useUpsert({
 			group: "base"
 		},
 		{
-			label: "意向学校",
+			label: "意向院校",
 			prop: "school_id",
 			span: 8,
 			component: {
-				name: "el-select",
+				name: "slot-school_id",
 				options: []
 			},
 			required: true,
@@ -264,7 +288,7 @@ const Upsert = useUpsert({
 			prop: "majors_id",
 			span: 8,
 			component: {
-				name: "el-select",
+				name: "slot-majors_id",
 				options: []
 			},
 			required: true,
@@ -479,29 +503,32 @@ const Upsert = useUpsert({
 		}
 	],
 	async onOpen() {
-		// 学校
-		const schoolList = await service.customer_pro.school.list();
-		Upsert.value?.setOptions(
-			"school_id",
-			schoolList.map((e) => {
-				return {
-					label: e.name,
-					value: e.id
-				};
-			})
-		);
+		// // 学校
+		// const schoolList = await service.customer_pro.school.list();
+		// Upsert.value?.setOptions(
+		// 	"school_id",
+		// 	schoolList.map((e) => {
+		// 		return {
+		// 			label: e.name,
+		// 			value: e.id
+		// 		};
+		// 	})
+		// );
 
-		// 专业
-		const majorsList = await service.customer_pro.majors.list();
-		Upsert.value?.setOptions(
-			"majors_id",
-			majorsList.map((e) => {
-				return {
-					label: e.name,
-					value: e.id
-				};
-			})
-		);
+		// // 专业
+		// const majorsList = await service.customer_pro.majors.list();
+		// Upsert.value?.setOptions(
+		// 	"majors_id",
+		// 	majorsList.map((e) => {
+		// 		return {
+		// 			label: e.name,
+		// 			value: e.id
+		// 		};
+		// 	})
+		// );
+
+		// 学校列表
+		getSchoolList();
 
 		// 报读类型
 		const majorsTypeList = await service.customer_pro.readtypes.list();
@@ -702,6 +729,28 @@ const orderUpdate = (form: any) => {
 		.finally(() => {
 			cancelPopver();
 		});
+};
+
+// 学校列表
+const schoolList = ref();
+const majorsList = ref();
+
+const getSchoolList = async () => {
+	schoolList.value = await service.customer_pro.school.list();
+	if (Upsert.value?.mode != "add") {
+		getMajorList(schoolList.value[0].id);
+	}
+};
+
+// 学校改变
+const schoolChange = async (v: any) => {
+	Upsert.value?.setForm("majors_id", null);
+	getMajorList(v);
+};
+
+// 专业列表
+const getMajorList = async (v: any) => {
+	majorsList.value = await service.customer_pro.majors.list({ schoolId: v });
 };
 </script>
 

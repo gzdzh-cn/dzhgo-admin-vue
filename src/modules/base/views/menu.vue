@@ -326,7 +326,7 @@ const Upsert = useUpsert({
 				props: {
 					placeholder: "请填写排序号",
 					min: 0,
-					max: 99,
+					max: 100,
 					"controls-position": "right"
 				}
 			}

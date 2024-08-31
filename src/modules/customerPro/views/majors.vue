@@ -109,7 +109,7 @@ const Table = useTable({
 	columns: [
 		{ type: "selection" },
 		{ label: "名称", prop: "name" },
-		{ label: "院校", prop: "school_id" },
+		{ label: "院校", prop: "schoolName" },
 		{ label: "定位金", prop: "amount" },
 		{ label: "招生人数", prop: "planned_numbers" },
 		{ label: "报名人数", prop: "registered_numbers" },

@@ -4,7 +4,7 @@
 
 		<el-form label-width="100px" :model="form" :disabled="loading">
 			<el-form-item label="头像">
-				<cl-upload v-model="form.headImg" />
+				<cl-upload v-model="form.headImg" :before-upload="onBeforeUpload" />
 			</el-form-item>
 
 			<el-form-item label="昵称">
@@ -23,15 +23,15 @@
 </template>
 
 <script lang="ts" name="my-info" setup>
-import { ElMessage } from "element-plus";
-import { reactive, ref } from "vue";
+import { ElMessage, MessageHandler } from "element-plus";
+import { reactive, ref, watch } from "vue";
 import { useBase } from "/$/base";
 import { useCool } from "/@/cool";
 import { cloneDeep } from "lodash-es";
 
 const { service } = useCool();
 const { user } = useBase();
-
+const msg = ref<MessageHandler | null>(null);
 // 表单数据
 const form = reactive<any>(cloneDeep(user.info));
 
@@ -60,6 +60,26 @@ async function save() {
 		});
 
 	loading.value = false;
+}
+
+watch(
+	() => form.headImg,
+	(n) => {
+		if (n) {
+			loading.value = false;
+			msg.value?.close();
+		}
+	},
+	{
+		immediate: true
+	}
+);
+
+function onBeforeUpload(file: any, item: any) {
+	msg.value = ElMessage.warning("文件上传中");
+
+	loading.value = true;
+	return true;
 }
 </script>
 

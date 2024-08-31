@@ -1,49 +1,42 @@
 <template>
 	<div class="view-home">
-		<el-row>
-			<el-col :lg="24" :md="24" :xs="24">
+		<el-row :gutter="15">
+			<el-col :lg="8" :md="8" :xs="24">
 				<div class="card">
-					<setting-views />
+					<count-sales :data="statistics && statistics?.saleCount" />
 				</div>
 			</el-col>
-		</el-row>
-		<!-- <el-row :gutter="15">
-			<el-col :lg="6" :md="12" :xs="24">
+			<el-col :lg="8" :md="8" :xs="24">
 				<div class="card">
-					<count-sales />
+					<count-views :data="statistics && statistics?.saleMount" />
 				</div>
 			</el-col>
-			<el-col :lg="6" :md="12" :xs="24">
+			<el-col :lg="8" :md="8" :xs="24">
 				<div class="card">
-					<count-views />
+					<count-paid :data="statistics && statistics?.saleTran" />
 				</div>
 			</el-col>
-			<el-col :lg="6" :md="12" :xs="24">
-				<div class="card">
-					<count-paid />
-				</div>
-			</el-col>
-			<el-col :lg="6" :md="12" :xs="24">
+			<!-- <el-col :lg="6" :md="12" :xs="24">
 				<div class="card">
 					<count-effect />
 				</div>
-			</el-col>
+			</el-col> -->
 		</el-row>
 
 		<el-row :gutter="15">
-			<el-col :lg="14" :xs="24">
+			<el-col :lg="24" :xs="24">
 				<div class="card">
-					<tab-chart />
+					<tab-chart :data="statistics && statistics?.weekData" />
 				</div>
 			</el-col>
-			<el-col :lg="10" :xs="24">
+			<!-- <el-col :lg="10" :xs="24">
 				<div class="card">
 					<sales-rank />
 				</div>
-			</el-col>
+			</el-col> -->
 		</el-row>
 
-		<el-row :gutter="15">
+		<!-- <el-row :gutter="15">
 			<el-col :lg="14" :sm="24">
 				<div class="card card--last">
 					<hot-search />
@@ -59,15 +52,40 @@
 </template>
 
 <script lang="ts" name="home" setup>
-// import CategoryRatio from "./components/category-ratio.vue";
-// import CountSales from "./components/count-sales.vue";
-// import CountViews from "./components/count-views.vue";
-import SettingViews from "./components/setting-views.vue";
-// import CountPaid from "./components/count-paid.vue";
-// import CountEffect from "./components/count-effect.vue";
-// import TabChart from "./components/tab-chart.vue";
-// import SalesRank from "./components/sales-rank.vue";
-// import HotSearch from "./components/hot-search.vue";
+import CountSales from "../components/statistics/count-sales.vue";
+import CountViews from "../components/statistics/count-views.vue";
+import CountPaid from "../components/statistics/count-paid.vue";
+import TabChart from "../components/statistics/tab-chart.vue";
+import { useCool } from "/@/cool";
+import { onMounted, ref } from "vue";
+import { ElLoading } from "element-plus";
+
+const { service } = useCool();
+const statistics = ref();
+
+// 统计数据
+const getStatistics = () => {
+	// const loading = ElLoading.service({
+	// 	lock: true,
+	// 	text: "Loading",
+	// 	background: "rgba(0, 0, 0, 0.7)"
+	// });
+	service.customer_pro.comm
+		.statistics()
+		.then((res) => {
+			statistics.value = res;
+			// loading.close();
+		})
+		.finally(() => {
+			// setTimeout(() => {
+			// 	loading.close();
+			// }, 2000);
+		});
+};
+
+onMounted(() => {
+	getStatistics();
+});
 </script>
 
 <style lang="scss">

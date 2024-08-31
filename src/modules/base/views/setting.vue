@@ -35,6 +35,16 @@
 							clearable
 						/>
 					</el-form-item>
+
+					<el-form-item label="版权所有">
+						<el-input
+							v-model="basicForm.copyright"
+							placeholder="请填写版权所有"
+							clearable
+							type="textarea"
+							:rows="4"
+						/>
+					</el-form-item>
 				</el-form>
 			</el-tab-pane>
 
@@ -69,7 +79,7 @@
 						/>
 					</el-form-item>
 
-					<el-form-item label="通知">
+					<!-- <el-form-item label="通知">
 						<el-switch
 							v-model="basicForm.isWpNotice"
 							:active-value="switchV.active"
@@ -78,7 +88,7 @@
 							inactiveText="关闭"
 							:inlinePrompt="true"
 						/>
-					</el-form-item>
+					</el-form-item> -->
 				</el-form>
 			</el-tab-pane>
 
@@ -357,7 +367,7 @@
 			</el-tab-pane>
 		</el-tabs>
 
-		<el-form-item>
+		<el-form-item style="margin-top: 30px">
 			<el-button type="primary" :disabled="loading" @click="save">保存修改</el-button>
 		</el-form-item>
 	</div>

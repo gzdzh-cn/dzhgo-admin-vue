@@ -17,6 +17,17 @@
 							>格式：http://移动端域名/#/pages/index/wxSubscribe</span
 						>
 					</el-form-item>
+
+					<el-form-item label="公众号开启推送">
+						<el-switch
+							v-model="basicForm.pushWp"
+							inline-prompt
+							active-text="推送"
+							inactive-text="禁止"
+							:active-value="pushWp.active"
+							:inactive-value="pushWp.inactive"
+						/>
+					</el-form-item>
 				</el-form>
 
 				<el-card style="max-width: 600px">
@@ -105,7 +116,7 @@
 <script lang="ts" name="customer_pro-setting" setup>
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { onMounted, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import vueQr from "vue-qr/src/packages/vue-qr.vue";
 
@@ -116,6 +127,10 @@ const isAdmin = ref(false);
 const loading = ref(false); // 保存状态
 const basicForm: any = ref({}); // 表单数据
 const logo = ref("/logo.png");
+const pushWp = reactive({
+	active: 1,
+	inactive: 0
+});
 
 // 获取资料
 const getForm = async () => {
@@ -140,6 +155,7 @@ const save = () => {
 		});
 };
 
+// 获取账号信息
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
 	isAdmin.value = userInfo.value.roleIds.split(",").includes("1");

@@ -5,6 +5,23 @@
 <img src="dzh/weixin.jpg" alt="Description of image" width="200" height="280">
 
 
+
+### github
+* 后台项目地址：https://github.com/gzdzh-cn/dzhgo
+* 前端项目地址：https://github.com/gzdzh-cn/dzhgo-admin-vue
+
+
+### gitee
+* 后台项目地址：https://gitee.com/gzdzh_cn/dzhgo
+* 前端项目地址：https://gitee.com/gzdzh_cn/dzhgo-admin-vue.git
+
+
+
+## 计划更新
+* -如果菜单在某个权限组里面增加增加一个方法权限，需要手动去角色再打开编辑保存一次才可以，比如菜单目录：通用，里面有权限page和list，添加多一个add后，需要到角色编辑保存一次
+
+
+
 ## 更新日志
 
 ### v1.1.1

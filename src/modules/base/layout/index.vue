@@ -20,25 +20,8 @@ import Slider from "./components/slider.vue";
 import process from "./components/process.vue";
 import Views from "./components/views.vue";
 import { useBase } from "/$/base";
-// import { onMounted } from "vue";
-// import { useCool } from "/@/cool";
-// const { service } = useCool();
 
 const { app } = useBase();
-
-// let siteName = "默认标题";
-// const getSetting = async () => {
-// 	const result = await service.base.open.getSetting();
-// 	if (result.siteName) {
-// 		siteName = result.siteName;
-// 	}
-// };
-
-// window.document.title = siteName;
-
-// onMounted(() => {
-// 	getSetting();
-// });
 </script>
 
 <style lang="scss" scoped>

@@ -15,6 +15,17 @@
 				v-permission="service.customer_pro.clues._permission.distribute"
 				>分配</el-button
 			>
+			<el-popconfirm title="会清空当前系统的数据，确定迁移数据吗?" @confirm="migrateData()">
+				<template #reference>
+					<el-button v-if="isAdmin" bg type="danger">迁移数据</el-button>
+				</template>
+			</el-popconfirm>
+
+			<el-popconfirm title="清空当前系统全部数据吗?" @confirm="clearData()">
+				<template #reference>
+					<el-button v-if="isAdmin" bg type="info">清除数据</el-button>
+				</template>
+			</el-popconfirm>
 
 			<!-- <cl-export-btn
 				:columns="Table?.columns"
@@ -23,30 +34,28 @@
 			/> -->
 
 			<cl-flex1 />
+
+			<el-button type="info" text bg :icon="Search" v-show="searchStatus">
+				正在搜索中
+			</el-button>
+
+			<!-- 高级按钮 -->
+			<cl-adv-btn />
 			<!-- 关键字搜索 -->
 			<cl-search-key />
 		</cl-row>
 
 		<cl-row>
-			<div style="padding: 10px 0 0 0">
-				<el-tabs v-model="activeName" type="card" @tab-click="handleClick">
-					<el-tab-pane label="全部" name="all"> </el-tab-pane>
-					<el-tab-pane label="待跟进" name="followUp"> </el-tab-pane>
-					<el-tab-pane label="电话访谈" name="phone"> </el-tab-pane>
-					<el-tab-pane label="微信沟通" name="wx"> </el-tab-pane>
-					<el-tab-pane label="视频参观" name="video"> </el-tab-pane>
-					<el-tab-pane label="预约参观" name="book"> </el-tab-pane>
-					<el-tab-pane label="已参观" name="has"> </el-tab-pane>
-				</el-tabs>
-			</div>
-
 			<!-- 数据表格 -->
 			<cl-table ref="Table" :border="false">
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p v-if="scope.row?.userName">创建者: {{ scope.row?.userName }}</p>
 						<p>账户: {{ scope.row?.account_name }}</p>
-						<p v-if="scope.row?.keywords">关键字: {{ scope.row?.keywords }}</p>
+						<p v-if="scope.row?.services_names">
+							分配过的客服: {{ scope.row?.services_names }}
+						</p>
+
 						<p>
 							最后跟进时间:
 							{{
@@ -55,7 +64,7 @@
 									: scope.row?.createTime
 							}}
 						</p>
-						<p>备注: {{ scope.row?.remark }}</p>
+						<p v-if="scope.row?.remark">备注: {{ scope.row?.remark }}</p>
 					</div>
 				</template>
 
@@ -108,12 +117,13 @@
 		<cl-row>
 			<cl-flex1 />
 			<!-- 分页控件 -->
-			<cl-pagination />
+			<cl-pagination :page-size="10" />
 		</cl-row>
 
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
 			<template #slot-school_id="{ scope }">
+				<!-- 学校 -->
 				<el-select v-model="scope.school_id" @change="schoolChange">
 					<el-option
 						v-for="item in schoolList"
@@ -124,6 +134,7 @@
 				</el-select>
 			</template>
 
+			<!-- 专业 -->
 			<template #slot-majors_id="{ scope }">
 				<el-select v-model="scope.majors_id">
 					<el-option
@@ -214,6 +225,7 @@
 
 		<!-- 成交弹窗 -->
 		<cl-form ref="OrderFormRef">
+			<!-- 学校 -->
 			<template #slot-school_id="{ scope }">
 				<el-select v-model="scope.school_id" @change="schoolChange">
 					<el-option
@@ -225,6 +237,7 @@
 				</el-select>
 			</template>
 
+			<!-- 专业 -->
 			<template #slot-majors_id="{ scope }">
 				<el-select v-model="scope.majors_id">
 					<el-option
@@ -236,24 +249,29 @@
 				</el-select>
 			</template>
 		</cl-form>
+
+		<!-- 高级搜索 -->
+		<cl-adv-search ref="AdvSearch" />
 	</cl-crud>
 </template>
 
 <script lang="ts" name="customer_pro-clues" setup>
-import { useCrud, useForm, useTable, useUpsert } from "@cool-vue/crud";
+import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
+import { useBase } from "/$/base";
 import { ElMessage, TabsPaneContext } from "element-plus";
-import { ref } from "vue";
+import { Search } from "@element-plus/icons-vue";
+import { onMounted, ref } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
 
 const { service } = useCool();
-
+const { user } = useBase();
 const FollowRef = ref(); //跟进
-const activeName = ref("all"); //默认标签
 const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
 const projectList = ref(); // 项目列表
+const searchStatus = ref(false);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -496,7 +514,8 @@ const Table = useTable({
 			};
 		},
 
-		{ label: "53标识", prop: "guest_id" },
+		{ label: "序号", prop: "id" },
+		// { label: "序号", prop: "serialId" },
 		{ label: "项目", prop: "project_name" },
 		{
 			label: "姓名",
@@ -505,6 +524,7 @@ const Table = useTable({
 		},
 
 		{ label: "手机号", prop: "mobile" },
+		{ label: "关键词", prop: "keywords" },
 		{ label: "微信号", prop: "wechat" },
 		{
 			label: "来源",
@@ -532,21 +552,23 @@ const Table = useTable({
 				}
 			]
 		},
-		{ label: "客服", prop: "services_name" },
-		{ label: "ip归属地", prop: "guest_ip_info" },
-
+		{ label: "当前客服", prop: "services_name" },
+		{ label: "IP归属地", prop: "guest_ip_info" },
+		{
+			label: "跟进状态",
+			prop: "followupType",
+			dict: [
+				{ label: "待跟进", value: "1" },
+				{ label: "电话访谈", value: "2" },
+				{ label: "微信沟通", value: "3" },
+				{ label: "视频参观", value: "4" },
+				{ label: "预约参观", value: "5" },
+				{ label: "已参观", value: "6" }
+			]
+		},
 		{
 			label: "状态",
 			prop: "status"
-			// formatter(row, column, value, index) {
-			// 	switch (value) {
-			// 		case 0:
-			// 			return "未成交";
-
-			// 		case 1:
-			// 			return "成交";
-			// 	}
-			// }
 		},
 		{ label: "创建时间", prop: "createTime" },
 		{ type: "op", width: 300, buttons: ["slot-op"] }
@@ -566,6 +588,28 @@ const Crud = useCrud(
 // 刷新
 const refresh = (params?: any) => {
 	Crud.value?.refresh(params);
+};
+
+// 迁移数据
+const migrateData = async () => {
+	const info = await service.customer_pro.config.info({ id: 1 });
+
+	service.customer_pro.config
+		.migrateData()
+		.then(() => {
+			ElMessage.success("迁移执行中，请稍等5分钟再刷新页面");
+		})
+		.catch((e) => {
+			ElMessage.error(e.message);
+		});
+};
+
+//清除数据
+const clearData = async () => {
+	service.customer_pro.config.clearTable().then(() => {
+		ElMessage.success("清除数据完成");
+		refresh();
+	});
 };
 
 // 导出
@@ -1121,7 +1165,7 @@ const getSchoolList = async () => {
 
 // 学校改变
 const schoolChange = async (v: any) => {
-	Upsert.value?.setForm("majors_id", null);
+	OrderFormRef.value?.setForm("majors_id", null);
 	getMajorList(v);
 };
 
@@ -1129,4 +1173,82 @@ const schoolChange = async (v: any) => {
 const getMajorList = async (v: any) => {
 	majorsList.value = await service.customer_pro.majors.list({ schoolId: v });
 };
+
+// 时间选择器起始
+const defaultTime = new Date();
+// 高级搜索
+const AdvSearch = useAdvSearch({
+	items: [
+		{
+			label: "客服分配状态",
+			prop: "serviceStatus",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: [
+					{ label: "全部", value: 0 },
+					{ label: "未分配", value: 1 },
+					{ label: "已分配", value: 2 }
+				]
+			}
+		},
+		{
+			label: "跟进状态",
+			prop: "followType",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: [
+					{ label: "待跟进", value: 1 },
+					{ label: "电话访谈", value: 2 },
+					{ label: "微信沟通", value: 3 },
+					{ label: "视频参观", value: 4 },
+					{ label: "预约参观", value: 5 },
+					{ label: "已参观", value: 6 }
+				]
+			}
+		},
+		{
+			label: "时间",
+			prop: "datetimerange",
+			component: {
+				name: "el-date-picker",
+				props: {
+					type: "datetimerange",
+					startPlaceholder: "开始日期",
+					endPlaceholder: "结束日期",
+					defaultTime: defaultTime,
+					value: "YYYY-MM-DD HH:mm",
+					valueFormat: "YYYY-MM-DD HH:mm",
+					timeFormat: "HH:mm"
+				}
+			}
+		}
+	],
+	op: ["reset", "close", "search"],
+	onSearch(data, { next, close }) {
+		next(data);
+		searchStatus.value = false;
+		searchStatus.value = Object.values(data).some((value) => {
+			if (value) return true;
+		});
+	}
+});
+
+const userInfo = ref();
+const isAdmin = ref(false);
+const getUserInfo = async () => {
+	userInfo.value = await service.customer_pro.comm.person();
+	isAdmin.value = userInfo.value.roleIds.split(",").includes("1");
+	console.log("isAdmin", isAdmin.value);
+};
+
+onMounted(async () => {
+	await getUserInfo();
+	console.log("userInfo", userInfo.value);
+});
 </script>

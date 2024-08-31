@@ -5,6 +5,13 @@
 
 			<el-button
 				size="small"
+				@click="refresh"
+				:icon="RefreshRight"
+				circle
+				v-if="service.customer_pro.project._permission.list"
+			/>
+			<el-button
+				size="small"
 				@click="add"
 				:icon="Plus"
 				circle
@@ -69,7 +76,7 @@
 						placeholder="选择成员"
 						style="width: 80%"
 						@change="selectChange"
-						:disabled="mode == 'update' ? true : false"
+						:disabled="scope.projectUserId ? true : false"
 					>
 						<el-option
 							v-for="item in selectOptions"
@@ -101,7 +108,7 @@ import { ContextMenu, useForm } from "@cool-vue/crud";
 import { MoreFilled } from "@element-plus/icons-vue";
 import { checkPerm, useViewGroup } from "/$/base";
 import { deepTree, revDeepTree } from "/@/cool/utils";
-import { Plus, Edit } from "@element-plus/icons-vue";
+import { Plus, Edit, RefreshRight } from "@element-plus/icons-vue";
 const props = defineProps({
 	drag: {
 		type: Boolean,
@@ -169,9 +176,11 @@ async function refresh() {
 
 	await service.customer_pro.project.list().then((res) => {
 		list.value = deepTree(res);
-		// if (!ViewGroup.value?.selected) {
-		rowClick();
-		// }
+		if (!ViewGroup.value?.selected) {
+			rowClick();
+		} else {
+			rowClick(ViewGroup.value?.selected);
+		}
 	});
 
 	loading.value = false;
@@ -239,8 +248,8 @@ function rowEdit(item: any) {
 					mode: method,
 					type: "project"
 				});
-				selectOptions.value = kfList.map((e: { name: any; id: any; kfStatus: any }) => {
-					userMap.value[e.id] = e.name; //会员id：name集合
+				selectOptions.value = kfList.map((e: { username: any; id: any; kfStatus: any }) => {
+					userMap.value[e.id] = e.username; //会员id：name集合
 					kfMap.value[e.id] = e.kfStatus; //会员id：status集合
 					if (method == "update") {
 						kfStatus.value = kfMap.value[data.projectUserId];
@@ -249,7 +258,7 @@ function rowEdit(item: any) {
 						kfStatus.value = 1;
 					}
 					return {
-						label: e.name,
+						label: e.username,
 						value: e.id
 					};
 				});

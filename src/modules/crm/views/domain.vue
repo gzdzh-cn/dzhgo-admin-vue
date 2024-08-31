@@ -170,7 +170,6 @@ const Table = useTable({
 				options: dict.get("domainProvider").value
 			}
 		},
-		// { label: "域名所有者", prop: "domainOwer" },
 		{
 			label: "注册时间",
 			prop: "startDate",
@@ -191,6 +190,8 @@ const Crud = useCrud(
 		service: service.crm.domain,
 		async onRefresh(params, { render }) {
 			const { list, pagination } = await service.crm.domain.page(params);
+			console.log("list", list);
+
 			render(list, pagination);
 		}
 	},

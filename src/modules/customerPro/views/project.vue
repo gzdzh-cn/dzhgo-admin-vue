@@ -1,5 +1,5 @@
 <template>
-	<cl-view-group ref="ViewGroup" leftWidth="15%">
+	<cl-view-group ref="ViewGroup" leftWidth="260px">
 		<template #left>
 			<sub-tree ref="subTree" @refresh="refresh" />
 		</template>
