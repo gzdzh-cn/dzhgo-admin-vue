@@ -14,7 +14,13 @@
 
 		<cl-row>
 			<!-- 数据表格 -->
-			<cl-table ref="Table" :border="false" />
+			<cl-table ref="Table" :border="false">
+				<template #column-detail="{ scope }">
+					<div style="padding: 0 30px">
+						<p>分配列表: {{ scope.row?.allotServicesNames }}</p>
+					</div>
+				</template>
+			</cl-table>
 		</cl-row>
 
 		<cl-row>
@@ -155,6 +161,13 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
+		() => {
+			return {
+				label: "#",
+				type: "expand",
+				prop: "detail"
+			};
+		},
 		{ label: "账号名称", prop: "name" },
 		{ label: "账户编号", prop: "account" },
 		{
@@ -202,18 +215,18 @@ const Table = useTable({
 				}
 			]
 		},
-		{ label: "分配列表", prop: "allotServicesNames" },
+		// { label: "分配列表", prop: "allotServicesNames" },
 		{ label: "下次分配", prop: "userName" },
 		{
-			label: "状态",
+			label: "接收线索",
 			prop: "status",
 			component: {
 				name: "cl-switch",
 				props: {
 					activeValue: 1,
 					inactiveValue: 0,
-					activeText: "激活",
-					inactiveText: "关闭",
+					activeText: "接收",
+					inactiveText: "禁止",
 					inlinePrompt: true
 				}
 			}

@@ -95,16 +95,20 @@ const Upsert = useUpsert({
 				name: "el-select",
 				options: [
 					{
-						label: "线索分配",
+						label: "线索自动分配",
 						value: 1
 					},
 					{
-						label: "线索跟进",
+						label: "线索手动分配",
 						value: 2
 					},
 					{
-						label: "订单成交",
+						label: "线索跟进",
 						value: 3
+					},
+					{
+						label: "订单成交",
+						value: 4
 					}
 				]
 			}

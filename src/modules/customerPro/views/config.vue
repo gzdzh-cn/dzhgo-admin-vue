@@ -2,27 +2,35 @@
 	<div class="view-my">
 		<el-tabs type="border-card">
 			<el-tab-pane label="绑定微信">
-				<el-form
-					:model="basicForm"
-					label-width="auto"
-					style="max-width: 600px"
-					v-if="isAdmin"
-				>
-					<el-form-item label="公众号订阅链接">
-						<el-input
-							v-model="basicForm.wpSubscribeUrl"
-							placeholder="格式：http://移动端域名/#/pages/index/wxSubscribe<"
-						/>
-						<span style="color: #ea4300; font-size: 14px"
-							>格式：http://移动端域名/#/pages/index/wxSubscribe</span
-						>
-					</el-form-item>
+				<el-form :model="basicForm" label-width="auto" style="max-width: 600px">
+					<div v-if="isAdmin">
+						<el-form-item label="公众号订阅链接">
+							<el-input
+								v-model="basicForm.wpSubscribeUrl"
+								placeholder="格式：http://移动端域名/#/pages/index/wxSubscribe<"
+							/>
+							<span style="color: #ea4300; font-size: 14px"
+								>格式：http://移动端域名/#/pages/index/wxSubscribe</span
+							>
+						</el-form-item>
 
-					<el-form-item label="公众号开启推送">
+						<el-form-item label="公众号消息推送">
+							<el-switch
+								v-model="basicForm.pushWp"
+								inline-prompt
+								active-text="推送"
+								inactive-text="禁止"
+								:active-value="pushWp.active"
+								:inactive-value="pushWp.inactive"
+							/>
+						</el-form-item>
+					</div>
+
+					<el-form-item label="接收线索分配" v-if="!isAdmin">
 						<el-switch
-							v-model="basicForm.pushWp"
+							v-model="basicForm.publishStatus"
 							inline-prompt
-							active-text="推送"
+							active-text="接收"
 							inactive-text="禁止"
 							:active-value="pushWp.active"
 							:inactive-value="pushWp.inactive"
@@ -107,9 +115,7 @@
 		</el-tabs>
 
 		<el-form-item style="margin-top: 30px">
-			<el-button type="primary" :disabled="loading" @click="save" v-if="isAdmin"
-				>保存修改</el-button
-			>
+			<el-button type="primary" :disabled="loading" @click="save">保存修改</el-button>
 		</el-form-item>
 	</div>
 </template>
@@ -126,7 +132,7 @@ const userInfo = ref();
 const isAdmin = ref(false);
 const loading = ref(false); // 保存状态
 const basicForm: any = ref({}); // 表单数据
-const logo = ref("/logo.png");
+const logo = ref("/customer_pro/mpico.png");
 const pushWp = reactive({
 	active: 1,
 	inactive: 0
@@ -150,8 +156,12 @@ const save = () => {
 		.then(() => {
 			ElMessage.success("更新成功");
 		})
+		.catch((e) => {
+			ElMessage.error(e.message);
+		})
 		.finally(() => {
-			loading.value = true;
+			loading.value = false;
+			getForm();
 		});
 };
 

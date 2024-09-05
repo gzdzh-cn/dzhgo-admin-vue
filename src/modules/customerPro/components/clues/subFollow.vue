@@ -226,16 +226,7 @@ const Table = useTable({
 		{
 			label: "姓名",
 			prop: "name",
-			width: 250,
-			formatter(row) {
-				if (row.source_from == 1) {
-					return row.name;
-				} else if (row.city) {
-					return row.city + row.guest_id;
-				} else {
-					return row.guest_id;
-				}
-			}
+			width: 250
 		},
 
 		{ label: "手机号", prop: "mobile" },

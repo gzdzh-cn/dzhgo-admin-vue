@@ -8,6 +8,10 @@
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn />
 
+			<el-button plain @click="toggleRowExpansion()" style="margin-right: 10px">
+				{{ isExtend ? "全部收起" : "全部展开" }}
+			</el-button>
+
 			<el-button
 				type="warning"
 				:disabled="Table?.selection.length == 0"
@@ -47,15 +51,21 @@
 
 		<cl-row>
 			<!-- 数据表格 -->
-			<cl-table ref="Table" :border="false">
+			<cl-table
+				ref="Table"
+				:border="false"
+				:default-expand-all="true"
+				:row-class-name="tableRowClassName"
+			>
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
-						<p v-if="scope.row?.userName">创建者: {{ scope.row?.userName }}</p>
+						<p v-if="scope.row?.createdName">创建者: {{ scope.row?.createdName }}</p>
 						<p>账户: {{ scope.row?.account_name }}</p>
-						<p v-if="scope.row?.services_names">
+						<p v-if="scope.row?.services_names" style="color: #d83b01">
 							分配过的客服: {{ scope.row?.services_names }}
 						</p>
-
+						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
+						<p>IP归属地: {{ scope.row?.guest_ip_info }}</p>
 						<p>
 							最后跟进时间:
 							{{
@@ -63,6 +73,10 @@
 									? scope.row?.last_followup_time
 									: scope.row?.createTime
 							}}
+						</p>
+						<p>
+							创建时间:
+							{{ scope.row?.createTime }}
 						</p>
 						<p v-if="scope.row?.remark">备注: {{ scope.row?.remark }}</p>
 					</div>
@@ -74,42 +88,49 @@
 				</template>
 
 				<template #slot-op="{ scope }">
-					<el-button
-						text
-						bg
-						type="primary"
-						@click="edit(scope.row)"
-						v-if="
-							scope.row.status == 0 && service.customer_pro.clues._permission.update
+					<div
+						style="
+							display: flex;
+							flex-direction: row;
+							flex-wrap: wrap;
+							align-items: center;
+							gap: 12px;
 						"
-						>编辑</el-button
 					>
-					<el-button
-						text
-						bg
-						type="primary"
-						@click="edit(scope.row)"
-						v-if="scope.row.status == 1 && service.customer_pro.clues._permission.info"
-						>查看</el-button
-					>
-					<el-button text bg type="info" @click="openFollow(scope.row)">跟进</el-button>
-					<el-button
-						text
-						bg
-						type="warning"
-						@click="openTracks(scope.row)"
-						v-permission="service.customer_pro.clues._permission.getTrackList"
-						>轨迹</el-button
-					>
-					<el-button
-						text
-						bg
-						type="success"
-						@click="openOrderAdd(scope.row)"
-						v-if="scope.row.status == 0"
-						v-permission="service.customer_pro.order._permission.add"
-						>成交</el-button
-					>
+						<el-button
+							text
+							bg
+							type="primary"
+							@click="edit(scope.row)"
+							v-if="
+								scope.row.status == 0 &&
+								service.customer_pro.clues._permission.update
+							"
+							>编辑</el-button
+						>
+
+						<el-button text bg type="info" @click="openFollow(scope.row)"
+							>跟进</el-button
+						>
+						<el-button
+							text
+							bg
+							type="warning"
+							@click="openTracks(scope.row)"
+							v-if="service.customer_pro.clues._permission.getTrackList"
+							>轨迹</el-button
+						>
+						<el-button
+							text
+							bg
+							type="success"
+							@click="openOrderAdd(scope.row)"
+							v-if="
+								scope.row.status == 0 && service.customer_pro.order._permission.add
+							"
+							>成交</el-button
+						>
+					</div>
 				</template>
 			</cl-table>
 		</cl-row>
@@ -117,7 +138,7 @@
 		<cl-row>
 			<cl-flex1 />
 			<!-- 分页控件 -->
-			<cl-pagination :page-size="10" />
+			<cl-pagination ref="PaginationRef" :page-size="10" />
 		</cl-row>
 
 		<!-- 新增、编辑 -->
@@ -260,7 +281,7 @@ import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/c
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
 import { ElMessage, TabsPaneContext } from "element-plus";
-import { Search } from "@element-plus/icons-vue";
+import { Search, DArrowLeft } from "@element-plus/icons-vue";
 import { onMounted, ref } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
@@ -272,6 +293,15 @@ const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
 const projectList = ref(); // 项目列表
 const searchStatus = ref(false);
+const PaginationRef = ref(); //分页
+const isExtend = ref(true); //展开
+// 展开按钮
+const toggleRowExpansion = () => {
+	isExtend.value = !isExtend.value;
+	Table.value?.data.map((item: any) => {
+		Table.value?.toggleRowExpansion(item, isExtend.value);
+	});
+};
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -524,54 +554,63 @@ const Table = useTable({
 		},
 
 		{ label: "手机号", prop: "mobile" },
-		{ label: "关键词", prop: "keywords" },
 		{ label: "微信号", prop: "wechat" },
-		{
-			label: "来源",
-			prop: "source_from",
-			dict: [
-				{
-					label: "手动录入",
-					value: 1
-				},
-				{
-					label: "百度",
-					value: 2
-				},
-				{
-					label: "抖音",
-					value: 3
-				},
-				{
-					label: "53客服",
-					value: 4
-				},
-				{
-					label: "小红书",
-					value: 5
-				}
-			]
-		},
-		{ label: "当前客服", prop: "services_name" },
-		{ label: "IP归属地", prop: "guest_ip_info" },
+		{ label: "关键词", prop: "keywords" },
+		// {
+		// 	label: "来源",
+		// 	prop: "source_from",
+		// dict: [
+		// {
+		// 	label: "手动录入",
+		// 	value: 1
+		// },
+		// {
+		// 	label: "百度",
+		// 	value: 2
+		// },
+		// {
+		// 	label: "抖音",
+		// 	value: 3
+		// },
+		// {
+		// 	label: "53客服",
+		// 	value: 4
+		// },
+		// {
+		// 	label: "小红书",
+		// 	value: 5
+		// }
+		// ]
+		// },
+		// { label: "当前客服", prop: "services_name" },
+		// { label: "IP归属地", prop: "guest_ip_info" },
 		{
 			label: "跟进状态",
 			prop: "followupType",
+			width: 80,
 			dict: [
-				{ label: "待跟进", value: "1" },
-				{ label: "电话访谈", value: "2" },
-				{ label: "微信沟通", value: "3" },
-				{ label: "视频参观", value: "4" },
-				{ label: "预约参观", value: "5" },
-				{ label: "已参观", value: "6" }
+				{ label: "待跟进", value: "1", type: "danger" },
+				{ label: "电话访谈", value: "2", type: "warning" },
+				{ label: "微信沟通", value: "3", type: "warning" },
+				{ label: "视频参观", value: "4", type: "info" },
+				{ label: "预约参观", value: "5", type: "info" },
+				{ label: "已参观", value: "6", type: "success" }
 			]
 		},
 		{
 			label: "状态",
-			prop: "status"
+			prop: "status",
+			width: 80
+			// dict: {
+			// 	text: true,
+			// 	options: [
+			// 		{ label: "未成交", value: "0" },
+			// 		{ label: "已成交", value: "1" }
+			// 	]
+			// }
 		},
-		{ label: "创建时间", prop: "createTime" },
-		{ type: "op", width: 300, buttons: ["slot-op"] }
+		// { label: "创建时间", prop: "createTime" },
+		{ type: "op", width: 160, buttons: ["slot-op"] }
 	]
 });
 
@@ -581,6 +620,7 @@ const Crud = useCrud(
 		service: service.customer_pro.clues
 	},
 	(app) => {
+		PaginationRef.value.setPagination({ pageSize: 10 });
 		app.refresh();
 	}
 );
@@ -1180,6 +1220,42 @@ const defaultTime = new Date();
 const AdvSearch = useAdvSearch({
 	items: [
 		{
+			label: "来源",
+			prop: "sourceStatus",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: [
+					{
+						label: "全部",
+						value: "0"
+					},
+					{
+						label: "手动录入",
+						value: "1"
+					},
+					{
+						label: "百度",
+						value: "2"
+					},
+					{
+						label: "抖音",
+						value: "3"
+					},
+					{
+						label: "53客服",
+						value: "4"
+					},
+					{
+						label: "小红书",
+						value: "5"
+					}
+				]
+			}
+		},
+		{
 			label: "客服分配状态",
 			prop: "serviceStatus",
 			component: {
@@ -1240,6 +1316,7 @@ const AdvSearch = useAdvSearch({
 });
 
 const userInfo = ref();
+// 是否是管理员
 const isAdmin = ref(false);
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
@@ -1247,8 +1324,41 @@ const getUserInfo = async () => {
 	console.log("isAdmin", isAdmin.value);
 };
 
+// 来源
+const sourceFormatter = (v: string) => {
+	switch (v) {
+		case "1":
+			return "手动录入";
+		case "2":
+			return "百度";
+		case "3":
+			return "抖音";
+		case "4":
+			return "53客服";
+		case "5":
+			return "小红书";
+		default:
+			break;
+	}
+};
+
+// table行颜色
+const tableRowClassName = () => {
+	return "rowColor";
+};
+
 onMounted(async () => {
 	await getUserInfo();
-	console.log("userInfo", userInfo.value);
 });
 </script>
+
+<style lang="scss" scoped>
+// 表格表头的背景色;
+::v-deep(.el-table .rowColor) {
+	background: #f0f0f1;
+}
+
+.el-button + .el-button {
+	margin-left: 0;
+}
+</style>

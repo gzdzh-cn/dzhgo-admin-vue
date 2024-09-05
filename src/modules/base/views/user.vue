@@ -304,10 +304,17 @@ const Table = useTable({
 		},
 		{
 			prop: "status",
-			label: "状态",
+			label: "登录状态",
 			minWidth: 120,
 			component: {
-				name: "cl-switch"
+				name: "cl-switch",
+				props: {
+					activeValue: 1,
+					inactiveValue: 0,
+					activeText: "开启",
+					inactiveText: "禁用",
+					inlinePrompt: true
+				}
 			}
 		},
 		{

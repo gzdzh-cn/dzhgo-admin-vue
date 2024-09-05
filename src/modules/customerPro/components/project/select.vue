@@ -19,7 +19,7 @@
 	</div>
 </template>
 
-<script lang="ts" name="dept-select" setup>
+<script lang="ts" name="project-select" setup>
 import { ElMessage } from "element-plus";
 import { onMounted, ref, watch } from "vue";
 import { useCool } from "/@/cool";

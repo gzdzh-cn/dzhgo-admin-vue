@@ -100,7 +100,7 @@
 	</div>
 </template>
 
-<script lang="ts" name="dept-tree" setup>
+<script lang="ts" name="project-tree" setup>
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox, MessageParamsWithType } from "element-plus";
 import { useCool } from "/@/cool";

@@ -7,6 +7,14 @@
 			<cl-add-btn />
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn />
+			<el-button
+				v-permission="service.customer_pro.project_group.permission.move"
+				type="success"
+				:disabled="Table?.selection.length == 0"
+				@click="toMove()"
+				>转移</el-button
+			>
+
 			<cl-flex1 />
 			<!-- 关键字搜索 -->
 			<cl-search-key />
@@ -60,6 +68,9 @@
 
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert" />
+
+		<!-- 移动 -->
+		<kf-move :ref="setRefs('kfMove')" />
 	</cl-crud>
 </template>
 
@@ -68,8 +79,9 @@ import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage } from "element-plus";
 import { ref } from "vue";
+import KfMove from "./kfMove.vue";
 
-const { service } = useCool();
+const { service, refs, setRefs } = useCool();
 
 const props = defineProps({
 	groupId: String,
@@ -160,15 +172,15 @@ const Table = useTable({
 			prop: "name"
 		},
 		{
-			label: "推送",
+			label: "接收推送",
 			prop: "status",
 			component: {
 				name: "cl-switch",
 				props: {
 					activeValue: 1,
 					inactiveValue: 0,
-					activeText: "开启",
-					inactiveText: "关闭",
+					activeText: "接收",
+					inactiveText: "禁用",
 					inlinePrompt: true
 				}
 			}
@@ -220,4 +232,17 @@ const setRole = (row: any, action: boolean, type: number) => {
 			ElMessage.error(e.message);
 		});
 };
+
+// 移动成员
+async function toMove(item?: any) {
+	let ids = [];
+
+	if (item) {
+		ids = [item.id];
+	} else {
+		ids = Table.value?.selection.map((e) => e.id) || [];
+	}
+
+	refs.kfMove.open(ids);
+}
 </script>

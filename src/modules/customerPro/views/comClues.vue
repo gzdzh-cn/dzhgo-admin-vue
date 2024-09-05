@@ -6,6 +6,9 @@
 
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn />
+			<el-button plain @click="toggleRowExpansion()" style="margin-right: 10px">
+				{{ isExtend ? "全部收起" : "全部展开" }}
+			</el-button>
 
 			<el-button
 				type="warning"
@@ -16,30 +19,32 @@
 			>
 
 			<cl-flex1 />
+			<el-button type="info" text bg :icon="Search" v-show="searchStatus">
+				正在搜索中
+			</el-button>
+
+			<!-- 高级按钮 -->
+			<cl-adv-btn />
 			<!-- 关键字搜索 -->
 			<cl-search-key />
 		</cl-row>
 
 		<cl-row>
-			<div style="padding: 10px 0 0 0">
-				<el-tabs v-model="activeName" type="card" @tab-click="handleClick">
-					<el-tab-pane label="全部" name="all"> </el-tab-pane>
-					<el-tab-pane label="待跟进" name="followUp"> </el-tab-pane>
-					<el-tab-pane label="电话访谈" name="phone"> </el-tab-pane>
-					<el-tab-pane label="微信沟通" name="wx"> </el-tab-pane>
-					<el-tab-pane label="视频参观" name="video"> </el-tab-pane>
-					<el-tab-pane label="预约参观" name="book"> </el-tab-pane>
-					<el-tab-pane label="已参观" name="has"> </el-tab-pane>
-				</el-tabs>
-			</div>
 			<!-- 数据表格 -->
-			<cl-table ref="Table">
+			<cl-table
+				ref="Table"
+				:border="false"
+				:default-expand-all="true"
+				:row-class-name="tableRowClassName"
+			>
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p v-if="scope.row?.userName">创建者: {{ scope.row?.userName }}</p>
 						<p v-if="scope.row?.ocean_time">公海时间: {{ scope.row?.ocean_time }}</p>
 						<p>账户: {{ scope.row?.account_name }}</p>
-						<p v-if="scope.row?.keywords">关键字: {{ scope.row?.keywords }}</p>
+						<!-- <p v-if="scope.row?.keywords">关键字: {{ scope.row?.keywords }}</p> -->
+						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
+						<p>IP归属地: {{ scope.row?.guest_ip_info }}</p>
 						<p>
 							最后跟进时间:
 							{{
@@ -144,20 +149,32 @@
 				</div>
 			</template>
 		</cl-dialog>
+
+		<!-- 高级搜索 -->
+		<cl-adv-search ref="AdvSearch" />
 	</cl-crud>
 </template>
 
 <script lang="ts" name="customer_pro-comclues" setup>
-import { useCrud, useTable, useUpsert, useForm } from "@cool-vue/crud";
+import { useCrud, useTable, useUpsert, useForm, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage, TabsPaneContext } from "element-plus";
 import { ref } from "vue";
 import SubTrack from "../components/clues/subTrack.vue";
+import { Search } from "@element-plus/icons-vue";
 
 const { service } = useCool();
-const activeName = ref("all"); //默认标签
 const cluesId = ref(); //线索id
 const projectList = ref(); // 项目列表
+const searchStatus = ref(false);
+const isExtend = ref(true); //展开
+// 展开按钮
+const toggleRowExpansion = () => {
+	isExtend.value = !isExtend.value;
+	Table.value?.data.map((item: any) => {
+		Table.value?.toggleRowExpansion(item, isExtend.value);
+	});
+};
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -379,42 +396,44 @@ const Table = useTable({
 
 		{ label: "手机号", prop: "mobile" },
 		{ label: "微信号", prop: "wechat" },
-		{
-			label: "来源",
-			prop: "source_from",
-			dict: [
-				{
-					label: "手动录入",
-					value: 1
-				},
-				{
-					label: "百度",
-					value: 2
-				},
-				{
-					label: "抖音",
-					value: 3
-				},
-				{
-					label: "53客服",
-					value: 4
-				},
-				{
-					label: "小红书",
-					value: 5
-				}
-			]
-		},
+		{ label: "关键词", prop: "keywords" },
+		// {
+		// 	label: "来源",
+		// 	prop: "source_from",
+		// 	dict: [
+		// 		{
+		// 			label: "手动录入",
+		// 			value: 1
+		// 		},
+		// 		{
+		// 			label: "百度",
+		// 			value: 2
+		// 		},
+		// 		{
+		// 			label: "抖音",
+		// 			value: 3
+		// 		},
+		// 		{
+		// 			label: "53客服",
+		// 			value: 4
+		// 		},
+		// 		{
+		// 			label: "小红书",
+		// 			value: 5
+		// 		}
+		// 	]
+		// },
 		{
 			label: "跟进状态",
 			prop: "followupType",
+			width: 80,
 			dict: [
-				{ label: "待跟进", value: "1" },
-				{ label: "电话访谈", value: "2" },
-				{ label: "微信沟通", value: "3" },
-				{ label: "视频参观", value: "4" },
-				{ label: "预约参观", value: "5" },
-				{ label: "已参观", value: "6" }
+				{ label: "待跟进", value: "1", type: "danger" },
+				{ label: "电话访谈", value: "2", type: "warning" },
+				{ label: "微信沟通", value: "3", type: "warning" },
+				{ label: "视频参观", value: "4", type: "info" },
+				{ label: "预约参观", value: "5", type: "info" },
+				{ label: "已参观", value: "6", type: "success" }
 			]
 		},
 		{
@@ -575,4 +594,84 @@ const openTracks = (row: any) => {
 	cluesId.value = row.id;
 	trackVisible.value = true;
 };
+
+// 时间选择器起始
+const defaultTime = new Date();
+// 高级搜索
+const AdvSearch = useAdvSearch({
+	items: [
+		{
+			label: "跟进状态",
+			prop: "followType",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: [
+					{ label: "待跟进", value: 1 },
+					{ label: "电话访谈", value: 2 },
+					{ label: "微信沟通", value: 3 },
+					{ label: "视频参观", value: 4 },
+					{ label: "预约参观", value: 5 },
+					{ label: "已参观", value: 6 }
+				]
+			}
+		},
+		{
+			label: "时间",
+			prop: "datetimerange",
+			component: {
+				name: "el-date-picker",
+				props: {
+					type: "datetimerange",
+					startPlaceholder: "开始日期",
+					endPlaceholder: "结束日期",
+					defaultTime: defaultTime,
+					value: "YYYY-MM-DD HH:mm",
+					valueFormat: "YYYY-MM-DD HH:mm",
+					timeFormat: "HH:mm"
+				}
+			}
+		}
+	],
+	op: ["reset", "close", "search"],
+	onSearch(data, { next, close }) {
+		next(data);
+		searchStatus.value = false;
+		searchStatus.value = Object.values(data).some((value) => {
+			if (value) return true;
+		});
+	}
+});
+
+// 来源
+const sourceFormatter = (v: string) => {
+	switch (v) {
+		case "1":
+			return "手动录入";
+		case "2":
+			return "百度";
+		case "3":
+			return "抖音";
+		case "4":
+			return "53客服";
+		case "5":
+			return "小红书";
+		default:
+			break;
+	}
+};
+
+// table行颜色
+const tableRowClassName = () => {
+	return "rowColor";
+};
 </script>
+
+<style lang="scss" scoped>
+// 表格表头的背景色;
+::v-deep(.el-table .rowColor) {
+	background: #f0f0f1;
+}
+</style>

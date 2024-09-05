@@ -44,10 +44,10 @@
 				<cl-upsert ref="Upsert" />
 
 				<!-- 移动 -->
-				<dept-move :ref="setRefs('deptMove')" />
+				<project-move :ref="setRefs('projectMove')" />
 
 				<!-- 客服人员列表 -->
-				<el-drawer v-model="drawerKf" title="客服人员" direction="rtl" size="80%">
+				<el-drawer v-model="drawerKf" :title="groupTitle" direction="rtl" size="80%">
 					<sub-kf :key="callKey" :groupId="groupId" :projectId="projectId" />
 				</el-drawer>
 			</cl-crud>
@@ -62,13 +62,14 @@ import { useViewGroup } from "/$/base";
 import { ElDrawer, ElMessageBox } from "element-plus";
 import SubTree from "../components/project/subTree.vue";
 import SubKf from "../components/project/subKf.vue";
-import DeptMove from "../components/project/move.vue";
+import ProjectMove from "../components/project/move.vue";
 import { ref, watch } from "vue";
 
 const { service, refs, setRefs } = useCool();
 const { ViewGroup } = useViewGroup();
 const callKey = ref(0); //重新渲染子组件
 const groupId = ref(); //组别id
+const groupTitle = ref(); // 组别名称
 const projectId = ref(); //项目id
 const subTree = ref(); //子组件
 
@@ -81,22 +82,22 @@ const Upsert = useUpsert({
 			label: "备注",
 			prop: "remark",
 			component: { name: "el-input", props: { type: "textarea", rows: 4 } }
-		},
-		{
-			label: "状态",
-			prop: "status",
-			value: 1,
-			component: {
-				name: "cl-switch",
-				props: {
-					activeValue: 1,
-					inactiveValue: 0,
-					activeText: "开启",
-					inactiveText: "关闭",
-					inlinePrompt: true
-				}
-			}
 		}
+		// {
+		// 	label: "状态",
+		// 	prop: "status",
+		// 	value: 1,
+		// 	component: {
+		// 		name: "cl-switch",
+		// 		props: {
+		// 			activeValue: 1,
+		// 			inactiveValue: 0,
+		// 			activeText: "开启",
+		// 			inactiveText: "关闭",
+		// 			inlinePrompt: true
+		// 		}
+		// 	}
+		// }
 	],
 	async onOpen() {
 		const projectList = await service.customer_pro.project.list();
@@ -131,20 +132,20 @@ const Table = useTable({
 		{ type: "selection" },
 		{ label: "客服组名称", prop: "name" },
 
-		{
-			label: "状态",
-			prop: "status",
-			component: {
-				name: "cl-switch",
-				props: {
-					activeValue: 1,
-					inactiveValue: 0,
-					activeText: "开启",
-					inactiveText: "关闭",
-					inlinePrompt: true
-				}
-			}
-		},
+		// {
+		// 	label: "状态",
+		// 	prop: "status",
+		// 	component: {
+		// 		name: "cl-switch",
+		// 		props: {
+		// 			activeValue: 1,
+		// 			inactiveValue: 0,
+		// 			activeText: "开启",
+		// 			inactiveText: "关闭",
+		// 			inlinePrompt: true
+		// 		}
+		// 	}
+		// },
 		{
 			label: "备注",
 			prop: "remark",
@@ -176,7 +177,7 @@ async function toMove(item?: any) {
 		ids = Table.value?.selection.map((e) => e.id) || [];
 	}
 
-	refs.deptMove.open(ids);
+	refs.projectMove.open(ids);
 }
 
 // 行点击展开
@@ -200,6 +201,7 @@ const openKf = (row: any) => {
 	drawerKf.value = true;
 	callKey.value++;
 	groupId.value = row.id;
+	groupTitle.value = row.name;
 	projectId.value = row.projectId;
 };
 
