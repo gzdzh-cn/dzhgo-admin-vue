@@ -78,7 +78,6 @@ const serverInfo = ref();
 // 服务器信息
 const getServerInfo = async () => {
 	serverInfo.value = await service.base.open.serverInfo();
-	console.log("serverInfo", serverInfo.value);
 };
 
 onMounted(() => {

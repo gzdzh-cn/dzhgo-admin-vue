@@ -1,9 +1,11 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import { config, useBrowser } from "/@/cool";
+import { config, useBrowser, useCool } from "/@/cool";
 import { deepMerge, storage } from "/@/cool/utils";
 
 export const useAppStore = defineStore("app", function () {
+	const { service } = useCool();
+
 	const { browser, onScreenChange } = useBrowser();
 
 	// 基本信息
@@ -28,8 +30,18 @@ export const useAppStore = defineStore("app", function () {
 		isFold.value = v;
 	}
 
+	async function getSetting() {
+		const result = await service.base.open.getSetting();
+		if (result.siteName) {
+			info.name = result.siteName;
+		}
+		if (result.logo) {
+			info.logo = result.logo;
+		}
+	}
+
 	// 设置基本信息
-	function set(data: any) {
+	async function set(data: any) {
 		deepMerge(info, data);
 		storage.set("__app__", info);
 	}
@@ -52,6 +64,7 @@ export const useAppStore = defineStore("app", function () {
 		fold,
 		events,
 		set,
-		addEvent
+		addEvent,
+		getSetting
 	};
 });

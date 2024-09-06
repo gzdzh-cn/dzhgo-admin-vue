@@ -5,7 +5,7 @@ export default (): ModuleConfig => {
 		onLoad({ hasToken }) {
 			const { crm } = useCrm();
 			hasToken(() => {
-				crm.refresh();
+				// crm.refresh();
 			});
 		}
 	};

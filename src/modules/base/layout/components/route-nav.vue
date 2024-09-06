@@ -1,8 +1,6 @@
 <template>
 	<div class="route-nav">
-<!--		<p v-if="browser.isMini" class="title">-->
-<!--			{{ lastName }}-->
-<!--		</p>-->
+		<p v-if="browser.isMini" class="title">{{ lastName }}</p>
 
 		<p class="home" v-if="!lastName">控制台面板</p>
 

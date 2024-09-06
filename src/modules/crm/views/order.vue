@@ -195,7 +195,7 @@ import { ElNotification } from "element-plus";
 import { compareDate } from "/@/dzh";
 
 const { dict } = useDict();
-const { crm } = useCrm();
+// const { crm } = useCrm();
 const { service } = useCool();
 const { user } = useBase();
 const uidDisabled = ref(user.info?.id == 1 ? false : true);
@@ -231,6 +231,7 @@ const orderTypeObj: any = ref({});
 const nowTime = new Date();
 const currentDate = ref(dayjs(nowTime).format("YYYY-MM-DD"));
 const isExtend = ref(false);
+
 // 展开按钮
 const toggleExtendBt = () => {
 	isExtend.value = !isExtend.value;
@@ -739,10 +740,10 @@ const Crud = useCrud(
 			// 整理订单类型
 			orderTypeObj.value = doFilterOrderType();
 			// 会员
-			// userList.value = await service.base.sys.user.list();
+			userList.value = await service.base.sys.user.list();
 
-			const userlist_ = crm.get();
-			userList.value = userlist_.value;
+			// const userlist_ = crm.get();
+			// userList.value = userlist_.value;
 			userData.value = userFilter(userList.value);
 			userMapList.value = getUser(userList.value);
 		}

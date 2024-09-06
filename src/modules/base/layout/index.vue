@@ -35,7 +35,7 @@ const { app } = useBase();
 	&__left {
 		overflow: hidden;
 		height: 100%;
-		width: 225px;
+		width: 205px;
 		transition: left 0.2s;
 	}
 

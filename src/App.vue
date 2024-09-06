@@ -8,25 +8,8 @@
 import { ElConfigProvider } from "element-plus";
 
 import { onMounted } from "vue";
-import { useCool } from "/@/cool";
 
-const { service } = useCool();
-
-let siteName = "管理系统";
-const getSetting = async () => {
-	const result = await service.base.open.getSetting();
-	if (result.siteName) {
-		siteName = result.siteName;
-	}
-	if (result.logo) {
-		document.querySelector("link[rel='icon']").href = result.logo;
-	}
-	window.document.title = siteName;
-};
-
-onMounted(() => {
-	getSetting();
-});
+onMounted(() => {});
 </script>
 
 <style lang="scss">

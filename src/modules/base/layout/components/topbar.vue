@@ -8,7 +8,6 @@
 				unfold: !app.isFold
 			}"
 			@click="app.fold()"
-			v-if="browser.isMini"
 		>
 			<el-icon><Operation /></el-icon>
 		</div>
@@ -24,9 +23,9 @@
 				<cl-chat />
 			</li> -->
 
-			<!--			<li>-->
-			<!--				<cl-theme />-->
-			<!--			</li>-->
+			<!-- <li>
+				<cl-theme />
+			</li> -->
 		</ul>
 
 		<!-- 用户信息 -->

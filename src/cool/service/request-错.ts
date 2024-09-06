@@ -2,7 +2,6 @@ import axios from "axios";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import { ElMessage } from "element-plus";
-import { endsWith } from "lodash-es";
 import { isDev, config } from "/@/cool";
 import { storage } from "/@/cool/utils";
 import { useBase } from "/$/base";
@@ -25,7 +24,7 @@ let isRefreshing = false;
 
 // 请求
 request.interceptors.request.use(
-	(req: any) => {
+	(req) => {
 		const { user } = useBase();
 
 		if (req.url) {
@@ -50,11 +49,7 @@ request.interceptors.request.use(
 				req.headers["Authorization"] = user.token;
 			}
 
-			// if (req.url?.includes("refreshToken")) {
-			// 	return req;
-			// }
-			// 忽略
-			if (["eps", "refreshToken"].some((e) => endsWith(req.url, e))) {
+			if (req.url?.includes("refreshToken")) {
 				return req;
 			}
 
@@ -66,11 +61,14 @@ request.interceptors.request.use(
 					user.logout();
 					return req;
 				}
+				console.info("isRefreshing", isRefreshing);
 				// 是否在刷新中
 				if (!isRefreshing) {
 					isRefreshing = true;
+					console.info("user.refreshToken");
 					user.refreshToken()
-						.then((token: string) => {
+						.then((token) => {
+							console.info("user.refreshToken then", token);
 							queue.forEach((cb) => cb(token));
 							queue = [];
 							isRefreshing = false;
@@ -79,6 +77,7 @@ request.interceptors.request.use(
 							console.info("catch", e);
 						})
 						.catch(() => {
+							console.info("user.clear()");
 							user.clear();
 						});
 				}
@@ -86,6 +85,7 @@ request.interceptors.request.use(
 				return new Promise((resolve) => {
 					// 继续请求
 					queue.push((token) => {
+						console.info("queue.push then", token);
 						// 重新设置 token
 						if (req.headers) {
 							req.headers["Authorization"] = token;

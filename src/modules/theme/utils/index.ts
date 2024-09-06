@@ -44,11 +44,18 @@ export const themes = [
 		label: "天蓝",
 		name: "sky",
 		color: "#54A4F7"
+	},
+	{
+		label: "黑蓝",
+		name: "bsky",
+		color: "#54A4F7"
 	}
 ];
 
 export function setTheme({ color, name, isGroup, transition }: Theme) {
 	const { app } = useBase();
+	console.log("name", name);
+	console.log("color", color);
 
 	// 主题配置
 	const theme = storage.get("theme") || {};
@@ -70,7 +77,10 @@ export function setTheme({ color, name, isGroup, transition }: Theme) {
 		const item = themes.find((e) => e.name == name);
 
 		if (item) {
-			color = item.color;
+			if (!color) {
+				color = item.color;
+			}
+
 			document.body?.setAttribute("class", `theme-${name}`);
 		}
 

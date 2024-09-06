@@ -8,7 +8,8 @@ export const isDev = import.meta.env.MODE === "development";
 export const config = {
 	// 项目信息
 	app: {
-		name: "dzhgo",
+		name: "dzhgo管理系统",
+		logo: "/logo.png",
 		version: "v0.0.93",
 
 		// 菜单

@@ -128,7 +128,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="bottom-text" v-html="setting?.copyright"></div>
+		<div class="bottom-text" v-html="copyright"></div>
 	</div>
 </template>
 
@@ -142,7 +142,7 @@ import { User, Lock, Key, Iphone } from "@element-plus/icons-vue";
 import LoginLeft from "./svg/login-left.vue";
 
 const { refs, setRefs, router, service } = useCool();
-const { user, app } = useBase();
+const { user, app, setting } = useBase();
 
 const currentPage = ref(0);
 const disabled = ref(false);
@@ -168,21 +168,9 @@ const loginChange = (model: string) => {
 const show = ref(true);
 const count = ref(0);
 
-const logo = ref("/logo.png");
-const siteName = ref(app.info.name);
-const setting = ref();
-
-const getSetting = async () => {
-	setting.value = await service.base.open.getSetting();
-
-	if (setting.value.logo) {
-		logo.value = setting.value.logo;
-	}
-	if (setting.value.siteName) {
-		siteName.value = setting.value.siteName;
-	}
-};
-
+const logo = ref(setting.setting.logo || app.info.logo);
+const siteName = ref(setting.setting.siteName || app.info.name);
+const copyright = ref(setting.setting.copyright);
 // 获取验证码
 // const getCode = async () => {
 // 	if (!form.phone) {
@@ -277,9 +265,7 @@ async function toLogin() {
 	saving.value = false;
 }
 
-onMounted(() => {
-	getSetting();
-});
+onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>

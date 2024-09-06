@@ -67,6 +67,16 @@ export const useUserStore = defineStore("user", function () {
 		router.push("/login");
 	}
 
+	async function getSetting() {
+		const result = await service.base.open.getSetting();
+		// if (result.siteName) {
+		// 	info.name = result.siteName;
+		// }
+		// if (result.logo) {
+		// 	info.logo = result.logo;
+		// }
+	}
+
 	// 获取用户信息
 	async function get() {
 		return service.base.comm.person().then((res) => {
@@ -83,6 +93,7 @@ export const useUserStore = defineStore("user", function () {
 		logout,
 		clear,
 		setToken,
-		refreshToken
+		refreshToken,
+		getSetting
 	};
 });

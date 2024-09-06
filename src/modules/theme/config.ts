@@ -8,15 +8,15 @@ export default (): ModuleConfig => {
 		components: [import("./components/theme.vue")],
 
 		options: {
-			// 推荐主题：'jihei', 'guolv', 'jiangzi'
-			name: "sky"
+			// 推荐主题：'default','jihei', 'guolv', 'jiangzi'
+			name: "bsky",
 			// 自定义主题色
-			// color: "#4165d7",
+			color: "#54A4F7"
 		},
 
 		install(_, options) {
 			const data =
-				storage.get("theme") ||
+				// storage.get("theme") ||
 				Object.assign(
 					{
 						isGroup: config.app.menu.isGroup,
@@ -25,7 +25,9 @@ export default (): ModuleConfig => {
 					options
 				);
 
-			setTheme(data);
+			console.log(data);
+
+			setTheme({ ...data });
 		}
 	};
 };

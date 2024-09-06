@@ -50,9 +50,6 @@ request.interceptors.request.use(
 				req.headers["Authorization"] = user.token;
 			}
 
-			// if (req.url?.includes("refreshToken")) {
-			// 	return req;
-			// }
 			// 忽略
 			if (["eps", "refreshToken"].some((e) => endsWith(req.url, e))) {
 				return req;
@@ -62,37 +59,35 @@ request.interceptors.request.use(
 			if (storage.isExpired("token")) {
 				// 判断 refreshToken 是否过期
 				if (storage.isExpired("refreshToken")) {
-					ElMessage.warning("登录已过期，请重新登录");
+					ElMessage.error("登录状态已失效，请重新登录");
 					user.logout();
-					return req;
-				}
-				// 是否在刷新中
-				if (!isRefreshing) {
-					isRefreshing = true;
-					user.refreshToken()
-						.then((token: string) => {
-							queue.forEach((cb) => cb(token));
-							queue = [];
-							isRefreshing = false;
-						})
-						.catch((e: any) => {
-							console.info("catch", e);
-						})
-						.catch(() => {
-							user.clear();
-						});
-				}
+				} else {
+					// 是否在刷新中
+					if (!isRefreshing) {
+						isRefreshing = true;
 
-				return new Promise((resolve) => {
-					// 继续请求
-					queue.push((token) => {
-						// 重新设置 token
-						if (req.headers) {
-							req.headers["Authorization"] = token;
-						}
-						resolve(req);
+						user.refreshToken()
+							.then((token) => {
+								queue.forEach((cb) => cb(token));
+								queue = [];
+								isRefreshing = false;
+							})
+							.catch(() => {
+								user.clear();
+							});
+					}
+
+					return new Promise((resolve) => {
+						// 继续请求
+						queue.push((token) => {
+							// 重新设置 token
+							if (req.headers) {
+								req.headers["Authorization"] = token;
+							}
+							resolve(req);
+						});
 					});
-				});
+				}
 			}
 		}
 
@@ -129,14 +124,16 @@ request.interceptors.response.use(
 		NProgress.done();
 
 		if (error.response) {
-			const { status, config } = error.response;
+			const { status, config: c } = error.response;
 			const { user } = useBase();
 
 			if (status == 401) {
 				user.logout();
 			} else {
 				if (isDev) {
-					ElMessage.error(`${config.url} ${status}`);
+					if (c.url != `${config.baseUrl}/`) {
+						ElMessage.error(`${c.url} ${status}`);
+					}
 				} else {
 					switch (status) {
 						case 403:

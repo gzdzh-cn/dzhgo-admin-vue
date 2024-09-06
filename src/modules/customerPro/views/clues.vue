@@ -347,7 +347,13 @@ const Upsert = useUpsert({
 			span: 12,
 			component: { name: "el-input" }
 		},
-		{ label: "来源", prop: "source_from", span: 12, component: { name: "el-select" } },
+		{
+			label: "来源",
+			prop: "source_from",
+			span: 12,
+			required: true,
+			component: { name: "el-select" }
+		},
 
 		{ label: "关键字", prop: "keywords", span: 12, component: { name: "el-input" } },
 

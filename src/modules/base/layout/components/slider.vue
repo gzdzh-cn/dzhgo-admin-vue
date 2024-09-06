@@ -1,7 +1,7 @@
 <template>
 	<div class="app-slider">
 		<div class="app-slider__logo" @click="toHome">
-			<img :src="logo" />
+			<img class="avatar" :src="logo" alt="Logo" />
 			<span v-if="!app.isFold || browser.isMini">{{ siteName }}</span>
 		</div>
 
@@ -18,28 +18,15 @@ import BMenu from "./bmenu";
 import { onMounted, ref } from "vue";
 
 const { browser } = useBrowser();
-const { app } = useBase();
-const { service } = useCool();
+const { app, setting } = useBase();
 
-const logo = ref("/logo.png");
-const siteName = ref(app.info.name);
-
-const getSetting = async () => {
-	const result = await service.base.open.getSetting();
-
-	if (result.logo) {
-		logo.value = result.logo;
-	}
-	if (result.siteName) {
-		siteName.value = result.siteName;
-	}
-};
+const logo = ref(setting.setting.logo || app.info.logo);
+const siteName = ref(setting.setting.siteName || app.info.name);
+const copyright = ref(setting.setting.copyright);
 
 function toHome() {}
 
-onMounted(() => {
-	getSetting();
-});
+onMounted(() => {});
 </script>
 
 <style lang="scss">
@@ -47,7 +34,7 @@ onMounted(() => {
 	height: 100%;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 	background-color: #2f3447;
-	border: 1px #f0e8e8 solid;
+	border: 0px #f0e8e8 solid;
 
 	&__logo {
 		display: flex;
@@ -57,8 +44,8 @@ onMounted(() => {
 		cursor: pointer;
 
 		img {
-			height: 30px;
-			width: 30px;
+			// height: 30px;
+			width: 50px;
 		}
 
 		span {

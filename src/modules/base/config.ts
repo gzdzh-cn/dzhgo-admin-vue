@@ -1,5 +1,6 @@
-import { ModuleConfig, config } from "/@/cool";
+import { ModuleConfig, config, useCool } from "/@/cool";
 import { useStore } from "./store";
+
 import "./static/css/index.scss";
 
 export default (): ModuleConfig => {
@@ -56,12 +57,27 @@ export default (): ModuleConfig => {
 				component: () => import("./pages/error/502.vue")
 			}
 		],
-		install() {
+		async install() {
 			// 设置标题
-			document.title = config.app.name;
+			// document.title = config.app.name;
 		},
 		async onLoad() {
-			const { user, menu, app } = useStore();
+			const { user, menu, app, setting } = useStore();
+
+			const res = await setting.get();
+			// 设置标题
+			if (res.value?.siteName) {
+				document.title = res.value?.siteName;
+			} else {
+				document.title = config.app.name;
+			}
+
+			// 设置logo
+			if (res.value?.logo) {
+				document.querySelector("link[rel='icon']").href = res.value?.logo;
+			} else {
+				document.querySelector("link[rel='icon']").href = config.app.logo;
+			}
 
 			// token 事件
 			async function hasToken(cb: () => Promise<any> | void) {
