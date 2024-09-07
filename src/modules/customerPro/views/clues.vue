@@ -550,7 +550,18 @@ const Table = useTable({
 			};
 		},
 
-		{ label: "序号", prop: "id" },
+		{
+			label: "序号",
+			prop: "id",
+			width: 100,
+			formatter(row, column, value, index) {
+				if (row.id > 67114) {
+					return row.serialId;
+				} else {
+					return row.id;
+				}
+			}
+		},
 		// { label: "序号", prop: "serialId" },
 		{ label: "项目", prop: "project_name" },
 		{
