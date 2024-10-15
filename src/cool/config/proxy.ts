@@ -4,7 +4,6 @@ export const proxy = {
 		changeOrigin: true,
 		rewrite: (path: string) => path.replace(/^\/dev/, "")
 	},
-
 	"/prod": {
 		target: "",
 		changeOrigin: true,

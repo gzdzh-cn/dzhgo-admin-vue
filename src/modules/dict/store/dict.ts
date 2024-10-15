@@ -17,7 +17,7 @@ export const useDictStore = defineStore("dict", () => {
 
 	// 刷新
 	async function refresh(types?: string[]) {
-		return service.dict.info
+		return service.dict.comm
 			.data({
 				types
 			})

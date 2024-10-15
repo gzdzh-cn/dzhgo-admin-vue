@@ -1,32 +1,33 @@
 <template>
 	<cl-crud ref="Crud">
-		<div style="padding: 10px 10px 0px 20px; display: flex; flex-wrap: wrap; row-gap: 10px">
+		<cl-row>
 			<!-- 刷新按钮 -->
 			<cl-refresh-btn />
 			<!-- 新增按钮 -->
-
+			<el-button type="primary" @click="expenditureOpen('in')">新增收入</el-button>
+			<el-button type="danger" @click="expenditureOpen('out')">新增支出</el-button>
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn style="margin-right: 10px" />
-			<!-- 关键字搜索 -->
-			<cl-search-key />
-			<!-- 按钮 -->
-			<cl-adv-btn />
 
 			<cl-flex1 />
 
-			<el-button plain @click="toggleExtendBt" style="margin-right: 10px">
+			<!-- <el-button plain @click="toggleExtendBt" style="margin-right: 10px">
 				<el-icon><DArrowLeft /></el-icon> {{ isExtend ? "收起" : "展开" }}
-			</el-button>
+			</el-button> -->
 
 			<!-- <el-button test bg @click="search(3)">近三个月</el-button>
 			<el-button test bg @click="search(0)">当月</el-button> -->
 
-			<el-button type="primary" @click="expenditureOpen('in')">新增收入</el-button>
-			<el-button type="danger" @click="expenditureOpen('out')">新增支出</el-button>
-			<el-button test bg @click="doClear">清除条件</el-button>
-		</div>
+			<!-- <el-button test bg @click="doClear">清除条件</el-button> -->
 
-		<div class="divider"></div>
+			<el-button type="info" text bg :icon="Search" v-show="searchStatus">
+				正在搜索中
+			</el-button>
+			<!-- 按钮 -->
+			<cl-adv-btn />
+			<!-- 关键字搜索 -->
+			<cl-search-key />
+		</cl-row>
 
 		<cl-row>
 			<!-- 数据表格 -->
@@ -77,7 +78,7 @@ import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useDict } from "../../dict";
 import { TableColumnCtx, dayjs } from "element-plus";
-import { Money } from "@element-plus/icons-vue";
+import { Money, Search } from "@element-plus/icons-vue";
 import { onMounted, ref } from "vue";
 import { useBase } from "/$/base";
 
@@ -91,6 +92,7 @@ const isExtend = ref(false);
 const toggleExtendBt = () => {
 	isExtend.value = !isExtend.value;
 };
+const searchStatus = ref(false); // 搜索状态
 
 onMounted(() => {
 	getUser();
@@ -325,7 +327,6 @@ const Crud = useCrud({
 		} else {
 			list = await service.crm.finance.list(params);
 		}
-
 		render(list);
 	}
 });
@@ -363,13 +364,7 @@ const AdvSearch = useAdvSearch({
 				component: {
 					name: "cl-select",
 					props: {
-						options: [
-							{
-								label: "全部",
-								value: ""
-							},
-							...userMapList.value
-						]
+						options: [...userMapList.value]
 					}
 				}
 			};
@@ -381,10 +376,6 @@ const AdvSearch = useAdvSearch({
 				name: "cl-select",
 				props: {
 					options: [
-						{
-							label: "全部",
-							value: ""
-						},
 						{
 							label: "近一个月",
 							value: "1"
@@ -415,13 +406,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [
-						{
-							label: "全部",
-							value: ""
-						},
-						...dict.get("species").value
-					]
+					options: [...dict.get("species").value]
 				}
 			}
 		},
@@ -431,13 +416,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [
-						{
-							label: "全部",
-							value: ""
-						},
-						...dict.get("type").value
-					]
+					options: [...dict.get("type").value]
 				}
 			}
 		},
@@ -447,13 +426,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [
-						{
-							label: "全部",
-							value: ""
-						},
-						...dict.get("paytype").value
-					]
+					options: [...dict.get("paytype").value]
 				}
 			}
 		},
@@ -474,7 +447,14 @@ const AdvSearch = useAdvSearch({
 				}
 			}
 		}
-	]
+	],
+	onSearch(data, { next, close }) {
+		next(data);
+		searchStatus.value = false;
+		searchStatus.value = Object.values(data).some((value) => {
+			if (value || value === 0) return true;
+		});
+	}
 });
 
 // 搜索

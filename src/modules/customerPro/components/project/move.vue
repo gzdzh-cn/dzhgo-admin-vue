@@ -37,13 +37,9 @@ async function open(ids: any[]) {
 					return done();
 				}
 
-				ElMessageBox.confirm(
-					"转移到新项目，组内客服列表也会一起迁移，也会影响分配队列，是否继续？",
-					"提示",
-					{
-						type: "warning"
-					}
-				)
+				ElMessageBox.confirm("转移到新项目，组内客服列表也会一起迁移，是否继续？", "提示", {
+					type: "warning"
+				})
 					.then(() => {
 						service.customer_pro.project_group
 							.move({
@@ -60,7 +56,9 @@ async function open(ids: any[]) {
 								done();
 							});
 					})
-					.catch(() => null);
+					.catch(() => {
+						done();
+					});
 			}
 		}
 	});

@@ -140,6 +140,7 @@ import { useBase } from "/$/base";
 import Captcha from "./components/captcha.vue";
 import { User, Lock, Key, Iphone } from "@element-plus/icons-vue";
 import LoginLeft from "./svg/login-left.vue";
+import { request } from "/@/cool/service/request";
 
 const { refs, setRefs, router, service } = useCool();
 const { user, app, setting } = useBase();
@@ -284,7 +285,7 @@ onMounted(() => {});
 }
 
 .translation {
-	::v-deep(.el-dropdown-menu__item) {
+	:deep(.el-dropdown-menu__item) {
 		padding: 5px 40px;
 	}
 
@@ -322,7 +323,7 @@ onMounted(() => {});
 	color: #999;
 	position: absolute;
 	bottom: 20px;
-	::v-deep a {
+	:deep a {
 		text-align: center;
 		color: #999 !important;
 	}

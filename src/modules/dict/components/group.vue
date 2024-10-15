@@ -22,7 +22,7 @@
 						:class="{
 							'is-active': ViewGroup?.selected?.id == item.id
 						}"
-						@click="select(item)"
+						@click="rowClick(item)"
 						@contextmenu="
 							(e) => {
 								onContextMenu(e, item);
@@ -186,7 +186,7 @@ function onContextMenu(e: any, item: Eps.DictTypeEntity) {
 
 									// 删除当前
 									if (ViewGroup.value?.selected?.id == item.id) {
-										select();
+										rowClick();
 									}
 								})
 								.catch((err) => {

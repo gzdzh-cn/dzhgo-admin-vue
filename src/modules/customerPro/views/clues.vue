@@ -65,6 +65,9 @@
 							分配过的客服: {{ scope.row?.services_names }}
 						</p>
 						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
+						<p v-if="scope.row?.level">
+							线索等级: {{ levelFormatter(scope.row?.level) }}
+						</p>
 						<p>IP归属地: {{ scope.row?.guest_ip_info }}</p>
 						<p>
 							最后跟进时间:
@@ -138,9 +141,11 @@
 		<cl-row>
 			<cl-flex1 />
 			<!-- 分页控件 -->
-			<cl-pagination ref="PaginationRef" :page-size="10" />
+			<cl-pagination ref="PaginationRef" :slotDom="slotDom" />
 		</cl-row>
-
+		<!-- prev, pager, next, jumper, ->, total -->
+		<!-- layout="slot,total,sizes, prev, pager, next, jumper" -->
+		<!-- layout="slot,total,sizes, prev, pager, next, jumper, " -->
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
 			<template #slot-school_id="{ scope }">
@@ -279,22 +284,20 @@
 <script lang="ts" name="customer_pro-clues" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { useBase } from "/$/base";
 import { ElMessage, TabsPaneContext } from "element-plus";
-import { Search, DArrowLeft } from "@element-plus/icons-vue";
-import { onMounted, ref } from "vue";
+import { Search } from "@element-plus/icons-vue";
+import { computed, onMounted, ref } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
 
 const { service } = useCool();
-const { user } = useBase();
 const FollowRef = ref(); //跟进
 const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
 const projectList = ref(); // 项目列表
-const searchStatus = ref(false);
-const PaginationRef = ref(); //分页
+const searchStatus = ref(false); // 搜索状态
 const isExtend = ref(true); //展开
+
 // 展开按钮
 const toggleRowExpansion = () => {
 	isExtend.value = !isExtend.value;
@@ -320,6 +323,7 @@ const Upsert = useUpsert({
 				label: "项目",
 				prop: "project_id",
 				span: 12,
+				required: true,
 				component: { name: "el-select", props: { disabled: Upsert.value?.mode !== "add" } }
 			};
 		},
@@ -573,34 +577,7 @@ const Table = useTable({
 		{ label: "手机号", prop: "mobile" },
 		{ label: "微信号", prop: "wechat" },
 		{ label: "关键词", prop: "keywords" },
-		// {
-		// 	label: "来源",
-		// 	prop: "source_from",
-		// dict: [
-		// {
-		// 	label: "手动录入",
-		// 	value: 1
-		// },
-		// {
-		// 	label: "百度",
-		// 	value: 2
-		// },
-		// {
-		// 	label: "抖音",
-		// 	value: 3
-		// },
-		// {
-		// 	label: "53客服",
-		// 	value: 4
-		// },
-		// {
-		// 	label: "小红书",
-		// 	value: 5
-		// }
-		// ]
-		// },
-		// { label: "当前客服", prop: "services_name" },
-		// { label: "IP归属地", prop: "guest_ip_info" },
+
 		{
 			label: "跟进状态",
 			prop: "followupType",
@@ -618,15 +595,8 @@ const Table = useTable({
 			label: "状态",
 			prop: "status",
 			width: 80
-			// dict: {
-			// 	text: true,
-			// 	options: [
-			// 		{ label: "未成交", value: "0" },
-			// 		{ label: "已成交", value: "1" }
-			// 	]
-			// }
 		},
-		// { label: "创建时间", prop: "createTime" },
+
 		{ type: "op", width: 160, buttons: ["slot-op"] }
 	]
 });
@@ -637,10 +607,25 @@ const Crud = useCrud(
 		service: service.customer_pro.clues
 	},
 	(app) => {
-		PaginationRef.value.setPagination({ pageSize: 10 });
 		app.refresh();
 	}
 );
+
+// 分页自定义插槽
+const selectNum = computed(() => Crud.value?.selection.length);
+const slotDom = computed(() => {
+	return {
+		style: {
+			width: "200px",
+			fontWeight: "400",
+			float: "left",
+			marginRight: "auto",
+			paddingLeft: "20px"
+		},
+		htmlText: `已选中 ${selectNum.value} 条`,
+		selectNum: selectNum.value
+	};
+});
 
 // 刷新
 const refresh = (params?: any) => {
@@ -650,7 +635,6 @@ const refresh = (params?: any) => {
 // 迁移数据
 const migrateData = async () => {
 	const info = await service.customer_pro.config.info({ id: 1 });
-
 	service.customer_pro.config
 		.migrateData()
 		.then(() => {
@@ -1237,6 +1221,34 @@ const defaultTime = new Date();
 const AdvSearch = useAdvSearch({
 	items: [
 		{
+			label: "线索等级",
+			prop: "levelStatus",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: [
+					{
+						label: "全部",
+						value: "-1"
+					},
+					{
+						label: "无意向",
+						value: "0"
+					},
+					{
+						label: "无效",
+						value: "1"
+					},
+					{
+						label: "有意向",
+						value: "2"
+					}
+				]
+			}
+		},
+		{
 			label: "来源",
 			prop: "sourceStatus",
 			component: {
@@ -1359,6 +1371,21 @@ const sourceFormatter = (v: string) => {
 	}
 };
 
+// 线索等级
+const levelFormatter = (v: string) => {
+	switch (v) {
+		case "0":
+			return "无意向";
+		case "1":
+			return "无效";
+		case "2":
+			return "有意向";
+
+		default:
+			break;
+	}
+};
+
 // table行颜色
 const tableRowClassName = () => {
 	return "rowColor";
@@ -1370,11 +1397,20 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
+.dialog-footer {
+	display: inline-flex;
+	flex-direction: row;
+	gap: 10px;
+}
 // 表格表头的背景色;
-::v-deep(.el-table .rowColor) {
+:deep(.el-table .rowColor) {
 	background: #f0f0f1;
 }
 
+:deep(.el-pagination) {
+	width: 100%;
+	justify-content: end;
+}
 .el-button + .el-button {
 	margin-left: 0;
 }

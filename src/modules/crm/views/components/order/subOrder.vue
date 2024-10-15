@@ -4,10 +4,14 @@
 			<!-- 刷新按钮 -->
 			<cl-refresh-btn />
 			<!-- 新增按钮 -->
-			<cl-add-btn />
+			<cl-add-btn v-if="props.orderInfo?.id" />
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn />
 			<cl-flex1 />
+
+			<el-button type="info" text bg :icon="Search" v-show="searchStatus">
+				正在搜索中
+			</el-button>
 			<cl-adv-btn />
 			<!-- 关键字搜索 -->
 			<cl-search-key />
@@ -74,17 +78,17 @@ import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
 import { reactive, ref, watch, onMounted } from "vue";
 
-import { Money } from "@element-plus/icons-vue";
+import { Money, Search } from "@element-plus/icons-vue";
 import { dayjs } from "element-plus";
-import { useDict } from "../../../../dict";
+import { useDict } from "/$/dict";
 
 const { service } = useCool();
 const { user } = useBase();
 const { dict } = useDict();
 const uidDisabled = ref(user.info.id == 1 ? false : true);
-
 const userMapList = ref();
 const userList = ref();
+const searchStatus = ref(false); // 搜索状态
 
 const props = defineProps({
 	orderInfo: Object
@@ -330,13 +334,14 @@ const Upsert = useUpsert({
 			}
 		}
 
-		if (Upsert.value?.mode == "add") {
+		if (Upsert.value?.mode == "add" && props.orderInfo?.projectNum) {
 			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-新增子订单`);
+
 			if (orderType.value) {
 				Upsert.value?.setForm("orderType", orderType.value);
 			}
 		}
-		if (Upsert.value?.mode == "update") {
+		if (Upsert.value?.mode == "update" && props.orderInfo?.projectNum) {
 			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-编辑子订单`);
 		}
 		if (orderType.value == "subRenewal") {
@@ -396,6 +401,11 @@ const Table = useTable({
 		{ label: "价格", prop: "price" },
 		{
 			label: "到期时间",
+			prop: "endDate",
+			component: { name: "cl-date-text", props: { format: "YYYY-MM-DD" } }
+		},
+		{
+			label: "操作时间",
 			prop: "createTime",
 			component: { name: "cl-date-text", props: { format: "YYYY-MM-DD" } }
 		},
@@ -409,7 +419,6 @@ const Crud = useCrud({
 	service: service.crm.order,
 	async onRefresh(params, { render }) {
 		const { list, pagination } = await service.crm.order.page(params);
-
 		// 渲染数据
 		render(list, pagination);
 	}
@@ -570,7 +579,14 @@ const AdvSearch = useAdvSearch({
 				}
 			}
 		}
-	]
+	],
+	onSearch(data, { next, close }) {
+		next(data);
+		searchStatus.value = false;
+		searchStatus.value = Object.values(data).some((value) => {
+			if (value || value === 0) return true;
+		});
+	}
 });
 
 // 后台用户列表：客服，技术员，对接人字段使用

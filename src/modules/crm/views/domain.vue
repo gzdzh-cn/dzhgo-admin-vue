@@ -1,18 +1,17 @@
 <template>
 	<cl-crud ref="Crud">
-		<div style="padding: 10px 10px 0px 20px; display: flex; flex-wrap: wrap; row-gap: 10px">
+		<cl-row>
 			<!-- 刷新按钮 -->
 			<cl-refresh-btn />
 			<!-- 新增按钮 -->
 			<cl-add-btn />
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn style="margin-right: 10px" />
+			<cl-flex1 />
+
 			<!-- 关键字搜索 -->
 			<cl-search-key />
-			<cl-flex1 />
-		</div>
-
-		<div class="divider"></div>
+		</cl-row>
 
 		<cl-row>
 			<!-- 数据表格 -->
@@ -47,7 +46,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { useDict } from "../../dict";
+import { useDict } from "/$/dict";
 import { ref } from "vue";
 import { dayjs } from "element-plus";
 
@@ -55,6 +54,8 @@ const { service } = useCool();
 const { user } = useBase();
 const { dict } = useDict();
 const uidDisabled = ref(user.info.id == 1 ? false : true);
+// dict.refresh();
+
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
@@ -190,8 +191,6 @@ const Crud = useCrud(
 		service: service.crm.domain,
 		async onRefresh(params, { render }) {
 			const { list, pagination } = await service.crm.domain.page(params);
-			console.log("list", list);
-
 			render(list, pagination);
 		}
 	},

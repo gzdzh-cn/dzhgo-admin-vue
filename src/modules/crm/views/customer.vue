@@ -1,16 +1,17 @@
 <template>
 	<cl-crud ref="Crud">
-		<div style="padding: 10px 10px 0px 20px; display: flex; flex-wrap: wrap; row-gap: 10px">
+		<cl-row>
 			<!-- 刷新按钮 -->
 			<cl-refresh-btn />
 			<!-- 新增按钮 -->
 			<cl-add-btn />
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn style="margin-right: 10px" />
+
+			<cl-flex1 />
 			<!-- 关键字搜索 -->
 			<cl-search-key />
 
-			<cl-flex1 />
 			<!-- 导出按钮 -->
 			<!-- <cl-export-btn :columns="Table?.columns" />
 			<cl-import-btn
@@ -18,8 +19,8 @@
 				:on-submit="onImportSubmit"
 				:on-config="onImportConfig"
 			/> -->
-		</div>
-		<div class="divider"></div>
+		</cl-row>
+
 		<cl-row>
 			<!-- 数据表格 -->
 			<cl-table ref="Table" :border="false" />

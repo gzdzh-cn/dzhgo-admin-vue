@@ -1,27 +1,25 @@
 <template>
 	<cl-crud ref="Crud">
-		<div style="padding: 10px 10px 0px 20px; display: flex; flex-wrap: wrap; row-gap: 10px">
+		<cl-row style="">
 			<!-- 刷新按钮 -->
 			<cl-refresh-btn />
 			<!-- 新增按钮 -->
 			<cl-add-btn />
 			<!-- 删除按钮 -->
 			<cl-multi-delete-btn style="margin-right: 10px" />
-			<!-- 关键字搜索 -->
-			<cl-search-key />
-			<!-- 高级按钮 -->
-			<cl-adv-btn />
-
-			<cl-flex1 />
 
 			<el-button type="info" @click="openSubOrder">查看子订单</el-button>
 
-			<!-- <el-button plain @click="toggleExtendBt" style="margin-right: 10px">
-				<el-icon><DArrowLeft /></el-icon> {{ isExtend ? "收起" : "展开" }}
-			</el-button> -->
-		</div>
+			<cl-flex1 />
 
-		<div class="divider"></div>
+			<el-button type="info" text bg :icon="Search" v-show="searchStatus">
+				正在搜索中
+			</el-button>
+			<!-- 高级按钮 -->
+			<cl-adv-btn />
+			<!-- 关键字搜索 -->
+			<cl-search-key />
+		</cl-row>
 
 		<cl-row>
 			<!-- 数据表格 -->
@@ -107,6 +105,7 @@
 					<div style="padding: 0 30px">
 						<p>客户: {{ scope.row?.cName }}</p>
 						<p>订单类型: {{ orderTypeObj[scope.row?.orderType] }}</p>
+						<p>价格: {{ scope.row?.price }}</p>
 						<p>渠道: {{ scope.row?.agentName }}</p>
 						<p>客服: {{ userData[scope.row?.waiterId] }}</p>
 						<p>技术员: {{ userData[scope.row?.technicianId] }}</p>
@@ -163,16 +162,20 @@
 			</template>
 		</cl-upsert>
 
+		<!-- 高级搜索 -->
 		<cl-adv-search ref="AdvSearch" />
 
+		<!-- 子订单 -->
 		<el-drawer v-model="drawerSubOrder" title="下级订单" direction="rtl" size="100%">
 			<order-sub :orderInfo="orderInfo" :key="callKey"></order-sub>
 		</el-drawer>
 
+		<!-- 财务订单 -->
 		<el-drawer v-model="drawerFinance" title="财务列表" direction="rtl" size="80%">
 			<order-finance :orderInfo="orderInfo" :key="callKey" />
 		</el-drawer>
 
+		<!-- 历史跟踪 -->
 		<el-drawer v-model="drawerDoHistory" title="跟踪处理" direction="rtl" size="80%">
 			<order-dohistory :orderInfo="orderInfo" :key="callKey" />
 		</el-drawer>
@@ -183,14 +186,13 @@
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 import { ElDrawer, dayjs } from "element-plus";
 import OrderSub from "./components/order/sub.vue";
 import OrderFinance from "./components/order/finance.vue";
 import OrderDohistory from "./components/order/doHistory.vue";
 import { useDict } from "../../dict";
-import { useCrm } from "..";
-import { Money } from "@element-plus/icons-vue";
+import { Money, Search } from "@element-plus/icons-vue";
 import { ElNotification } from "element-plus";
 import { compareDate } from "/@/dzh";
 
@@ -231,7 +233,7 @@ const orderTypeObj: any = ref({});
 const nowTime = new Date();
 const currentDate = ref(dayjs(nowTime).format("YYYY-MM-DD"));
 const isExtend = ref(false);
-
+const searchStatus = ref(false); // 搜索状态
 // 展开按钮
 const toggleExtendBt = () => {
 	isExtend.value = !isExtend.value;
@@ -715,7 +717,7 @@ const Table = useTable({
 			label: "项目进度",
 			prop: "state"
 		},
-		{ label: "价格", prop: "price" },
+		// { label: "价格", prop: "price" },
 		{
 			label: "续费时间",
 			prop: "endDate"
@@ -742,8 +744,6 @@ const Crud = useCrud(
 			// 会员
 			userList.value = await service.base.sys.user.list();
 
-			// const userlist_ = crm.get();
-			// userList.value = userlist_.value;
 			userData.value = userFilter(userList.value);
 			userMapList.value = getUser(userList.value);
 		}
@@ -880,7 +880,14 @@ const AdvSearch = useAdvSearch({
 				}
 			}
 		}
-	]
+	],
+	onSearch(data, { next, close }) {
+		next(data);
+		searchStatus.value = false;
+		searchStatus.value = Object.values(data).some((value) => {
+			if (value || value === 0) return true;
+		});
+	}
 });
 
 const drawerSubOrder = ref(false);
@@ -954,7 +961,7 @@ interface ListItem {
 	value: string;
 	label: string;
 }
-// 远程搜索
+// 客户远程搜索
 const optionsCustomerId = ref<ListItem[]>([]);
 const remoteMethodCustomer = async (keyWord: string) => {
 	if (keyWord && keyWord !== "") {

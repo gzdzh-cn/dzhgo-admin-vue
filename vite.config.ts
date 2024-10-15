@@ -38,7 +38,8 @@ export default (): UserConfig => {
 			alias: {
 				"/@": resolve("src"),
 				"/#": resolve("types"),
-				"/$": resolve("src/modules")
+				"/$": resolve("src/modules"),
+				"/~": resolve("packages")
 			}
 		},
 		server: {

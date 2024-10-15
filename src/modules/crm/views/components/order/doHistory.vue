@@ -226,10 +226,10 @@ const Upsert = useUpsert({
 			})
 		);
 		if (Upsert.value?.mode == "add") {
-			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-新增订单`);
+			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-新增跟踪`);
 		}
 		if (Upsert.value?.mode == "update") {
-			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-编辑订单`);
+			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-编辑跟踪`);
 		}
 	},
 	onSubmit(data, { next }) {

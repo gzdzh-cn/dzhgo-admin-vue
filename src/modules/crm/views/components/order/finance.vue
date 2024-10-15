@@ -167,10 +167,10 @@ const Upsert = useUpsert({
 		);
 
 		if (Upsert.value?.mode == "add") {
-			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-新增订单`);
+			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-新增财务`);
 		}
 		if (Upsert.value?.mode == "update") {
-			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-编辑订单`);
+			Upsert.value?.setTitle(`${props.orderInfo?.projectNum}-编辑财务`);
 		}
 	},
 	onSubmit(data, { next }) {

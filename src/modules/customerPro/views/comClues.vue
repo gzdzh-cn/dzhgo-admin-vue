@@ -671,7 +671,7 @@ const tableRowClassName = () => {
 
 <style lang="scss" scoped>
 // 表格表头的背景色;
-::v-deep(.el-table .rowColor) {
+:deep(.el-table .rowColor) {
 	background: #f0f0f1;
 }
 </style>

@@ -97,6 +97,10 @@
 				</div>
 			</template>
 		</cl-form>
+
+		<cl-dialog title="设置项目主管" v-model="projectVisible">
+			<project-role :projectRoleItem="projectRoleItem" />
+		</cl-dialog>
 	</div>
 </template>
 
@@ -109,6 +113,7 @@ import { MoreFilled } from "@element-plus/icons-vue";
 import { checkPerm, useViewGroup } from "/$/base";
 import { deepTree, revDeepTree } from "/@/cool/utils";
 import { Plus, Edit, RefreshRight } from "@element-plus/icons-vue";
+import ProjectRole from "./projectRole.vue";
 const props = defineProps({
 	drag: {
 		type: Boolean,
@@ -201,11 +206,7 @@ function rowClick(item?: any) {
 
 		// 选择
 		ViewGroup.value?.select(item);
-		ViewGroup.value?.setTitle(
-			`${item.name} - 客服组列表 ${
-				item.projectUserId ? "-【项目主管：" + item.projectUserName + "】" : ""
-			}`
-		);
+		ViewGroup.value?.setTitle(`${item.name} - 客服组列表`);
 	}
 }
 
@@ -228,49 +229,49 @@ function rowEdit(item: any) {
 					name: "el-input"
 				},
 				required: true
-			},
-			{
-				label: "项目主管",
-				prop: "projectUserId",
-				component: {
-					name: "slot-projectUserId"
-				}
 			}
+			// {
+			// 	label: "",
+			// 	prop: "projectUserId",
+			// 	component: {
+			// 		name: "slot-projectUserId"
+			// 	}
+			// }
 		],
 		form: {
 			...item
 		},
 		on: {
 			async open(data) {
-				const kfList = await service.customer_pro.kf.getList({
-					roleId: "1815245038695747584",
-					userId: data.projectUserId,
-					mode: method,
-					type: "project"
-				});
-				selectOptions.value = kfList.map((e: { username: any; id: any; kfStatus: any }) => {
-					userMap.value[e.id] = e.username; //会员id：name集合
-					kfMap.value[e.id] = e.kfStatus; //会员id：status集合
-					if (method == "update") {
-						kfStatus.value = kfMap.value[data.projectUserId];
-					}
-					if (method == "add") {
-						kfStatus.value = 1;
-					}
-					return {
-						label: e.username,
-						value: e.id
-					};
-				});
+				// const kfList = await service.customer_pro.kf.getList({
+				// 	roleId: "1815245038695747584",
+				// 	userId: data.projectUserId,
+				// 	mode: method,
+				// 	type: "project"
+				// });
+				// selectOptions.value = kfList.map((e: { name: any; id: any; kfStatus: any }) => {
+				// 	userMap.value[e.id] = e.name; //会员id：name集合
+				// 	kfMap.value[e.id] = e.kfStatus; //会员id：status集合
+				// 	if (method == "update") {
+				// 		kfStatus.value = kfMap.value[data.projectUserId];
+				// 	}
+				// 	if (method == "add") {
+				// 		kfStatus.value = 1;
+				// 	}
+				// 	return {
+				// 		label: e.name,
+				// 		value: e.id
+				// 	};
+				// });
 			},
 			submit(data, { done, close }) {
 				service.customer_pro.project[method]({
 					id: item.id,
-					projectUserId: data.projectUserId,
-					name: data.name,
-					orderNum: data.orderNum,
-					userName: userMap.value[data.projectUserId],
-					kfStatus: kfStatus.value
+					// projectUserId: data.projectUserId,
+					name: data.name
+					// orderNum: data.orderNum,
+					// userName: userMap.value[data.projectUserId],
+					// kfStatus: kfStatus.value
 				})
 					.then(() => {
 						ElMessage.success(
@@ -310,25 +311,28 @@ function rowDel(item: any) {
 						"删除成功"
 					);
 				}
-			});
 
-		refresh();
+				refresh();
+			})
+			.catch((e) => {
+				ElMessage.error(e.message);
+				return;
+			});
 	}
 
 	ElMessageBox.confirm(`该操作会删除 “${item.name}” 项目的所有组别，是否确认？`, "提示", {
 		type: "warning",
 		confirmButtonText: "直接删除",
-		cancelButtonText: "保留组别",
+		cancelButtonText: "关闭",
 		distinguishCancelAndClose: true
-	})
-		.then(() => {
-			del(true);
-		})
-		.catch((action) => {
-			if (action == "cancel") {
-				del(false);
-			}
-		});
+	}).then(() => {
+		del(true);
+	});
+	// .catch((action) => {
+	// 	if (action == "cancel") {
+	// 		del(false);
+	// 	}
+	// });
 }
 
 // 排序
@@ -420,17 +424,26 @@ function onContextMenu(e: any, d?: any, n?: any) {
 				}
 			},
 			{
-				label: "删除项目主管",
+				label: "设置项目主管",
 				hidden: !checkPerm(kfPerm.setProjectRole),
 				callback(done) {
-					setProjectRole(d);
+					openProjectRole(d);
 					done();
 				}
 			}
+			// {
+			// 	label: "删除项目主管",
+			// 	hidden: !checkPerm(kfPerm.setProjectRole),
+			// 	callback(done) {
+			// 		setProjectRole(d);
+			// 		done();
+			// 	}
+			// }
 		]
 	});
 }
 
+// 新增项目
 function add() {
 	rowEdit({
 		name: "",
@@ -439,11 +452,23 @@ function add() {
 	});
 }
 
-function edit() {
-	const item = ViewGroup.value?.selected;
-	console.log(item);
+// 编辑项目
+async function edit() {
+	const item = await service.customer_pro.project.info({ id: ViewGroup.value?.selected?.id });
+	// const item = ViewGroup.value?.selected;
 	rowEdit(item);
 }
+
+interface ProjectRoleItem {
+	id: string;
+}
+// 设置项目主管
+const projectVisible = ref(false);
+const projectRoleItem = ref<ProjectRoleItem>();
+const openProjectRole = (item: any) => {
+	projectRoleItem.value = item;
+	projectVisible.value = true;
+};
 
 // 设置主管
 const setProjectRole = (item: any) => {
