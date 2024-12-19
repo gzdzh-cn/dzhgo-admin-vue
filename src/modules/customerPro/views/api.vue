@@ -15,11 +15,11 @@
 		<cl-row>
 			<!-- 数据表格 -->
 			<cl-table ref="Table" :border="false">
-				<template #column-detail="{ scope }">
+				<!-- <template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p>分配列表: {{ scope.row?.allotServicesNames }}</p>
 					</div>
-				</template>
+				</template> -->
 			</cl-table>
 		</cl-row>
 
@@ -76,29 +76,47 @@ const Upsert = useUpsert({
 			}
 		},
 		{ label: "token", prop: "token", component: { name: "el-input" } },
-		{ label: "所属项目", prop: "projectId", component: { name: "el-select" } },
-		{
-			label: "分配方式",
-			prop: "allot_type",
-			value: 1,
-			component: {
-				name: "el-select",
-				options: [
-					{
-						label: "不分配",
-						value: 0
-					},
-					{
-						label: "按顺序分配",
-						value: 1
-					},
-					{
-						label: "随机分配",
-						value: 2
+		() => {
+			return {
+				label: "所属项目",
+				prop: "projectId",
+				value: [],
+				hook: {
+					bind: ["split"],
+					submit: ["join"]
+				},
+				component: {
+					name: "el-select",
+					options: [],
+					props: {
+						multiple: true,
+						"multiple-limit": 3
 					}
-				]
-			}
+				}
+			};
 		},
+		// {
+		// 	label: "分配方式",
+		// 	prop: "allot_type",
+		// 	value: 1,
+		// 	component: {
+		// 		name: "el-select",
+		// 		options: [
+		// 			{
+		// 				label: "不分配",
+		// 				value: 0
+		// 			},
+		// 			{
+		// 				label: "按顺序分配",
+		// 				value: 1
+		// 			},
+		// 			{
+		// 				label: "随机分配",
+		// 				value: 2
+		// 			}
+		// 		]
+		// 	}
+		// },
 		{
 			label: "备注",
 			prop: "remark",
@@ -161,13 +179,13 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
-		() => {
-			return {
-				label: "#",
-				type: "expand",
-				prop: "detail"
-			};
-		},
+		// () => {
+		// 	return {
+		// 		label: "#",
+		// 		type: "expand",
+		// 		prop: "detail"
+		// 	};
+		// },
 		{ label: "账号名称", prop: "name" },
 		{ label: "账户编号", prop: "account" },
 		{
@@ -197,26 +215,26 @@ const Table = useTable({
 			]
 		},
 		{ label: "所属项目", prop: "projectName" },
-		{
-			label: "分配方式",
-			prop: "allotType",
-			dict: [
-				{
-					label: "不分配",
-					value: 0
-				},
-				{
-					label: "按顺序分配",
-					value: 1
-				},
-				{
-					label: "随机分配",
-					value: 2
-				}
-			]
-		},
+		// {
+		// 	label: "分配方式",
+		// 	prop: "allotType",
+		// 	dict: [
+		// 		{
+		// 			label: "不分配",
+		// 			value: 0
+		// 		},
+		// 		{
+		// 			label: "按顺序分配",
+		// 			value: 1
+		// 		},
+		// 		{
+		// 			label: "随机分配",
+		// 			value: 2
+		// 		}
+		// 	]
+		// },
 		// { label: "分配列表", prop: "allotServicesNames" },
-		{ label: "下次分配", prop: "userName" },
+		// { label: "下次分配", prop: "userName" },
 		{
 			label: "接收线索",
 			prop: "status",

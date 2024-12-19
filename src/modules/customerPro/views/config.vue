@@ -121,13 +121,12 @@
 </template>
 <script lang="ts" name="customer_pro-setting" setup>
 import { useCool } from "/@/cool";
-import { useBase } from "/$/base";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import vueQr from "vue-qr/src/packages/vue-qr.vue";
 
 const { service } = useCool();
-const { user } = useBase();
+
 const userInfo = ref();
 const isAdmin = ref(false);
 const loading = ref(false); // 保存状态

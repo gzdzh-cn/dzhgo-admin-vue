@@ -11,6 +11,14 @@
 			<el-button plain @click="toggleRowExpansion()" style="margin-right: 10px">
 				{{ isExtend ? "全部收起" : "全部展开" }}
 			</el-button>
+			<el-button
+				plain
+				@click="openExcelDialog()"
+				style="margin-right: 10px"
+				v-if="service.customer_pro.clues._permission.excel"
+			>
+				导出Excel
+			</el-button>
 
 			<el-button
 				type="warning"
@@ -30,6 +38,10 @@
 					<el-button v-if="isAdmin" bg type="info">清除数据</el-button>
 				</template>
 			</el-popconfirm>
+
+			<el-button plain @click="randomDialog = true" style="margin-right: 10px" v-if="isAdmin">
+				生成随机数据
+			</el-button>
 
 			<!-- <cl-export-btn
 				:columns="Table?.columns"
@@ -59,7 +71,10 @@
 			>
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
-						<p v-if="scope.row?.createdName">创建者: {{ scope.row?.createdName }}</p>
+						<p v-if="isAdmin">唯一码: {{ scope.row?.id }}</p>
+						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
+							创建者: {{ scope.row?.createdName }}
+						</p>
 						<p>账户: {{ scope.row?.account_name }}</p>
 						<p v-if="scope.row?.services_names" style="color: #d83b01">
 							分配过的客服: {{ scope.row?.services_names }}
@@ -100,7 +115,7 @@
 							gap: 12px;
 						"
 					>
-						<el-button
+						<!-- <el-button
 							text
 							bg
 							type="primary"
@@ -109,8 +124,8 @@
 								scope.row.status == 0 &&
 								service.customer_pro.clues._permission.update
 							"
-							>编辑</el-button
-						>
+							>审核</el-button
+						> -->
 
 						<el-button text bg type="info" @click="openFollow(scope.row)"
 							>跟进</el-button
@@ -143,9 +158,7 @@
 			<!-- 分页控件 -->
 			<cl-pagination ref="PaginationRef" :slotDom="slotDom" />
 		</cl-row>
-		<!-- prev, pager, next, jumper, ->, total -->
-		<!-- layout="slot,total,sizes, prev, pager, next, jumper" -->
-		<!-- layout="slot,total,sizes, prev, pager, next, jumper, " -->
+
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
 			<template #slot-school_id="{ scope }">
@@ -214,6 +227,7 @@
 			<sub-follow ref="FollowRef" :id="cluesId" :status="cluesStatus" @cancel="cancel" />
 			<template #footer>
 				<div class="dialog-footer">
+					<!-- 
 					<el-popconfirm title="确定放入公海吗?" @confirm="pushCommonClause">
 						<template #reference>
 							<el-button
@@ -234,7 +248,7 @@
 						v-if="cluesStatus == 0 && service.customer_pro.clues._permission.followAdd"
 					>
 						保存
-					</el-button>
+					</el-button> -->
 				</div>
 			</template>
 		</cl-dialog>
@@ -278,17 +292,53 @@
 
 		<!-- 高级搜索 -->
 		<cl-adv-search ref="AdvSearch" />
+
+		<cl-dialog title="导出Excel" v-model="openExcel">
+			<div class="exportBox">
+				<el-button plain @click="toexcel(true)" style="margin-right: 10px">
+					导出当前页
+				</el-button>
+				<el-button
+					plain
+					@click="toexcel(false)"
+					style="margin-right: 10px"
+					v-loading.fullscreen.lock="fullscreenLoading"
+				>
+					导出全部
+				</el-button>
+			</div>
+		</cl-dialog>
+
+		<cl-dialog title="生成随机数据" v-model="randomDialog">
+			<el-form :model="randomForm" label-width="auto" style="max-width: 600px">
+				<el-form-item label="生成数量">
+					<el-input v-model="randomForm.randomNum" />
+				</el-form-item>
+				<el-form-item label="年月份">
+					<el-date-picker
+						v-model="randomForm.dateTime"
+						type="month"
+						placeholder="日期"
+						value-format="YYYY-MM"
+					/>
+				</el-form-item>
+				<el-form-item>
+					<el-button type="primary" @click="randomData()">提交</el-button>
+				</el-form-item>
+			</el-form>
+		</cl-dialog>
 	</cl-crud>
 </template>
 
 <script lang="ts" name="customer_pro-clues" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { ElMessage, TabsPaneContext } from "element-plus";
+import { ElMessage, TabsPaneContext, ElLoading } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import { computed, onMounted, ref } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
+import { useDict } from "/$/dict";
 
 const { service } = useCool();
 const FollowRef = ref(); //跟进
@@ -296,15 +346,11 @@ const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
 const projectList = ref(); // 项目列表
 const searchStatus = ref(false); // 搜索状态
+const searchData = ref(); //搜索条件
 const isExtend = ref(true); //展开
-
-// 展开按钮
-const toggleRowExpansion = () => {
-	isExtend.value = !isExtend.value;
-	Table.value?.data.map((item: any) => {
-		Table.value?.toggleRowExpansion(item, isExtend.value);
-	});
-};
+const serviceGroup = ref(); // 客服组
+const openExcel = ref(false); //打开导出弹窗
+const { dict } = useDict();
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -461,20 +507,7 @@ const Upsert = useUpsert({
 		]);
 
 		// 线索级别
-		Upsert.value?.setOptions("level", [
-			{
-				label: "无意向",
-				value: "0"
-			},
-			{
-				label: "无效",
-				value: "1"
-			},
-			{
-				label: "有意向",
-				value: "2"
-			}
-		]);
+		Upsert.value?.setOptions("level", dict.get("cluesLevel").value);
 
 		// 性别
 		Upsert.value?.setOptions("gender", [
@@ -604,12 +637,24 @@ const Table = useTable({
 // cl-crud 配置
 const Crud = useCrud(
 	{
-		service: service.customer_pro.clues
+		service: service.customer_pro.clues,
+		async onRefresh(params, { render }) {
+			searchData.value = params;
+			const { list, pagination } = await service.customer_pro.clues.page(params);
+			render(list, pagination);
+		}
 	},
-	(app) => {
+	async (app) => {
 		app.refresh();
 	}
 );
+// 展开按钮
+const toggleRowExpansion = () => {
+	isExtend.value = !isExtend.value;
+	Table.value?.data.map((item: any) => {
+		Table.value?.toggleRowExpansion(item, isExtend.value);
+	});
+};
 
 // 分页自定义插槽
 const selectNum = computed(() => Crud.value?.selection.length);
@@ -630,6 +675,18 @@ const slotDom = computed(() => {
 // 刷新
 const refresh = (params?: any) => {
 	Crud.value?.refresh(params);
+};
+
+const randomDialog = ref(false);
+const randomForm = ref({
+	randomNum: 1000,
+	dateTime: ""
+});
+// 生成随机数据
+const randomData = async () => {
+	await service.customer_pro.clues.randomData(randomForm.value);
+	randomDialog.value = false;
+	ElMessage.success("数据生成中，请稍等10分钟再刷新页面");
 };
 
 // 迁移数据
@@ -800,13 +857,15 @@ const openOrderAdd = async (row: any) => {
 				label: "意向院校",
 				prop: "school_id",
 				span: 8,
-				component: { name: "slot-school_id" }
+				component: { name: "slot-school_id" },
+				group: "base"
 			},
 			{
 				label: "意向专业",
 				prop: "majors_id",
 				span: 8,
-				component: { name: "slot-majors_id" }
+				component: { name: "slot-majors_id" },
+				group: "base"
 			},
 			{
 				label: "报读类型",
@@ -1196,7 +1255,6 @@ const getKfList = async (groupId: string, projectId: string) => {
 // 学校列表
 const schoolList = ref();
 const majorsList = ref();
-
 const getSchoolList = async () => {
 	schoolList.value = await service.customer_pro.school.list();
 	if (Upsert.value?.mode != "add") {
@@ -1206,6 +1264,7 @@ const getSchoolList = async () => {
 
 // 学校改变
 const schoolChange = async (v: any) => {
+	majorsList.value = [];
 	OrderFormRef.value?.setForm("majors_id", null);
 	getMajorList(v);
 };
@@ -1228,61 +1287,66 @@ const AdvSearch = useAdvSearch({
 				props: {
 					clearable: true
 				},
-				options: [
-					{
-						label: "全部",
-						value: "-1"
-					},
-					{
-						label: "无意向",
-						value: "0"
-					},
-					{
-						label: "无效",
-						value: "1"
-					},
-					{
-						label: "有意向",
-						value: "2"
-					}
-				]
+				options: dict.get("cluesLevel")
 			}
 		},
-		{
-			label: "来源",
-			prop: "sourceStatus",
-			component: {
-				name: "el-select",
-				props: {
-					clearable: true
-				},
-				options: [
-					{
-						label: "全部",
-						value: "0"
+		() => {
+			return {
+				label: "来源",
+				prop: "sourceStatus",
+				component: {
+					name: "el-select",
+					props: {
+						clearable: true
 					},
-					{
-						label: "手动录入",
-						value: "1"
-					},
-					{
-						label: "百度",
-						value: "2"
-					},
-					{
-						label: "抖音",
-						value: "3"
-					},
-					{
-						label: "53客服",
-						value: "4"
-					},
-					{
-						label: "小红书",
-						value: "5"
+					options: () => {
+						let option = [
+							{
+								label: "手动录入",
+								value: "1"
+							},
+							{
+								label: "百度",
+								value: "2"
+							},
+							{
+								label: "抖音",
+								value: "3"
+							},
+							{
+								label: "53客服",
+								value: "4"
+							},
+							{
+								label: "小红书",
+								value: "5"
+							}
+						];
+
+						if (isAdmin.value) {
+							option.push({
+								label: "测试数据",
+								value: "-1"
+							});
+						}
+
+						return option;
 					}
-				]
-			}
+				}
+			};
+		},
+		() => {
+			return {
+				label: "客服组",
+				prop: "serviceGroup",
+				component: {
+					name: "el-select",
+					props: {
+						clearable: true
+					},
+					options: serviceGroup.value
+				}
+			};
 		},
 		{
 			label: "客服分配状态",
@@ -1293,7 +1357,6 @@ const AdvSearch = useAdvSearch({
 					clearable: true
 				},
 				options: [
-					{ label: "全部", value: 0 },
 					{ label: "未分配", value: 1 },
 					{ label: "已分配", value: 2 }
 				]
@@ -1350,7 +1413,6 @@ const isAdmin = ref(false);
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
 	isAdmin.value = userInfo.value.roleIds.split(",").includes("1");
-	console.log("isAdmin", isAdmin.value);
 };
 
 // 来源
@@ -1386,13 +1448,56 @@ const levelFormatter = (v: string) => {
 	}
 };
 
+// 客服组
+const getServiceGroup = async () => {
+	const list = await service.customer_pro.project_group.list();
+	serviceGroup.value = list.map((item) => {
+		return {
+			label: item.name,
+			value: item.id
+		};
+	});
+};
+
 // table行颜色
 const tableRowClassName = () => {
 	return "rowColor";
 };
 
+// 打开弹窗
+const openExcelDialog = () => {
+	openExcel.value = true;
+};
+
+const fullscreenLoading = ref(false);
+// 导出excel
+const toexcel = async (isCurrent: boolean) => {
+	const loading = ElLoading.service({
+		lock: true,
+		text: "Loading",
+		background: "rgba(0, 0, 0, 0.7)"
+	});
+	const downLoadUrl = await service.customer_pro.clues.excel({
+		...searchData.value,
+		isCurrentPage: isCurrent
+	});
+
+	loading.close();
+
+	// 创建一个隐藏的<a>标签
+	const link = document.createElement("a");
+	link.href = downLoadUrl;
+	link.download = ""; // 可以设置文件名，留空则按服务器提供的文件名
+	// 将标签添加到页面并触发点击
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	openExcel.value = false;
+};
+
 onMounted(async () => {
 	await getUserInfo();
+	await getServiceGroup();
 });
 </script>
 
@@ -1413,5 +1518,12 @@ onMounted(async () => {
 }
 .el-button + .el-button {
 	margin-left: 0;
+}
+
+.exportBox {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
 }
 </style>
