@@ -47,7 +47,7 @@ export const config = {
 	test: {
 		token: "",
 		mock: false,
-		eps: true
+		eps: false
 	},
 
 	// 当前环境

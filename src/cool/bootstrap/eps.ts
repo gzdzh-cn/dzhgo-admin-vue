@@ -180,7 +180,7 @@ export async function createEps() {
 			});
 
 			// 接口数据
-			if (isDev && config.test.eps) {
+			if (isDev && config.eps) {
 				await service
 					.request({
 						url: "/admin/base/open/eps"
