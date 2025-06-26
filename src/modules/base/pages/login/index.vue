@@ -145,6 +145,10 @@ import { request } from "/@/cool/service/request";
 const { refs, setRefs, router, service } = useCool();
 const { user, app, setting } = useBase();
 
+const logo = ref(setting.setting.logo || app.info.logo);
+const siteName = ref(setting.setting.siteName || app.info.name);
+const copyright = ref(setting.setting.copyright);
+
 const currentPage = ref(0);
 const disabled = ref(false);
 // const bg = ref("./static/img/bg.png");
@@ -169,9 +173,6 @@ const loginChange = (model: string) => {
 const show = ref(true);
 const count = ref(0);
 
-const logo = ref(setting.setting.logo || app.info.logo);
-const siteName = ref(setting.setting.siteName || app.info.name);
-const copyright = ref(setting.setting.copyright);
 // 获取验证码
 // const getCode = async () => {
 // 	if (!form.phone) {

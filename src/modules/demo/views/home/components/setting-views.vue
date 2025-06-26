@@ -57,7 +57,7 @@
 						<tr>
 							<td class="left">go 版本：</td>
 							<td class="right">{{ serverInfo?.goVersion }}</td>
-							<td class="left">gf 版本</td>
+							<td class="left">goframe 版本</td>
 							<td class="right">{{ serverInfo?.gfVersion }}</td>
 						</tr>
 					</tbody>

@@ -1,11 +1,18 @@
 <template>
 	<el-tabs v-model="activeName" type="border-card" @tab-click="handleClick">
-		<el-tab-pane label="编辑线索" name="edit">
-			<el-divider content-position="left" v-if="status == 0">编辑线索</el-divider>
+		<el-tab-pane
+			label="编辑线索"
+			name="edit"
+			v-if="
+				service.customer_pro.clues._permission.update ||
+				service.customer_pro.clues_filter._permission.update
+			"
+		>
+			<el-divider content-position="left">编辑线索</el-divider>
 			<cl-form ref="FormEdit" :inner="true">
 				<template #slot-school_id="{ scope }">
 					<!-- 学校 -->
-					<el-select v-model="scope.school_id" @change="schoolChange">
+					<el-select v-model="scope.schoolId" @change="schoolChange">
 						<el-option
 							v-for="item in schoolList"
 							:key="item.value"
@@ -17,7 +24,7 @@
 
 				<!-- 专业 -->
 				<template #slot-majors_id="{ scope }">
-					<el-select v-model="scope.majors_id">
+					<el-select v-model="scope.majorsId">
 						<el-option
 							v-for="item in majorsList"
 							:key="item.value"
@@ -28,7 +35,11 @@
 				</template>
 			</cl-form>
 		</el-tab-pane>
-		<el-tab-pane label="创建记录" name="order">
+		<el-tab-pane
+			label="创建记录"
+			name="order"
+			v-if="service.customer_pro.clues._permission.followAdd && status == 0"
+		>
 			<div style="min-height: 100px; height: 220px">
 				<!-- <el-divider content-position="left">基本信息</el-divider>
 				<div style="height: 110px">
@@ -39,7 +50,7 @@
 					</cl-crud>
 				</div> -->
 
-				<el-divider content-position="left" v-if="status == 0">创建记录</el-divider>
+				<el-divider content-position="left">创建记录</el-divider>
 
 				<cl-form ref="FormFollow" :inner="true">
 					<template #slot-followType="{ scope }">
@@ -70,7 +81,7 @@
 		<el-tab-pane
 			label="跟进记录"
 			name="follow"
-			v-if="service.customer_pro.clues._permission.followList"
+			v-if="service.customer_pro.clues._permission.followList && status == 0"
 		>
 			<el-divider content-position="left">进度</el-divider>
 			<div style="min-height: 100px; height: 400px; overflow: auto">
@@ -193,7 +204,7 @@
 
 <script lang="ts" name="customeer_pro-subFollow" setup>
 import { useCool } from "/@/cool";
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useCrud, useTable, useForm } from "@cool-vue/crud";
 import { dayjs, ElMessage, FormInstance } from "element-plus";
 import { Edit, ChatLineRound, UserFilled } from "@element-plus/icons-vue";
@@ -265,7 +276,7 @@ const chatContentList = ref<Chat[]>([]);
 const { service } = useCool();
 const flolowContent = ref<FlolowContent[]>([]);
 const visible = ref(false);
-const cluesStatus = ref(0);
+const cluesStatus = computed(() => props.status);
 
 // cl-crud 配置
 const Crud = useCrud({
@@ -292,7 +303,9 @@ const Crud = useCrud({
 	}
 });
 // 标签
-const activeName = ref("order");
+const activeName = computed(() => {
+	return props.status == 0 ? "order" : "edit";
+});
 const handleClick = () => {};
 
 const FormEdit = useForm();
@@ -304,7 +317,7 @@ async function openEdit() {
 			() => {
 				return {
 					label: "53标识",
-					prop: "guest_id",
+					prop: "guestId",
 					span: 12,
 					component: { name: "el-input", props: { disabled: true } }
 				};
@@ -312,7 +325,7 @@ async function openEdit() {
 			() => {
 				return {
 					label: "项目",
-					prop: "project_id",
+					prop: "projectId",
 					span: 12,
 					required: true,
 					component: { name: "el-select", props: {} }
@@ -329,7 +342,7 @@ async function openEdit() {
 			() => {
 				return {
 					label: "IP归属地",
-					prop: "guest_ip_info",
+					prop: "guestIpInfo",
 					span: 12,
 					component: { name: "el-input", props: { disabled: true } }
 				};
@@ -342,7 +355,7 @@ async function openEdit() {
 			},
 			{
 				label: "来源",
-				prop: "source_from",
+				prop: "sourceFrom",
 				span: 12,
 				required: true,
 				component: { name: "el-select" }
@@ -353,36 +366,36 @@ async function openEdit() {
 			{ label: "学历", prop: "education", span: 12, component: { name: "el-select" } },
 			{
 				label: "毕业院校",
-				prop: "graduated_school",
+				prop: "graduatedSchool",
 				span: 12,
 				component: { name: "el-input" }
 			},
 
 			{
 				label: "意向院校",
-				prop: "school_id",
+				prop: "schoolId",
 				span: 12,
 				component: { name: "slot-school_id" }
 			},
 			{
 				label: "意向专业",
-				prop: "majors_id",
+				prop: "majorsId",
 				span: 12,
 				component: { name: "slot-majors_id" }
 			},
 
-			{ label: "报读类型", prop: "majors_type", span: 12, component: { name: "el-select" } },
-			{ label: "报读层次", prop: "degree_id", span: 12, component: { name: "el-select" } },
+			{ label: "报读类型", prop: "majorsType", span: 12, component: { name: "el-select" } },
+			{ label: "报读层次", prop: "degreeId", span: 12, component: { name: "el-select" } },
 
 			{
 				label: "户口类型",
-				prop: "household_type",
+				prop: "householdType",
 				span: 12,
 				component: { name: "el-select" }
 			},
 			{
 				label: "户籍地址",
-				prop: "household_address",
+				prop: "householdAddress",
 				span: 12,
 				component: { name: "el-input" }
 			},
@@ -406,7 +419,7 @@ async function openEdit() {
 			},
 			{
 				label: "紧急联系人电话",
-				prop: "emergency_mobile",
+				prop: "emergencyMobile",
 				props: {
 					labelWidth: "130px"
 				},
@@ -429,7 +442,7 @@ async function openEdit() {
 				// 项目
 				const projectList = await service.customer_pro.project.list();
 				FormEdit.value?.setOptions(
-					"project_id",
+					"projectId",
 					projectList.map((e) => {
 						return {
 							label: e.name,
@@ -441,7 +454,7 @@ async function openEdit() {
 				// 报读类型
 				const majorsTypeList = await service.customer_pro.readtypes.list();
 				FormEdit.value?.setOptions(
-					"majors_type",
+					"majorsType",
 					majorsTypeList.map((e) => {
 						return {
 							label: e.name,
@@ -453,7 +466,7 @@ async function openEdit() {
 				// 报读层次
 				const degreeList = await service.customer_pro.readdegree.list();
 				FormEdit.value?.setOptions(
-					"degree_id",
+					"degreeId",
 					degreeList.map((e) => {
 						return {
 							label: e.name,
@@ -463,7 +476,7 @@ async function openEdit() {
 				);
 
 				// 户口性质
-				FormEdit.value?.setOptions("household_type", [
+				FormEdit.value?.setOptions("householdType", [
 					{
 						label: "城镇",
 						value: "1"
@@ -494,7 +507,7 @@ async function openEdit() {
 				]);
 
 				// 来源
-				FormEdit.value?.setOptions("source_from", [
+				FormEdit.value?.setOptions("sourceFrom", [
 					{
 						label: "手动录入",
 						value: "1"

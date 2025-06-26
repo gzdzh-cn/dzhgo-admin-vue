@@ -216,17 +216,15 @@ const Upsert = useUpsert({
 		});
 
 		// 类别
-		service.base.sys.addonsType.list().then((res) => {
-			Upsert.value?.setOptions(
-				"typeId",
-				res.map((e) => {
-					return {
-						label: e.name || "",
-						value: e.id
-					};
-				})
-			);
-		});
+		Upsert.value?.setOptions(
+			"typeId",
+			typeList.value.map((e) => {
+				return {
+					label: e.name || "",
+					value: e.id
+				};
+			})
+		);
 	}
 });
 
@@ -251,7 +249,7 @@ const Crud = useCrud(
 			// 渲染数据
 			render(list, pagination);
 
-			typeList.value = await service.base.sys.addonsType.list();
+			typeList.value = await service.base.sys.addonsTypes.list();
 		}
 	},
 	(app) => {

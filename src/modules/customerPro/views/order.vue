@@ -619,7 +619,6 @@ const Crud = useCrud(
 		async onRefresh(params, { next, render }) {
 			// 1 默认调用
 			const { list, pagination } = await next(params);
-
 			ids.value = list.map((e) => e.id);
 
 			// 渲染数据

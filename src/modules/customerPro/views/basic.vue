@@ -1,7 +1,7 @@
 <template>
 	<div class="view-my">
 		<el-tabs type="border-card">
-			<el-tab-pane label="基础配置">
+			<el-tab-pane label="分配配置">
 				<div style="margin: 0 auto">
 					<cl-form ref="configFormRef" :inner="true">
 						<template #slot-projectAllGroup="{ scope }">
@@ -32,14 +32,24 @@
 								>设置项目管理，每个项目是否可以添加多个项目管理员</span
 							>
 						</template>
+						<template #slot-groupMultiManger="{ scope }">
+							<el-switch
+								v-model="scope.groupMultiManger"
+								:active-value="switchV.active"
+								:inactiv-value="switchV.inactiv"
+								active-text="多个"
+								inactive-text="单个"
+								inline-prompt
+								style="width: 80px"
+							/>
+							<span style="padding-left: 10px; color: #ff6b6b"
+								>设置项目管理，每个组别是否可以添加多个主管</span
+							>
+						</template>
 					</cl-form>
 				</div>
 			</el-tab-pane>
 		</el-tabs>
-
-		<!-- <el-form-item style="margin-top: 30px">
-			<el-button type="primary" :disabled="loading" @click="save">保存修改</el-button>
-		</el-form-item> -->
 	</div>
 </template>
 <script lang="ts" name="base-setting" setup>
@@ -48,14 +58,14 @@ import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElLoading } from "element-plus";
 import { useForm } from "@cool-vue/crud";
 
-interface Contact {
-	contactName: string;
-	imgUrl: string;
-}
+// interface Contact {
+// 	contactName: string;
+// 	imgUrl: string;
+// }
 
 const { service } = useCool();
-const payType = ref([1, 2]);
-const basicForm: any = ref({}); // 表单数据
+// const payType = ref([1, 2]);
+// const basicForm: any = ref({}); // 表单数据
 const switchV = reactive({
 	active: 1,
 	inactiv: 0
@@ -65,7 +75,10 @@ const configFormRef = useForm();
 const configFormOpen = async () => {
 	const basic = await service.customer_pro.basic.info({ id: 1 });
 	configFormRef.value?.open({
-		title: "基础配置",
+		title: "配置",
+		props: {
+			labelWidth: 150
+		},
 		items: [
 			{
 				label: "分配其他组员",
@@ -76,7 +89,7 @@ const configFormOpen = async () => {
 				}
 			},
 			{
-				label: "多个项目主管",
+				label: "多个项目管理员",
 				prop: "projectMultiManger",
 				component: {
 					name: "slot-projectMultiManger",
@@ -84,9 +97,18 @@ const configFormOpen = async () => {
 				}
 			},
 			{
+				label: "多个组主管",
+				prop: "groupMultiManger",
+				component: {
+					name: "slot-groupMultiManger",
+					props: {}
+				}
+			},
+			{
 				label: "分配方式",
 				prop: "allotType",
 				value: 1,
+				span: 6,
 				component: {
 					name: "el-select",
 					options: [
@@ -106,12 +128,27 @@ const configFormOpen = async () => {
 				}
 			},
 			{
-				label: "分配列表",
-				prop: "allotServicesNames",
+				label: "当前分配人数",
+				prop: "sliceNum",
+				span: 6,
+				hook: {
+					bind: (value, { form }) => {
+						return form.allotServicesNames.split(",").length;
+					}
+				},
+				value: 0,
 				component: { name: "el-input", props: { disabled: true } }
 			},
 			{
-				label: "下次分配",
+				label: "分配列表",
+				prop: "allotServicesNames",
+				component: {
+					name: "el-input",
+					props: { type: "textarea", rows: 10, disabled: true }
+				}
+			},
+			{
+				label: "当前分配",
 				prop: "userName",
 				component: { name: "el-input", props: { disabled: true } }
 			}
@@ -120,12 +157,15 @@ const configFormOpen = async () => {
 			...basic
 		},
 		on: {
-			async open() {},
-			submit(data, { close, done }) {
+			async open() {
+				// const arr = data.allotServicesNames.split
+				// configFormRef.value?.setForm("sliceNum", data.allotServicesNames.length);
+			},
+			submit(data, { done }) {
 				service.customer_pro.basic.update({ ...data }).then(() => {
 					done();
 					// close();
-					configFormOpen();
+					// configFormOpen();
 					ElMessage.success("保存成功");
 				});
 			}
@@ -134,27 +174,6 @@ const configFormOpen = async () => {
 			buttons: ["save"]
 		}
 	});
-};
-
-// 获取资料
-const getInfo = async () => {
-	basicForm.value = await service.customer_pro.basic.info({ id: 1 });
-};
-// 保存状态
-const loading = ref(false);
-const loadingPage = ref();
-
-// 保存
-const save = () => {
-	loading.value = false;
-	service.customer_pro.basic
-		.update({
-			id: 1,
-			...basicForm.value
-		})
-		.then(() => {
-			ElMessage.success("更新成功");
-		});
 };
 
 onMounted(() => {

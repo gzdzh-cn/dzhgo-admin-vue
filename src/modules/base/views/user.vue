@@ -152,7 +152,8 @@ const Upsert = useUpsert({
 				component: {
 					name: "el-input",
 					props: {
-						type: "password"
+						type: "password",
+						clearable: true
 					}
 				},
 				rules: [

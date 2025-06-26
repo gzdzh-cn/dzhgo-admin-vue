@@ -109,6 +109,14 @@ const Table = useTable({
 		{ label: "头像", prop: "headimgurl", component: { name: "cl-image" } },
 		{ label: "用户", prop: "userName" },
 		{ label: "微信昵称", prop: "nickname" },
+		{
+			label: "关注公众号",
+			prop: "subscribe",
+			formatter(row, column, value, index) {
+				return value ? "已关注" : "未关注";
+			}
+		},
+
 		{ label: "unionid", prop: "unionid" },
 		{ label: "openid", prop: "openid" },
 

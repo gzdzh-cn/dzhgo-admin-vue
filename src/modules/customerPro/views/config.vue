@@ -85,8 +85,6 @@
 							align-items: center;
 						"
 					>
-						<!-- <el-image style="width: 180px; height: 180px" :src="url" fit="fill" /> -->
-
 						<vue-qr
 							id="payQR"
 							v-if="basicForm.wpSubscribeUrl"
@@ -124,9 +122,10 @@ import { useCool } from "/@/cool";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import vueQr from "vue-qr/src/packages/vue-qr.vue";
+import { useBase } from "/$/base";
 
 const { service } = useCool();
-
+const { user } = useBase();
 const userInfo = ref();
 const isAdmin = ref(false);
 const loading = ref(false); // 保存状态
@@ -167,13 +166,13 @@ const save = () => {
 // 获取账号信息
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
-	isAdmin.value = userInfo.value.roleIds.split(",").includes("1");
+
+	isAdmin.value = user.info.roleIds?.split(",").includes("1");
 	console.log("isAdmin", isAdmin.value);
 };
 
 onMounted(async () => {
 	await getUserInfo();
-	console.log("userInfo", userInfo.value);
 	getForm();
 });
 </script>

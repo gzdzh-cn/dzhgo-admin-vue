@@ -41,7 +41,25 @@
 				</cl-row>
 
 				<!-- 新增、编辑 -->
-				<cl-upsert ref="Upsert" />
+				<cl-upsert ref="Upsert">
+					<!-- slot-cluesRule -->
+					<template #slot-cluesRule="{ scope }">
+						<div class="rule">
+							<el-checkbox-group v-model="scope.checkWeekList">
+								<template v-for="(item, index) in weeks" :key="index">
+									<el-checkbox :label="item" :value="item" />
+								</template>
+							</el-checkbox-group>
+							<div>
+								<div>
+									<span>每天数量：</span>
+									<el-input-number v-model="scope.receivedCluesNum" />
+								</div>
+								<span class="warning">注意：默认 0 是不限制</span>
+							</div>
+						</div>
+					</template>
+				</cl-upsert>
 
 				<!-- 移动 -->
 				<project-move :ref="setRefs('projectMove')" />
@@ -72,6 +90,7 @@ const groupId = ref(); //组别id
 const groupTitle = ref(); // 组别名称
 const projectId = ref(); //项目id
 const subTree = ref(); //子组件
+const weeks = ref(["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -79,25 +98,58 @@ const Upsert = useUpsert({
 		{ label: "客服组名称", prop: "name", required: true, component: { name: "el-input" } },
 		{ label: "项目", prop: "projectId", required: true, component: { name: "el-select" } },
 		{
+			label: "线索规则",
+			prop: "cluesRule",
+			component: { name: "slot-cluesRule" }
+		},
+		{
+			label: "选中星期",
+			prop: "checkWeekList",
+			hook: {
+				bind: (value) => {
+					const weekMap: Record<string, string> = {
+						"1": "星期一",
+						"2": "星期二",
+						"3": "星期三",
+						"4": "星期四",
+						"5": "星期五",
+						"6": "星期六",
+						"7": "星期日"
+					};
+					return (
+						value &&
+						value
+							.split(",")
+							.map(Number)
+							.filter(Boolean)
+							.map((num: number) => weekMap[num.toString()])
+					);
+				},
+				submit: (value) => {
+					const weekMap: Record<string, string> = {
+						星期一: "1",
+						星期二: "2",
+						星期三: "3",
+						星期四: "4",
+						星期五: "5",
+						星期六: "6",
+						星期日: "7"
+					};
+					return value.map((name: string) => weekMap[name]).join(",");
+				}
+			},
+			value: "1,2,3,4,5,6,7"
+		},
+		{
+			label: "接收数量",
+			prop: "receivedCluesNum",
+			value: 10
+		},
+		{
 			label: "备注",
 			prop: "remark",
 			component: { name: "el-input", props: { type: "textarea", rows: 4 } }
 		}
-		// {
-		// 	label: "状态",
-		// 	prop: "status",
-		// 	value: 1,
-		// 	component: {
-		// 		name: "cl-switch",
-		// 		props: {
-		// 			activeValue: 1,
-		// 			inactiveValue: 0,
-		// 			activeText: "开启",
-		// 			inactiveText: "关闭",
-		// 			inlinePrompt: true
-		// 		}
-		// 	}
-		// }
 	],
 	async onOpen() {
 		const projectList = await service.customer_pro.project.list();
@@ -131,6 +183,14 @@ const Table = useTable({
 	columns: [
 		{ type: "selection" },
 		{ label: "客服组名称", prop: "name" },
+		{
+			label: "每天上限",
+			prop: "receivedCluesNum",
+			formatter(row) {
+				return row.receivedCluesNum == 0 ? "不限制" : row.receivedCluesNum;
+			}
+		},
+		{ label: "今天总数", prop: "hasReceive" },
 
 		// {
 		// 	label: "状态",
@@ -146,13 +206,13 @@ const Table = useTable({
 		// 		}
 		// 	}
 		// },
-		{
-			label: "备注",
-			prop: "remark",
-			minWidth: 150,
-			showOverflowTooltip: true
-		},
-		{ label: "创建时间", prop: "createTime" },
+		// {
+		// 	label: "备注",
+		// 	prop: "remark",
+		// 	minWidth: 150,
+		// 	showOverflowTooltip: true
+		// },
+		{ label: "创建时间", prop: "createTime", width: 160 },
 		{ type: "op", width: 220, buttons: ["edit", "slot-add"] }
 	]
 });
@@ -211,3 +271,10 @@ watch(drawerKf, (v) => {
 	}
 });
 </script>
+
+<style lang="scss" scoped>
+.warning {
+	padding: 0 10px;
+	color: #d05a5a;
+}
+</style>

@@ -1,22 +1,29 @@
 <template>
 	<div class="app-views">
 		<router-view v-slot="{ Component }">
-			<el-scrollbar>
-				<transition :name="app.info.router.transition">
-					<keep-alive :include="caches">
-						<component :is="Component" />
-					</keep-alive>
-				</transition>
-			</el-scrollbar>
+			<div style="height: 96%">
+				<el-scrollbar>
+					<transition :name="app.info.router.transition">
+						<keep-alive :include="caches">
+							<component :is="Component" />
+						</keep-alive>
+					</transition>
+				</el-scrollbar>
+			</div>
+			<div class="preload__footer">
+				<a v-html="copyright"> </a>
+			</div>
 		</router-view>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useBase } from "/$/base";
 
-const { process, app } = useBase();
+const { process, app, setting } = useBase();
+
+const copyright = ref(setting.setting.copyright);
 
 // 缓存列表
 const caches = computed(() => {
@@ -32,8 +39,8 @@ const caches = computed(() => {
 .app-views {
 	flex: 1;
 	overflow: hidden;
-	margin: 10px 20px;
-	margin-bottom: 20px;
+	margin: 0px 20px;
+	// margin-bottom: 20px;
 	height: 100%;
 	width: calc(100% - 30px);
 	box-sizing: border-box;

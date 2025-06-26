@@ -67,7 +67,25 @@
 		</cl-row>
 
 		<!-- 新增、编辑 -->
-		<cl-upsert ref="Upsert" />
+		<cl-upsert ref="Upsert">
+			<!-- slot-cluesRule -->
+			<template #slot-cluesRule="{ scope }">
+				<div class="rule">
+					<el-checkbox-group v-model="scope.checkWeekList">
+						<template v-for="(item, index) in weeks" :key="index">
+							<el-checkbox :label="item" :value="item" />
+						</template>
+					</el-checkbox-group>
+					<div>
+						<div>
+							<span>每天数量：</span>
+							<el-input-number v-model="scope.receivedCluesNum" />
+						</div>
+						<span class="warning">注意：默认 0 是不限制</span>
+					</div>
+				</div>
+			</template>
+		</cl-upsert>
 
 		<!-- 移动 -->
 		<kf-move :ref="setRefs('kfMove')" />
@@ -89,6 +107,7 @@ const props = defineProps({
 });
 
 const userMap = ref<{ [key: string]: string }>({});
+const weeks = ref(["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -97,7 +116,58 @@ const Upsert = useUpsert({
 			label: "客服名称",
 			prop: "userId",
 			required: true,
+			hidden() {
+				return Upsert.value?.mode == "update";
+			},
 			component: { name: "el-select" }
+		},
+		{
+			label: "线索规则",
+			prop: "cluesRule",
+			component: { name: "slot-cluesRule" }
+		},
+		{
+			label: "选中星期",
+			prop: "checkWeekList",
+			hook: {
+				bind: (value) => {
+					const weekMap: Record<string, string> = {
+						"1": "星期一",
+						"2": "星期二",
+						"3": "星期三",
+						"4": "星期四",
+						"5": "星期五",
+						"6": "星期六",
+						"7": "星期日"
+					};
+					return (
+						value &&
+						value
+							.split(",")
+							.map(Number)
+							.filter(Boolean)
+							.map((num: number) => weekMap[num.toString()])
+					);
+				},
+				submit: (value) => {
+					const weekMap: Record<string, string> = {
+						星期一: "1",
+						星期二: "2",
+						星期三: "3",
+						星期四: "4",
+						星期五: "5",
+						星期六: "6",
+						星期日: "7"
+					};
+					return value.map((name: string) => weekMap[name]).join(",");
+				}
+			},
+			value: "1,2,3,4,5,6,7"
+		},
+		{
+			label: "接收数量",
+			prop: "receivedCluesNum",
+			value: 10
 		},
 		{
 			label: "备注",
@@ -107,7 +177,10 @@ const Upsert = useUpsert({
 		{
 			label: "推送",
 			prop: "status",
-			value: 1,
+			value: 0,
+			hidden() {
+				return Upsert.value?.mode == "update";
+			},
 			component: {
 				name: "cl-switch",
 				props: {
@@ -121,16 +194,6 @@ const Upsert = useUpsert({
 		}
 	],
 	async onOpen(data) {
-		if (Upsert.value?.mode == "update") {
-			Upsert.value?.setProps("userId", {
-				disabled: true
-			});
-		} else {
-			Upsert.value?.setProps("userId", {
-				disabled: false
-			});
-		}
-
 		Upsert.value?.setOptions("userId", []);
 		const kfList = await service.customer_pro.kf.getList({
 			roleId: "1815245038695747584",
@@ -140,7 +203,7 @@ const Upsert = useUpsert({
 		});
 		Upsert.value?.setOptions(
 			"userId",
-			kfList.map((e: { name: string; id: string }) => {
+			kfList.map((e: { name: any; id: any }) => {
 				userMap.value[e.id] = e.name;
 				return {
 					label: e.name,
@@ -172,8 +235,17 @@ const Table = useTable({
 			prop: "name"
 		},
 		{
+			label: "每天上限",
+			prop: "receivedCluesNum",
+			formatter(row) {
+				return row.receivedCluesNum == 0 ? "不限制" : row.receivedCluesNum;
+			}
+		},
+		{ label: "今天总数", prop: "hasReceive" },
+		{
 			label: "接收推送",
 			prop: "status",
+			width: 160,
 			component: {
 				name: "cl-switch",
 				props: {
@@ -185,14 +257,14 @@ const Table = useTable({
 				}
 			}
 		},
-		{
-			label: "备注",
-			prop: "remark",
-			minWidth: 150,
-			showOverflowTooltip: true
-		},
-		{ label: "创建时间", prop: "createTime" },
-		{ type: "op", width: 400, buttons: ["edit", "slot-set_Gadmin"] }
+		// {
+		// 	label: "备注",
+		// 	prop: "remark",
+		// 	minWidth: 150,
+		// 	showOverflowTooltip: true
+		// },
+		{ label: "创建时间", prop: "createTime", width: 160 },
+		{ type: "op", width: 200, buttons: ["edit", "slot-set_Gadmin"] }
 	]
 });
 
@@ -224,7 +296,7 @@ const setRole = (row: any, action: boolean, type: number) => {
 			groupId: row.groupId,
 			type: "group"
 		})
-		.then((res) => {
+		.then(() => {
 			ElMessage.success("设置成功");
 			Crud.value?.refresh();
 		})
@@ -246,3 +318,15 @@ async function toMove(item?: any) {
 	refs.kfMove.open(ids);
 }
 </script>
+
+<style lang="scss" scoped>
+.rule {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+.warning {
+	padding: 0 10px;
+	color: #d05a5a;
+}
+</style>

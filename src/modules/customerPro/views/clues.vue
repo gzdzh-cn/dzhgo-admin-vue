@@ -27,21 +27,21 @@
 				v-permission="service.customer_pro.clues._permission.distribute"
 				>分配</el-button
 			>
-			<el-popconfirm title="会清空当前系统的数据，确定迁移数据吗?" @confirm="migrateData()">
+			<!-- <el-popconfirm title="会清空当前系统的数据，确定迁移数据吗?" @confirm="migrateData()">
 				<template #reference>
 					<el-button v-if="isAdmin" bg type="danger">迁移数据</el-button>
 				</template>
-			</el-popconfirm>
+			</el-popconfirm> -->
 
-			<el-popconfirm title="清空当前系统全部数据吗?" @confirm="clearData()">
+			<!-- <el-popconfirm title="清空当前系统全部数据吗?" @confirm="clearData()">
 				<template #reference>
 					<el-button v-if="isAdmin" bg type="info">清除数据</el-button>
 				</template>
-			</el-popconfirm>
+			</el-popconfirm> -->
 
-			<el-button plain @click="randomDialog = true" style="margin-right: 10px" v-if="isAdmin">
+			<!-- <el-button plain @click="randomDialog = true" style="margin-right: 10px" v-if="isAdmin">
 				生成随机数据
-			</el-button>
+			</el-button> -->
 
 			<!-- <cl-export-btn
 				:columns="Table?.columns"
@@ -58,7 +58,7 @@
 			<!-- 高级按钮 -->
 			<cl-adv-btn />
 			<!-- 关键字搜索 -->
-			<cl-search-key />
+			<cl-search-key ref="searchRef" />
 		</cl-row>
 
 		<cl-row>
@@ -72,6 +72,7 @@
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p v-if="isAdmin">唯一码: {{ scope.row?.id }}</p>
+						<p>guestId: {{ scope.row?.guestId }}</p>
 						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
 							创建者: {{ scope.row?.createdName }}
 						</p>
@@ -83,7 +84,7 @@
 						<p v-if="scope.row?.level">
 							线索等级: {{ levelFormatter(scope.row?.level) }}
 						</p>
-						<p>IP归属地: {{ scope.row?.guest_ip_info }}</p>
+						<p>IP归属地: {{ scope.row?.guestIpInfo }}</p>
 						<p>
 							最后跟进时间:
 							{{
@@ -97,6 +98,9 @@
 							{{ scope.row?.createTime }}
 						</p>
 						<p v-if="scope.row?.remark">备注: {{ scope.row?.remark }}</p>
+						<p v-if="scope.row?.filterRemark">
+							过滤原因: {{ scope.row?.filterRemark }}
+						</p>
 					</div>
 				</template>
 
@@ -187,7 +191,7 @@
 		</cl-upsert>
 
 		<!-- 项目分配 -->
-		<cl-form ref="DistributeFormRef">
+		<cl-form ref="distributeFormRef">
 			<template #slot-project_id="{ scope }">
 				<el-select v-model="scope.project_id" @change="projectChange">
 					<el-option
@@ -225,32 +229,6 @@
 		<!-- 跟进弹窗 -->
 		<cl-dialog title="跟进" v-model="visible">
 			<sub-follow ref="FollowRef" :id="cluesId" :status="cluesStatus" @cancel="cancel" />
-			<template #footer>
-				<div class="dialog-footer">
-					<!-- 
-					<el-popconfirm title="确定放入公海吗?" @confirm="pushCommonClause">
-						<template #reference>
-							<el-button
-								type="warning"
-								v-if="
-									cluesStatus == 0 &&
-									service.customer_pro.clues._permission.pushCommonClause
-								"
-							>
-								放入公海
-							</el-button>
-						</template>
-					</el-popconfirm>
-					<el-button @click="visible = false">取消</el-button>
-					<el-button
-						type="success"
-						@click="followSave"
-						v-if="cluesStatus == 0 && service.customer_pro.clues._permission.followAdd"
-					>
-						保存
-					</el-button> -->
-				</div>
-			</template>
 		</cl-dialog>
 
 		<!-- 轨迹弹窗 -->
@@ -307,6 +285,10 @@
 					导出全部
 				</el-button>
 			</div>
+
+			<div class="excel-table">
+				<excel-down ref="excelDownRef" :clues_status="clues_status" :isAdmin="isAdmin" />
+			</div>
 		</cl-dialog>
 
 		<cl-dialog title="生成随机数据" v-model="randomDialog">
@@ -335,12 +317,15 @@ import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/c
 import { useCool } from "/@/cool";
 import { ElMessage, TabsPaneContext, ElLoading } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
+import excelDown from "../components/clues/excelDown.vue";
 import { useDict } from "/$/dict";
+import { useBase } from "/$/base";
 
 const { service } = useCool();
+const { user } = useBase();
 const FollowRef = ref(); //跟进
 const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
@@ -351,14 +336,16 @@ const isExtend = ref(true); //展开
 const serviceGroup = ref(); // 客服组
 const openExcel = ref(false); //打开导出弹窗
 const { dict } = useDict();
-
+const clues_status = ref(0);
+const searchRef = ref();
+const keyWord = ref();
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
 		() => {
 			return {
 				label: "53标识",
-				prop: "guest_id",
+				prop: "guestId",
 				span: 12,
 				hidden: Upsert.value?.mode == "add",
 				component: { name: "el-input", props: { disabled: true } }
@@ -367,7 +354,7 @@ const Upsert = useUpsert({
 		() => {
 			return {
 				label: "项目",
-				prop: "project_id",
+				prop: "projectId",
 				span: 12,
 				required: true,
 				component: { name: "el-select", props: { disabled: Upsert.value?.mode !== "add" } }
@@ -385,7 +372,7 @@ const Upsert = useUpsert({
 		() => {
 			return {
 				label: "IP归属地",
-				prop: "guest_ip_info",
+				prop: "guestIpInfo",
 				span: 12,
 				hidden: Upsert.value?.mode == "add",
 				component: { name: "el-input", props: { disabled: true } }
@@ -411,16 +398,16 @@ const Upsert = useUpsert({
 		{ label: "微信号", prop: "wechat", span: 12, component: { name: "el-input" } },
 
 		{ label: "学历", prop: "education", span: 12, component: { name: "el-select" } },
-		{ label: "毕业院校", prop: "graduated_school", span: 12, component: { name: "el-input" } },
+		{ label: "毕业院校", prop: "graduatedSchool", span: 12, component: { name: "el-input" } },
 
-		{ label: "意向院校", prop: "school_id", span: 12, component: { name: "slot-school_id" } },
-		{ label: "意向专业", prop: "majors_id", span: 12, component: { name: "slot-majors_id" } },
+		{ label: "意向院校", prop: "schoolId", span: 12, component: { name: "slot-school_id" } },
+		{ label: "意向专业", prop: "majorsId", span: 12, component: { name: "slot-majors_id" } },
 
-		{ label: "报读类型", prop: "majors_type", span: 12, component: { name: "el-select" } },
-		{ label: "报读层次", prop: "degree_id", span: 12, component: { name: "el-select" } },
+		{ label: "报读类型", prop: "majorsType", span: 12, component: { name: "el-select" } },
+		{ label: "报读层次", prop: "degreeId", span: 12, component: { name: "el-select" } },
 
-		{ label: "户口类型", prop: "household_type", span: 12, component: { name: "el-select" } },
-		{ label: "户籍地址", prop: "household_address", span: 12, component: { name: "el-input" } },
+		{ label: "户口类型", prop: "householdType", span: 12, component: { name: "el-select" } },
+		{ label: "户籍地址", prop: "householdAddress", span: 12, component: { name: "el-input" } },
 
 		{
 			label: "线索等级",
@@ -441,7 +428,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "紧急联系人电话",
-			prop: "emergency_mobile",
+			prop: "emergencyMobile",
 			props: {
 				labelWidth: "130px"
 			},
@@ -454,14 +441,14 @@ const Upsert = useUpsert({
 			component: { name: "el-input", props: { type: "textarea", rows: 4 } }
 		}
 	],
-	async onOpen(data) {
+	async onOpen() {
 		// 学校列表
 		getSchoolList();
 
 		// 项目
 		const projectList = await service.customer_pro.project.list();
 		Upsert.value?.setOptions(
-			"project_id",
+			"projectId",
 			projectList.map((e) => {
 				return {
 					label: e.name,
@@ -473,7 +460,7 @@ const Upsert = useUpsert({
 		// 报读类型
 		const majorsTypeList = await service.customer_pro.readtypes.list();
 		Upsert.value?.setOptions(
-			"majors_type",
+			"majorsType",
 			majorsTypeList.map((e) => {
 				return {
 					label: e.name,
@@ -485,7 +472,7 @@ const Upsert = useUpsert({
 		// 报读层次
 		const degreeList = await service.customer_pro.readdegree.list();
 		Upsert.value?.setOptions(
-			"degree_id",
+			"degreeId",
 			degreeList.map((e) => {
 				return {
 					label: e.name,
@@ -495,7 +482,7 @@ const Upsert = useUpsert({
 		);
 
 		// 户口性质
-		Upsert.value?.setOptions("household_type", [
+		Upsert.value?.setOptions("householdType", [
 			{
 				label: "城镇",
 				value: "1"
@@ -606,11 +593,9 @@ const Table = useTable({
 			prop: "name",
 			width: 150
 		},
-
 		{ label: "手机号", prop: "mobile" },
 		{ label: "微信号", prop: "wechat" },
 		{ label: "关键词", prop: "keywords" },
-
 		{
 			label: "跟进状态",
 			prop: "followupType",
@@ -640,6 +625,10 @@ const Crud = useCrud(
 		service: service.customer_pro.clues,
 		async onRefresh(params, { render }) {
 			searchData.value = params;
+			params.status = 0;
+			if (params?.keyWord != "") {
+				keyWord.value = params?.keyWord;
+			}
 			const { list, pagination } = await service.customer_pro.clues.page(params);
 			render(list, pagination);
 		}
@@ -690,44 +679,44 @@ const randomData = async () => {
 };
 
 // 迁移数据
-const migrateData = async () => {
-	const info = await service.customer_pro.config.info({ id: 1 });
-	service.customer_pro.config
-		.migrateData()
-		.then(() => {
-			ElMessage.success("迁移执行中，请稍等5分钟再刷新页面");
-		})
-		.catch((e) => {
-			ElMessage.error(e.message);
-		});
-};
+// const migrateData = async () => {
+// 	const info = await service.customer_pro.config.info({ id: 1 });
+// 	service.customer_pro.config
+// 		.migrateData()
+// 		.then(() => {
+// 			ElMessage.success("迁移执行中，请稍等5分钟再刷新页面");
+// 		})
+// 		.catch((e) => {
+// 			ElMessage.error(e.message);
+// 		});
+// };
 
 //清除数据
-const clearData = async () => {
-	service.customer_pro.config.clearTable().then(() => {
-		ElMessage.success("清除数据完成");
-		refresh();
-	});
-};
+// const clearData = async () => {
+// 	service.customer_pro.config.clearTable().then(() => {
+// 		ElMessage.success("清除数据完成");
+// 		refresh();
+// 	});
+// };
 
 // 导出
-const onExportData = async (params: any) => {
-	return Table.value?.selection;
-};
+// const onExportData = async (params: any) => {
+// 	return Table.value?.selection;
+// };
 
 // 切换类型
-const handleClick = (tab: TabsPaneContext) => {
-	refresh({ followType: tab.index });
-};
+// const handleClick = (tab: TabsPaneContext) => {
+// 	refresh({ followType: tab.index });
+// };
 
 // 编辑
-const edit = (row: any) => {
-	if (row.status == 0) {
-		Crud.value?.rowEdit(row);
-	} else {
-		Crud.value?.rowInfo(row);
-	}
-};
+// const edit = (row: any) => {
+// 	if (row.status == 0) {
+// 		Crud.value?.rowEdit(row);
+// 	} else {
+// 		Crud.value?.rowInfo(row);
+// 	}
+// };
 
 // 轨迹弹窗
 const trackVisible = ref(false);
@@ -745,9 +734,9 @@ const openFollow = (row: any) => {
 };
 
 // 保存跟进
-const followSave = () => {
-	FollowRef.value.sub();
-};
+// const followSave = () => {
+// 	FollowRef.value.sub();
+// };
 
 // 取消
 const cancel = () => {
@@ -756,10 +745,10 @@ const cancel = () => {
 };
 
 // 保存到公海
-const pushCommonClause = () => {
-	FollowRef.value.pushCommonClause();
-	refresh();
-};
+// const pushCommonClause = () => {
+// 	FollowRef.value.pushCommonClause();
+// 	refresh();
+// };
 
 // 线索成交
 const OrderFormRef = useForm(); //成交表单
@@ -1157,12 +1146,12 @@ const openOrderAdd = async (row: any) => {
 };
 
 // 分配表单打开
-const DistributeFormRef = useForm(); //分配表单
+const distributeFormRef = useForm(); //分配表单
 const openDistribute = async () => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("group_id", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 
 	projectList.value = await service.customer_pro.project.list();
 	const ids = Crud.value?.selection.map((e) => {
@@ -1170,7 +1159,7 @@ const openDistribute = async () => {
 	});
 
 	// const item: any = [];
-	DistributeFormRef.value?.open({
+	distributeFormRef.value?.open({
 		title: `分配`,
 		items: [
 			{
@@ -1226,9 +1215,9 @@ const projectId = ref();
 // 项目id改变
 const projectChange = (v: any) => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("group_id", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 	projectId.value = v;
 	getGroupList(v);
 };
@@ -1236,7 +1225,7 @@ const projectChange = (v: any) => {
 // 组别id改变
 const groupChange = (v: any) => {
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 	getKfList(v, projectId.value);
 };
 
@@ -1381,8 +1370,24 @@ const AdvSearch = useAdvSearch({
 			}
 		},
 		{
-			label: "时间",
+			label: "创建时间",
 			prop: "datetimerange",
+			component: {
+				name: "el-date-picker",
+				props: {
+					type: "datetimerange",
+					startPlaceholder: "开始日期",
+					endPlaceholder: "结束日期",
+					defaultTime: defaultTime,
+					value: "YYYY-MM-DD HH:mm",
+					valueFormat: "YYYY-MM-DD HH:mm",
+					timeFormat: "HH:mm"
+				}
+			}
+		},
+		{
+			label: "更新时间",
+			prop: "updatetimerange",
 			component: {
 				name: "el-date-picker",
 				props: {
@@ -1412,7 +1417,7 @@ const userInfo = ref();
 const isAdmin = ref(false);
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
-	isAdmin.value = userInfo.value.roleIds.split(",").includes("1");
+	isAdmin.value = user.info.roleIds?.split(",").includes("1");
 };
 
 // 来源
@@ -1470,6 +1475,7 @@ const openExcelDialog = () => {
 };
 
 const fullscreenLoading = ref(false);
+const excelDownRef = ref();
 // 导出excel
 const toexcel = async (isCurrent: boolean) => {
 	const loading = ElLoading.service({
@@ -1477,24 +1483,32 @@ const toexcel = async (isCurrent: boolean) => {
 		text: "Loading",
 		background: "rgba(0, 0, 0, 0.7)"
 	});
-	const downLoadUrl = await service.customer_pro.clues.excel({
+	const result = await service.customer_pro.clues.excel({
 		...searchData.value,
+		keyWord: keyWord.value,
 		isCurrentPage: isCurrent
 	});
 
 	loading.close();
 
-	// 创建一个隐藏的<a>标签
-	const link = document.createElement("a");
-	link.href = downLoadUrl;
-	link.download = ""; // 可以设置文件名，留空则按服务器提供的文件名
-	// 将标签添加到页面并触发点击
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
-	openExcel.value = false;
-};
+	if (result.status == 1) {
+		ElMessage.warning(result.msg);
+	} else {
+		ElMessage.success("导出任务已启动，请等待完成");
+		excelDownRef.value.refresh();
+	}
 
+	return;
+};
+watch(
+	() => openExcel.value,
+	(val) => {
+		if (!val) {
+			console.log("停止任务");
+			excelDownRef.value.stopInterval();
+		}
+	}
+);
 onMounted(async () => {
 	await getUserInfo();
 	await getServiceGroup();
@@ -1525,5 +1539,8 @@ onMounted(async () => {
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
+}
+.excel-table {
+	height: 600px;
 }
 </style>

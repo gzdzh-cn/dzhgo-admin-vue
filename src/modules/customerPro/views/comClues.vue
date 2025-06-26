@@ -451,6 +451,7 @@ const Crud = useCrud(
 		service: service.customer_pro.comClues,
 		async onRefresh(params, { next, render }) {
 			params.oceanTime = true;
+			params.status = 2;
 			const { list, pagination } = await next(params);
 			render(list, pagination);
 		}
