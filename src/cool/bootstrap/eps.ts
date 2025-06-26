@@ -17,7 +17,7 @@ const names = getNames(new BaseService());
 export async function createEps() {
 	// 创建描述文件
 	function createDts(list: any[]) {
-		if (!isDev) {
+		if (!isDev || !config.eps) {
 			return false;
 		}
 

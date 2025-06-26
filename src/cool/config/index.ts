@@ -6,6 +6,7 @@ export const isDev = import.meta.env.MODE === "development";
 
 // 配置
 export const config = {
+	eps: false,
 	// 项目信息
 	app: {
 		name: "dzhgo管理系统",
