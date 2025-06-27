@@ -174,21 +174,21 @@ const show = ref(true);
 const count = ref(0);
 
 // 获取验证码
-// const getCode = async () => {
-// 	if (!form.phone) {
-// 		return ElMessage.error("手机号码不能为空");
-// 	}
-// 	try {
-// 		await service.base.open.sendSms({ phone: form.phone }).then((res) => {
-// 			show.value = false;
-// 			count.value = 100;
-// 			timeLoop();
-// 			return ElMessage.success("短信已发送");
-// 		});
-// 	} catch (err: any) {
-// 		return ElMessage.error(err.message);
-// 	}
-// };
+const getCode = async () => {
+	// if (!form.phone) {
+	// 	return ElMessage.error("手机号码不能为空");
+	// }
+	// try {
+	// 	await service.base.open.sendSms({ phone: form.phone }).then((res) => {
+	// 		show.value = false;
+	// 		count.value = 100;
+	// 		timeLoop();
+	// 		return ElMessage.success("短信已发送");
+	// 	});
+	// } catch (err: any) {
+	// 	return ElMessage.error(err.message);
+	// }
+};
 
 const timeLoop = () => {
 	const interval = setInterval(() => {
