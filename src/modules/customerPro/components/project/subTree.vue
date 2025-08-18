@@ -391,7 +391,7 @@ function onContextMenu(e: any, d?: any, n?: any) {
 
 	// 权限
 	const perm = service.customer_pro.project.permission;
-	const kfPerm = service.customer_pro.kf.permission;
+	// const kfPerm = service.customer_pro.kf.permission;
 
 	ContextMenu.open(e, {
 		list: [
@@ -425,20 +425,12 @@ function onContextMenu(e: any, d?: any, n?: any) {
 			},
 			{
 				label: "设置项目主管",
-				hidden: !checkPerm(kfPerm.setProjectRole),
+				hidden: !checkPerm(perm.addProjectRole),
 				callback(done) {
 					openProjectRole(d);
 					done();
 				}
 			}
-			// {
-			// 	label: "删除项目主管",
-			// 	hidden: !checkPerm(kfPerm.setProjectRole),
-			// 	callback(done) {
-			// 		setProjectRole(d);
-			// 		done();
-			// 	}
-			// }
 		]
 	});
 }
@@ -471,20 +463,20 @@ const openProjectRole = (item: any) => {
 };
 
 // 设置主管
-const setProjectRole = (item: any) => {
-	service.customer_pro.project
-		.delProjectRole({
-			action: false,
-			id: item.id
-		})
-		.then((res) => {
-			ElMessage.success("删除成功");
-			refresh();
-		})
-		.catch((e) => {
-			ElMessage.error(e.message);
-		});
-};
+// const setProjectRole = (item: any) => {
+// 	service.customer_pro.project
+// 		.delProjectRole({
+// 			action: false,
+// 			id: item.id
+// 		})
+// 		.then((res) => {
+// 			ElMessage.success("删除成功");
+// 			refresh();
+// 		})
+// 		.catch((e) => {
+// 			ElMessage.error(e.message);
+// 		});
+// };
 
 // 选项改变
 const selectChange = (e: any) => {

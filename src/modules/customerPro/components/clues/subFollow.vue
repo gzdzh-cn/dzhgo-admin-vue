@@ -9,47 +9,97 @@
 			"
 		>
 			<el-divider content-position="left">编辑线索</el-divider>
-			<cl-form ref="FormEdit" :inner="true">
-				<template #slot-school_id="{ scope }">
-					<!-- 学校 -->
-					<el-select v-model="scope.schoolId" @change="schoolChange">
-						<el-option
-							v-for="item in schoolList"
-							:key="item.value"
-							:label="item.name"
-							:value="item.id"
-						/>
-					</el-select>
-				</template>
+			<div class="sub-follow-container">
+				<!-- <el-form :model="basicForm" :inline="true">
+					<el-form-item label="53标识">
+						<el-input v-model="basicForm.guestId" disabled />
+					</el-form-item>
+					<el-form-item label="项目">
+						<el-select v-model="basicForm.projectId" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="IP">
+						<el-input v-model="basicForm.ip" disabled />
+					</el-form-item>
+					<el-form-item label="IP归属地">
+						<el-input v-model="basicForm.guestIpInfo" disabled />
+					</el-form-item>
+					<el-form-item label="姓名">
+						<el-input v-model="basicForm.name" />
+					</el-form-item>
+					<el-form-item label="来源">
+						<el-select v-model="basicForm.sourceFrom" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="关键字">
+						<el-input v-model="basicForm.keywords" />
+					</el-form-item>
+					<el-form-item label="毕业院校">
+						<el-select v-model="basicForm.graduatedSchool" style="width: 200px">
+						</el-select>
+					</el-form-item>
+					<el-form-item label="意向院校">
+						<el-select v-model="basicForm.schoolId" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="意向专业">
+						<el-select v-model="basicForm.majorsId" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="报读类型">
+						<el-select v-model="basicForm.majorsType" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="户口类型">
+						<el-select v-model="basicForm.householdType" style="width: 200px">
+						</el-select>
+					</el-form-item>
+					<el-form-item label="户籍地址">
+						<el-input v-model="basicForm.householdAddress" />
+					</el-form-item>
+					<el-form-item label="线索等级">
+						<el-select v-model="basicForm.level" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="性别">
+						<el-select v-model="basicForm.gender" style="width: 200px"> </el-select>
+					</el-form-item>
+					<el-form-item label="紧急联系人">
+						<el-input v-model="basicForm.emergencyMobile" />
+					</el-form-item>
+					<el-form-item label="备注">
+						<el-input v-model="basicForm.remark" />
+					</el-form-item>
+				</el-form> -->
 
-				<!-- 专业 -->
-				<template #slot-majors_id="{ scope }">
-					<el-select v-model="scope.majorsId">
-						<el-option
-							v-for="item in majorsList"
-							:key="item.value"
-							:label="item.name"
-							:value="item.id"
-						/>
-					</el-select>
-				</template>
-			</cl-form>
+				<cl-form ref="FormEdit" :inner="true">
+					<!-- 学校 -->
+					<template #slot-school_id="{ scope }">
+						<el-select v-model="scope.schoolId" @change="schoolChange">
+							<el-option
+								v-for="item in schoolList"
+								:key="item.value"
+								:label="item.name"
+								:value="item.id"
+							/>
+						</el-select>
+					</template>
+
+					<!-- 专业 -->
+					<template #slot-majors_id="{ scope }">
+						<el-select v-model="scope.majorsId">
+							<el-option
+								v-for="item in majorsList"
+								:key="item.value"
+								:label="item.name"
+								:value="item.id"
+							/>
+						</el-select>
+					</template>
+				</cl-form>
+			</div>
 		</el-tab-pane>
+
 		<el-tab-pane
 			label="创建记录"
 			name="order"
 			v-if="service.customer_pro.clues._permission.followAdd && status == 0"
 		>
 			<div style="min-height: 100px; height: 220px">
-				<!-- <el-divider content-position="left">基本信息</el-divider>
-				<div style="height: 110px">
-					<cl-crud ref="Crud">
-						<cl-row>
-							<cl-table ref="Table" />
-						</cl-row>
-					</cl-crud>
-				</div> -->
-
 				<el-divider content-position="left">创建记录</el-divider>
 
 				<cl-form ref="FormFollow" :inner="true">
@@ -89,7 +139,6 @@
 					<el-steps
 						:active="flolowContent.length"
 						direction="vertical"
-						finish-status=""
 						v-if="flolowContent"
 					>
 						<el-step
@@ -187,6 +236,8 @@
 	</el-tabs>
 
 	<div class="sumit-btn" v-if="activeName == 'order' || activeName == 'edit'">
+		<el-button @click="cancel"> 取消 </el-button>
+		<el-button type="success" @click="submitAll"> 保存 </el-button>
 		<el-popconfirm title="确定放入公海吗?" @confirm="pushCommonClause">
 			<template #reference>
 				<el-button
@@ -204,7 +255,7 @@
 
 <script lang="ts" name="customeer_pro-subFollow" setup>
 import { useCool } from "/@/cool";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useCrud, useTable, useForm } from "@cool-vue/crud";
 import { dayjs, ElMessage, FormInstance } from "element-plus";
 import { Edit, ChatLineRound, UserFilled } from "@element-plus/icons-vue";
@@ -303,10 +354,36 @@ const Crud = useCrud({
 	}
 });
 // 标签
-const activeName = computed(() => {
-	return props.status == 0 ? "order" : "edit";
-});
+const activeName = ref(props.status == 0 ? "order" : "edit");
 const handleClick = () => {};
+
+// 监听status变化，更新activeName
+watch(
+	() => props.status,
+	(newStatus) => {
+		activeName.value = newStatus == 0 ? "order" : "edit";
+	}
+);
+
+// const basicForm = ref({
+// 	guestId: "",
+// 	projectId: 0,
+// 	ip: "",
+// 	guestIpInfo: "",
+// 	name: "",
+// 	sourceFrom: "",
+// 	keywords: "",
+// 	graduatedSchool: "",
+// 	schoolId: "",
+// 	majorsId: "",
+// 	majorsType: "",
+// 	householdType: "",
+// 	householdAddress: "",
+// 	level: "",
+// 	gender: "",
+// 	emergencyMobile: "",
+// 	remark: ""
+// });
 
 const FormEdit = useForm();
 async function openEdit() {
@@ -436,43 +513,49 @@ async function openEdit() {
 			...item
 		},
 		on: {
-			async open(data) {
+			async open() {
 				getSchoolList();
 
 				// 项目
 				const projectList = await service.customer_pro.project.list();
 				FormEdit.value?.setOptions(
 					"projectId",
-					projectList.map((e) => {
-						return {
-							label: e.name,
-							value: e.id
-						};
-					})
+					projectList
+						.map((e) => {
+							return {
+								label: e.name,
+								value: e.id
+							};
+						})
+						.filter((item) => item.value != null)
 				);
 
 				// 报读类型
 				const majorsTypeList = await service.customer_pro.readtypes.list();
 				FormEdit.value?.setOptions(
 					"majorsType",
-					majorsTypeList.map((e) => {
-						return {
-							label: e.name,
-							value: e.id
-						};
-					})
+					majorsTypeList
+						.map((e) => {
+							return {
+								label: e.name,
+								value: e.id
+							};
+						})
+						.filter((item) => item.value != null)
 				);
 
 				// 报读层次
 				const degreeList = await service.customer_pro.readdegree.list();
 				FormEdit.value?.setOptions(
 					"degreeId",
-					degreeList.map((e) => {
-						return {
-							label: e.name,
-							value: e.id
-						};
-					})
+					degreeList
+						.map((e) => {
+							return {
+								label: e.name,
+								value: e.id
+							};
+						})
+						.filter((item) => item.value != null)
 				);
 
 				// 户口性质
@@ -488,7 +571,11 @@ async function openEdit() {
 				]);
 
 				// 线索级别
-				FormEdit.value?.setOptions("level", dict.get("cluesLevel").value);
+				const levelOptions = dict.get("cluesLevel").value || [];
+				FormEdit.value?.setOptions(
+					"level",
+					levelOptions.filter((item) => item.value != null)
+				);
 
 				// 性别
 				FormEdit.value?.setOptions("gender", [
@@ -560,12 +647,21 @@ async function openEdit() {
 				emit("cancel");
 			},
 			submit(data, { close, done }) {
-				service.customer_pro.clues.update({ ...data }).then(() => {
-					done();
-					close();
-					ElMessage.success("保存成功");
-				});
+				service.customer_pro.clues
+					.update({ ...data })
+					.then(() => {
+						done();
+						close();
+						ElMessage.success("保存成功");
+					})
+					.catch((e: any) => {
+						console.log(e);
+						ElMessage.error("保存失败", e.message);
+					});
 			}
+		},
+		op: {
+			hidden: true
 		}
 	});
 }
@@ -598,21 +694,65 @@ async function openFollow() {
 			}
 		],
 		on: {
-			async open(data) {},
 			close(done) {
 				done();
 				emit("cancel");
 			},
 			submit(data, { close, done }) {
-				service.customer_pro.clues.followAdd({ cluesId: props.id, ...data }).then(() => {
-					done();
-					close();
-					ElMessage.success("保存成功");
-				});
+				if (data.followType) {
+					if (data.nextFollowupTime == "" || data.nextFollowupTime == null) {
+						ElMessage.error("请选择下次跟进时间");
+						return;
+					}
+					if (data.remark == "" || data.remark == null) {
+						ElMessage.error("请填写备注");
+						return;
+					}
+					service.customer_pro.clues
+						.followAdd({ cluesId: props.id, ...data })
+						.then(() => {
+							done();
+							close();
+							// ElMessage.success("保存成功");
+						})
+						.catch((e: any) => {
+							console.log(e);
+							ElMessage.error("保存失败", e.message);
+						});
+				}
 			}
+		},
+		op: {
+			hidden: true
 		}
 	});
 }
+
+const submitAll = () => {
+	const followType = FormFollow.value?.getForm("followType");
+	const nextFollowupTime = FormFollow.value?.getForm("nextFollowupTime");
+	const remark = FormFollow.value?.getForm("remark");
+	if (followType && (nextFollowupTime == "" || nextFollowupTime == null)) {
+		ElMessage.error("请选择下次跟进时间");
+		return;
+	}
+	if (followType && (remark == "" || remark == null)) {
+		ElMessage.error("请填写备注");
+		return;
+	}
+
+	if (followType) {
+		FormFollow.value?.submit();
+		FormEdit.value?.submit();
+	} else {
+		FormEdit.value?.submit();
+	}
+};
+
+const cancel = () => {
+	FormEdit.value?.close();
+	FormFollow.value?.close();
+};
 
 // 学校列表
 const schoolList = ref();
@@ -855,5 +995,11 @@ defineExpose({
 .item {
 	flex-basis: calc(50% - 8px); /* 每行两个子元素，占据50%的宽度 */
 	box-sizing: border-box; /* 包括内边距和边框在内 */
+}
+.sub-follow-container {
+	height: 450px;
+	overflow-y: auto;
+	padding: 20px;
+	box-sizing: border-box;
 }
 </style>

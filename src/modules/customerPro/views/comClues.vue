@@ -598,6 +598,52 @@ const openTracks = (row: any) => {
 
 // 时间选择器起始
 const defaultTime = new Date();
+const shortcuts = [
+	{
+		text: "最近一天",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一周",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 7);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近三个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 3);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	}
+];
 // 高级搜索
 const AdvSearch = useAdvSearch({
 	items: [
@@ -626,6 +672,7 @@ const AdvSearch = useAdvSearch({
 				name: "el-date-picker",
 				props: {
 					type: "datetimerange",
+					shortcuts: shortcuts,
 					startPlaceholder: "开始日期",
 					endPlaceholder: "结束日期",
 					defaultTime: defaultTime,

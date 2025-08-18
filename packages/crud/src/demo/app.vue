@@ -266,7 +266,7 @@ function openForm() {
 					// refs.name.focus();
 				},
 				submit(data, { done, close }) {
-					console.log(data);
+					// console.log(data);
 					close();
 				},
 				close(action, done) {

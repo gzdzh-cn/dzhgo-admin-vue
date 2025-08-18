@@ -75,7 +75,7 @@ watch(
 	}
 );
 
-function onBeforeUpload(file: any, item: any) {
+function onBeforeUpload() {
 	msg.value = ElMessage.warning("文件上传中");
 
 	loading.value = true;

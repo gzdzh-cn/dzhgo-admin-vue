@@ -1,62 +1,296 @@
 <template>
 	<div class="view-my">
-		<el-tabs type="border-card">
-			<el-tab-pane label="分配配置">
-				<div style="margin: 0 auto">
-					<cl-form ref="configFormRef" :inner="true">
-						<template #slot-projectAllGroup="{ scope }">
+		<el-form :model="basicForm" label-width="120px">
+			<el-tabs type="border-card">
+				<el-tab-pane label="基础配置">
+					<el-form-item label="es搜索开启">
+						<el-switch
+							v-model="basicForm.esOpen"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="开启"
+							inactive-text="关闭"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							开启后，线索列表查询速度提升，但会占用更多内存</span
+						>
+					</el-form-item>
+
+					<el-form-item label="全量同步数据">
+						<el-switch
+							v-model="basicForm.esSyncFullEnable"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="开启"
+							inactive-text="关闭"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							第一次开启es搜索才需要开启，开启后，将立即开始同步数据到ES，建议在业务低峰期开启</span
+						>
+					</el-form-item>
+
+					<el-form-item label="增量同步数据">
+						<el-switch
+							v-model="basicForm.esSyncIncrementEnable"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="开启"
+							inactive-text="关闭"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							开启后，增量同步数据到ES</span
+						>
+					</el-form-item>
+
+					<el-form-item label="流式同步数据">
+						<el-switch
+							v-model="basicForm.fullUseStreaming"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="开启"
+							inactive-text="关闭"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							开启后，流式同步数据到ES，减轻服务器压力</span
+						>
+					</el-form-item>
+
+					<!-- esSyncFullStatus 显示同步状态是否完成，0 未完成 1 完成 -->
+					<el-form-item label="es同步状态">
+						<el-tag
+							:type="
+								basicForm.esSyncFullStatus === 0
+									? 'info'
+									: basicForm.esSyncFullStatus === 1
+									? 'warning'
+									: basicForm.esSyncFullStatus === 2
+									? 'success'
+									: basicForm.esSyncFullStatus === 3
+									? 'danger'
+									: 'info'
+							"
+							:icon="
+								basicForm.esSyncFullStatus === 0
+									? 'Close'
+									: basicForm.esSyncFullStatus === 1
+									? 'Clock'
+									: basicForm.esSyncFullStatus === 2
+									? 'Check'
+									: basicForm.esSyncFullStatus === 3
+									? 'Warning'
+									: 'Close'
+							"
+						>
+							{{
+								basicForm.esSyncFullStatus === 0
+									? "未同步"
+									: basicForm.esSyncFullStatus === 1
+									? "同步中..."
+									: basicForm.esSyncFullStatus === 2
+									? "同步完成"
+									: basicForm.esSyncFullStatus === 3
+									? "同步失败"
+									: "未同步"
+							}}
+						</el-tag>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							{{
+								basicForm.esSyncFullStatus === 1
+									? "ES数据正在同步中，一般同步需要10分钟左右，请稍候"
+									: basicForm.esSyncFullStatus === 2
+									? "ES数据同步已完成，搜索功能正常"
+									: basicForm.esSyncFullStatus === 3
+									? "ES数据同步失败，请检查网络连接或联系管理员"
+									: "ES同步功能已开启"
+							}}（过几秒，手动刷新页面看同步状态）
+						</span>
+					</el-form-item>
+					<!-- esSyncFullStatus -->
+				</el-tab-pane>
+
+				<el-tab-pane label="项目配置">
+					<el-form-item label="分配其他组员">
+						<el-switch
+							v-model="basicForm.projectAllGroup"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="可分配"
+							inactive-text="关闭"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							设置客服列表里面的成员是否可以分配线索给同项目内的其他组别成员
+						</span>
+					</el-form-item>
+					<el-form-item label="多个项目管理员">
+						<el-switch
+							v-model="basicForm.projectMultiManger"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="多个"
+							inactive-text="单个"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							设置项目管理，每个项目是否可以添加多个项目管理员
+						</span>
+					</el-form-item>
+					<el-form-item label="多个组主管">
+						<el-switch
+							v-model="basicForm.groupMultiManger"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="多个"
+							inactive-text="单个"
+							inline-prompt
+							style="width: 80px"
+						/>
+						<span style="padding-left: 10px; color: #ff6b6b">
+							设置项目管理，每个组别是否可以添加多个主管
+						</span>
+					</el-form-item>
+				</el-tab-pane>
+
+				<el-tab-pane label="分配配置">
+					<div style="margin: 0 auto">
+						<el-form-item label="分配方式">
+							<el-select v-model="basicForm.allotType" style="width: 200px">
+								<el-option label="不分配" :value="0" />
+								<el-option label="按顺序分配" :value="1" />
+								<el-option label="随机分配" :value="2" />
+							</el-select>
+						</el-form-item>
+
+						<el-form-item label="推送开启">
 							<el-switch
-								v-model="scope.projectAllGroup"
-								:active-value="switchV.active"
-								:inactiv-value="switchV.inactiv"
-								active-text="可分配"
-								inactive-text="禁止"
+								v-model="basicForm.pushOpen"
+								:active-value="1"
+								:inactive-value="0"
+								active-text="开启"
+								inactive-text="关闭"
 								inline-prompt
 								style="width: 80px"
 							/>
-							<span style="padding-left: 10px; color: #ff6b6b"
-								>设置客服列表里面的成员是否可以分配线索给同项目内的其他组别成员</span
-							>
-						</template>
-						<template #slot-projectMultiManger="{ scope }">
-							<el-switch
-								v-model="scope.projectMultiManger"
-								:active-value="switchV.active"
-								:inactiv-value="switchV.inactiv"
-								active-text="多个"
-								inactive-text="单个"
-								inline-prompt
-								style="width: 80px"
-							/>
-							<span style="padding-left: 10px; color: #ff6b6b"
-								>设置项目管理，每个项目是否可以添加多个项目管理员</span
-							>
-						</template>
-						<template #slot-groupMultiManger="{ scope }">
-							<el-switch
-								v-model="scope.groupMultiManger"
-								:active-value="switchV.active"
-								:inactiv-value="switchV.inactiv"
-								active-text="多个"
-								inactive-text="单个"
-								inline-prompt
-								style="width: 80px"
-							/>
-							<span style="padding-left: 10px; color: #ff6b6b"
-								>设置项目管理，每个组别是否可以添加多个主管</span
-							>
-						</template>
-					</cl-form>
-				</div>
-			</el-tab-pane>
-		</el-tabs>
+							<span style="padding-left: 10px; color: #ff6b6b">
+								设置是否开启推送，把总接收栏目的数据推送到线索列表
+							</span>
+						</el-form-item>
+
+						<el-tabs v-model="allotTab" style="margin-top: 20px">
+							<el-tab-pane label="常规分配" name="public">
+								<div class="public-allot">
+									<el-form-item label="常规分配">
+										<el-switch
+											v-model="basicForm.allotOpen"
+											:active-value="1"
+											:inactive-value="0"
+											active-text="开启"
+											inactive-text="关闭"
+											inline-prompt
+											style="width: 80px"
+										/>
+										<span style="padding-left: 10px; color: #ff6b6b">
+											设置是否开启常规分配
+										</span>
+									</el-form-item>
+
+									<el-row :gutter="20">
+										<el-col :span="12">
+											<el-form-item label="当前分配人数">
+												<el-input v-model="basicForm.sliceNum" disabled />
+											</el-form-item>
+										</el-col>
+									</el-row>
+									<el-form-item label="分配列表">
+										<el-input
+											v-model="basicForm.allotServicesNames"
+											type="textarea"
+											:rows="10"
+											disabled
+											style="width: 100%"
+										/>
+									</el-form-item>
+									<el-form-item label="下次分配">
+										<el-input v-model="basicForm.servicesNames" disabled />
+									</el-form-item>
+								</div>
+							</el-tab-pane>
+							<el-tab-pane label="地区分配" name="area">
+								<div class="area-allot">
+									<el-form-item label="地区分配">
+										<el-switch
+											v-model="basicForm.areaAllotOpen"
+											:active-value="1"
+											:inactive-value="0"
+											active-text="开启"
+											inactive-text="关闭"
+											inline-prompt
+											style="width: 80px"
+										/>
+										<span style="padding-left: 10px; color: #ff6b6b">
+											设置是否开启地区分配
+										</span>
+									</el-form-item>
+									<el-form-item label="区域名称">
+										<el-input
+											v-model="basicForm.areaName"
+											type="textarea"
+											:rows="4"
+											:disabled="basicForm.areaAllotOpen === 0"
+											style="width: 100%"
+										/>
+										<span style="padding-left: 10px; color: #ff6b6b">
+											多个地区，每行一个区域名称，最多10个
+										</span>
+									</el-form-item>
+									<el-row :gutter="20">
+										<el-col :span="12">
+											<el-form-item label="当前分配人数">
+												<el-input
+													v-model="basicForm.areaSliceNum"
+													disabled
+												/>
+											</el-form-item>
+										</el-col>
+									</el-row>
+									<el-form-item label="分配列表">
+										<el-input
+											v-model="basicForm.areaAllotServicesNames"
+											type="textarea"
+											:rows="10"
+											disabled
+											style="width: 100%"
+										/>
+									</el-form-item>
+									<el-form-item label="下次分配">
+										<el-input v-model="basicForm.areaServicesNames" disabled />
+									</el-form-item>
+								</div>
+							</el-tab-pane>
+						</el-tabs>
+					</div>
+				</el-tab-pane>
+			</el-tabs>
+		</el-form>
+		<div style="display: flex; justify-content: flex-end; margin-top: 20px">
+			<el-button type="primary" @click="submit">保存</el-button>
+		</div>
 	</div>
 </template>
 <script lang="ts" name="base-setting" setup>
 import { useCool } from "/@/cool";
 import { onMounted, reactive, ref } from "vue";
-import { ElMessage, ElLoading } from "element-plus";
-import { useForm } from "@cool-vue/crud";
+import { ElMessage } from "element-plus";
 
 // interface Contact {
 // 	contactName: string;
@@ -66,119 +300,109 @@ import { useForm } from "@cool-vue/crud";
 const { service } = useCool();
 // const payType = ref([1, 2]);
 // const basicForm: any = ref({}); // 表单数据
-const switchV = reactive({
-	active: 1,
-	inactiv: 0
+// const switchV = reactive({
+// 	active: 1,
+// 	inactiv: 0
+// });
+
+const basicForm = reactive({
+	esOpen: 0,
+	esSyncFullEnable: 0,
+	esSyncIncrementEnable: 0,
+	fullUseStreaming: 0,
+	esSyncFullStatus: 0,
+	projectAllGroup: 0,
+	projectMultiManger: 0,
+	groupMultiManger: 0,
+	pushOpen: 0,
+	allotType: 1,
+	allotOpen: 0,
+	sliceNum: 0,
+	allotServicesNames: "",
+	servicesNames: "",
+	areaAllotOpen: 0,
+	areaAllotType: 1,
+	areaSliceNum: 0,
+	areaAllotServicesNames: "",
+	areaServicesNames: "",
+	areaName: ""
 });
 
-const configFormRef = useForm();
-const configFormOpen = async () => {
-	const basic = await service.customer_pro.basic.info({ id: 1 });
-	configFormRef.value?.open({
-		title: "配置",
-		props: {
-			labelWidth: 150
-		},
-		items: [
-			{
-				label: "分配其他组员",
-				prop: "projectAllGroup",
-				component: {
-					name: "slot-projectAllGroup",
-					props: {}
-				}
-			},
-			{
-				label: "多个项目管理员",
-				prop: "projectMultiManger",
-				component: {
-					name: "slot-projectMultiManger",
-					props: {}
-				}
-			},
-			{
-				label: "多个组主管",
-				prop: "groupMultiManger",
-				component: {
-					name: "slot-groupMultiManger",
-					props: {}
-				}
-			},
-			{
-				label: "分配方式",
-				prop: "allotType",
-				value: 1,
-				span: 6,
-				component: {
-					name: "el-select",
-					options: [
-						{
-							label: "不分配",
-							value: 0
-						},
-						{
-							label: "按顺序分配",
-							value: 1
-						},
-						{
-							label: "随机分配",
-							value: 2
-						}
-					]
-				}
-			},
-			{
-				label: "当前分配人数",
-				prop: "sliceNum",
-				span: 6,
-				hook: {
-					bind: (value, { form }) => {
-						return form.allotServicesNames.split(",").length;
-					}
-				},
-				value: 0,
-				component: { name: "el-input", props: { disabled: true } }
-			},
-			{
-				label: "分配列表",
-				prop: "allotServicesNames",
-				component: {
-					name: "el-input",
-					props: { type: "textarea", rows: 10, disabled: true }
-				}
-			},
-			{
-				label: "当前分配",
-				prop: "userName",
-				component: { name: "el-input", props: { disabled: true } }
-			}
-		],
-		form: {
-			...basic
-		},
-		on: {
-			async open() {
-				// const arr = data.allotServicesNames.split
-				// configFormRef.value?.setForm("sliceNum", data.allotServicesNames.length);
-			},
-			submit(data, { done }) {
-				service.customer_pro.basic.update({ ...data }).then(() => {
-					done();
-					// close();
-					// configFormOpen();
-					ElMessage.success("保存成功");
-				});
-			}
-		},
-		op: {
-			buttons: ["save"]
-		}
-	});
+const allotTab = ref("public");
+
+const submit = async () => {
+	// 互斥校验
+	// if (basicForm.esSyncFullEnable === 1 && basicForm.esSyncIncrementEnable === 1) {
+	// 	ElMessage.error("全量同步和增量同步不能同时开启！");
+	// 	return;
+	// }
+	// 如果开启ES搜索，检查服务可用性
+	// if (basicForm.esSearchOpen === 1) {
+	// 	await checkESAvailable();
+	// 	if (!available.value.available) {
+	// 		ElMessage.error(available.value.message);
+	// 		getBasic();
+	// 		return;
+	// 	}
+	// }
+
+	// 如果开启立即同步，但ES搜索未开启，提示用户
+	// if (basicForm.esSyncFullEnable === 1 && basicForm.esOpen === 0) {
+	// 	ElMessage.error("请先开启ES搜索功能，再开启数据同步");
+	// 	return;
+	// }
+
+	// 校验区域名称数量
+	let areaNames = (basicForm.areaName || "")
+		.split("\n")
+		.map((v) => v.replace(/\s+/g, "")) // 去除每行所有空格
+		.filter((v) => v);
+	if (areaNames.length > 10) {
+		ElMessage.error("区域名称不能超过10个，每行一个区域名称！");
+		return;
+	}
+	// 提交前去掉所有空格
+	basicForm.areaName = areaNames.join("\n");
+
+	service.customer_pro.basic
+		.update({ ...basicForm })
+		.then(() => {
+			ElMessage.success("保存成功");
+			getBasic();
+		})
+		.catch((err) => {
+			ElMessage.error(err.message);
+		});
 };
 
-onMounted(() => {
-	// getInfo();
-	configFormOpen();
+// const available = ref<{ available: boolean; message: string }>({
+// 	available: false,
+// 	message: ""
+// });
+// const checkESAvailable = async () => {
+// 	available.value = await service.customer_pro.clues.checkESAvailable();
+// };
+
+const getBasic = async () => {
+	// 获取后端数据
+	const data = await service.customer_pro.basic.info({ id: 1 });
+	// 合并数据到 basicForm
+	Object.assign(basicForm, data);
+	// 计算当前分配人数
+	if (basicForm.allotServicesNames) {
+		basicForm.sliceNum = basicForm.allotServicesNames.split(",").filter(Boolean).length;
+	} else {
+		basicForm.sliceNum = 0;
+	}
+	if (basicForm.areaAllotServicesNames) {
+		basicForm.areaSliceNum = basicForm.areaAllotServicesNames.split(",").filter(Boolean).length;
+	} else {
+		basicForm.areaSliceNum = 0;
+	}
+};
+
+onMounted(async () => {
+	getBasic();
 });
 </script>
 <style lang="scss" scoped>

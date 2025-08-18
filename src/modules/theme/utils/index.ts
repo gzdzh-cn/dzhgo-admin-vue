@@ -1,6 +1,7 @@
 import { Theme } from "../types";
 import { useBase } from "/$/base";
 import { storage } from "/@/cool";
+import { nextTick } from "vue";
 
 function mix(color1: string, color2: string, weight: number) {
 	weight = Math.max(Math.min(Number(weight), 1), 0);
@@ -53,73 +54,74 @@ export const themes = [
 ];
 
 export function setTheme({ color, name, isGroup, transition }: Theme) {
-	const { app } = useBase();
-	console.log("name", name);
-	console.log("color", color);
+	// 使用 nextTick 延迟执行，避免在模块安装阶段调用 Composition API
+	nextTick(() => {
+		const { app } = useBase();
 
-	// 主题配置
-	const theme = storage.get("theme") || {};
+		// 主题配置
+		const theme = storage.get("theme") || {};
 
-	// 变量前缀
-	const pre = "--el-color-primary";
+		// 变量前缀
+		const pre = "--el-color-primary";
 
-	// 白色混合色
-	const mixWhite = "#ffffff";
+		// 白色混合色
+		const mixWhite = "#ffffff";
 
-	// 黑色混合色
-	const mixBlack = "#000000";
+		// 黑色混合色
+		const mixBlack = "#000000";
 
-	// 元素
-	const el = document.documentElement;
+		// 元素
+		const el = document.documentElement;
 
-	// 主题
-	if (name) {
-		const item = themes.find((e) => e.name == name);
+		// 主题
+		if (name) {
+			const item = themes.find((e) => e.name == name);
 
-		if (item) {
-			if (!color) {
-				color = item.color;
+			if (item) {
+				if (!color) {
+					color = item.color;
+				}
+
+				document.body?.setAttribute("class", `theme-${name}`);
 			}
 
-			document.body?.setAttribute("class", `theme-${name}`);
+			theme.name = name;
 		}
 
-		theme.name = name;
-	}
+		// 设置主色
+		if (color) {
+			el.style.setProperty(pre, color);
+			el.style.setProperty("--color-primary", color);
 
-	// 设置主色
-	if (color) {
-		el.style.setProperty(pre, color);
-		el.style.setProperty("--color-primary", color);
+			// 设置辅色
+			for (let i = 1; i < 10; i += 1) {
+				el.style.setProperty(`${pre}-light-${i}`, mix(color, mixWhite, i * 0.1));
+				el.style.setProperty(`${pre}-dark-${i}`, mix(color, mixBlack, i * 0.1));
+			}
 
-		// 设置辅色
-		for (let i = 1; i < 10; i += 1) {
-			el.style.setProperty(`${pre}-light-${i}`, mix(color, mixWhite, i * 0.1));
-			el.style.setProperty(`${pre}-dark-${i}`, mix(color, mixBlack, i * 0.1));
+			theme.color = color;
 		}
 
-		theme.color = color;
-	}
+		// 菜单分组显示
+		if (isGroup !== undefined) {
+			theme.isGroup = isGroup;
+			app.set({
+				menu: {
+					isGroup
+				}
+			});
+		}
 
-	// 菜单分组显示
-	if (isGroup !== undefined) {
-		theme.isGroup = isGroup;
-		app.set({
-			menu: {
-				isGroup
-			}
-		});
-	}
+		// 转场动画
+		if (transition !== undefined) {
+			theme.transition = transition;
+			app.set({
+				router: {
+					transition
+				}
+			});
+		}
 
-	// 转场动画
-	if (transition !== undefined) {
-		theme.transition = transition;
-		app.set({
-			router: {
-				transition
-			}
-		});
-	}
-
-	storage.set("theme", theme);
+		storage.set("theme", theme);
+	});
 }

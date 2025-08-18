@@ -6,7 +6,7 @@ export const isDev = import.meta.env.MODE === "development";
 
 // 配置
 export const config = {
-	eps: false,
+	eps: true,
 	// 项目信息
 	app: {
 		name: "dzhgo管理系统",
@@ -38,7 +38,7 @@ export const config = {
 	// 忽略规则
 	ignore: {
 		// 不显示请求进度条
-		NProgress: ["/base/comm/upload", "/base/comm/uploadMode"],
+		NProgress: ["/base/comm/upload", "/base/comm/uploadMode", "/base/sys/notice/page"],
 		// 页面不需要登录验证
 		token: ["/login", "/401", "/403", "/404", "/500", "/502"]
 	},
@@ -47,7 +47,7 @@ export const config = {
 	test: {
 		token: "",
 		mock: false,
-		eps: false
+		eps: true
 	},
 
 	// 当前环境

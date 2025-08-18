@@ -11,19 +11,33 @@
 				</el-scrollbar>
 			</div>
 			<div class="preload__footer">
-				<a v-html="copyright"> </a>
+				<a v-text="copyright"> </a>
 			</div>
 		</router-view>
+
+		<!-- 右侧固定浮动图标 -->
+		<div class="floating-icon" @click="handleIconClick">
+			<el-icon size="20">
+				<chat-dot-round />
+			</el-icon>
+		</div>
+
+		<!-- 通知弹窗 -->
+		<cl-feedback ref="feedbackRef" />
 	</div>
 </template>
 
 <script lang="ts" setup>
 import { computed, ref } from "vue";
 import { useBase } from "/$/base";
+import { ChatDotRound } from "@element-plus/icons-vue";
 
 const { process, app, setting } = useBase();
 
 const copyright = ref(setting.setting.copyright);
+
+// 通知弹窗引用
+const feedbackRef = ref();
 
 // 缓存列表
 const caches = computed(() => {
@@ -33,6 +47,15 @@ const caches = computed(() => {
 			return e.path.substring(1, e.path.length).replace(/\//g, "-");
 		});
 });
+
+// 处理图标点击事件
+const handleIconClick = () => {
+	console.log("浮动图标被点击了！");
+	// 调用 cl-notice 组件的 open 方法
+	if (feedbackRef.value) {
+		feedbackRef.value.open();
+	}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -83,6 +106,34 @@ const caches = computed(() => {
 	.slide-leave-from {
 		transform: translate3d(0, 0, 0);
 		opacity: 1;
+	}
+
+	// 右侧固定浮动图标样式
+	.floating-icon {
+		position: fixed;
+		right: 30px;
+		bottom: 100px;
+		width: 50px;
+		height: 50px;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		cursor: pointer;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transition: all 0.3s ease;
+		z-index: 1000;
+
+		&:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
 	}
 }
 </style>

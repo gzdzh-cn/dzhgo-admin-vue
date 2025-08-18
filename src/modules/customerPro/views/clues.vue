@@ -71,7 +71,7 @@
 			>
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
-						<p v-if="isAdmin">唯一码: {{ scope.row?.id }}</p>
+						<p>唯一码: {{ scope.row?.id }}</p>
 						<p>guestId: {{ scope.row?.guestId }}</p>
 						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
 							创建者: {{ scope.row?.createdName }}
@@ -330,7 +330,6 @@ const FollowRef = ref(); //跟进
 const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
 const projectList = ref(); // 项目列表
-const searchStatus = ref(false); // 搜索状态
 const searchData = ref(); //搜索条件
 const isExtend = ref(true); //展开
 const serviceGroup = ref(); // 客服组
@@ -339,6 +338,7 @@ const { dict } = useDict();
 const clues_status = ref(0);
 const searchRef = ref();
 const keyWord = ref();
+
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
@@ -494,7 +494,11 @@ const Upsert = useUpsert({
 		]);
 
 		// 线索级别
-		Upsert.value?.setOptions("level", dict.get("cluesLevel").value);
+		const levelOptions = dict.get("cluesLevel").value || [];
+		Upsert.value?.setOptions(
+			"level",
+			levelOptions.filter((item) => item.value != null)
+		);
 
 		// 性别
 		Upsert.value?.setOptions("gender", [
@@ -599,7 +603,10 @@ const Table = useTable({
 		{
 			label: "跟进状态",
 			prop: "followupType",
-			width: 80,
+			width: 100,
+			formatter(row, column, value, index) {
+				return value.split(",")[0];
+			},
 			dict: [
 				{ label: "待跟进", value: "1", type: "danger" },
 				{ label: "电话访谈", value: "2", type: "warning" },
@@ -637,6 +644,7 @@ const Crud = useCrud(
 		app.refresh();
 	}
 );
+
 // 展开按钮
 const toggleRowExpansion = () => {
 	isExtend.value = !isExtend.value;
@@ -1136,10 +1144,18 @@ const openOrderAdd = async (row: any) => {
 				data.clues_id = cluesId.value;
 				data.services_id = row.services_id;
 				data.project_id = row.project_id;
-				service.customer_pro.order.add({ ...data }).then((r) => {
-					close();
-					refresh();
-				});
+				service.customer_pro.order
+					.add({ ...data })
+					.then((r: any) => {
+						done();
+						close();
+						refresh();
+					})
+					.catch((err: any) => {
+						done();
+						ElMessage.error(err.message);
+						close();
+					});
 			}
 		}
 	});
@@ -1263,8 +1279,55 @@ const getMajorList = async (v: any) => {
 	majorsList.value = await service.customer_pro.majors.list({ schoolId: v });
 };
 
+const searchStatus = ref(false); // 搜索状态
 // 时间选择器起始
 const defaultTime = new Date();
+const shortcuts = [
+	{
+		text: "最近一天",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一周",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 7);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近三个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 3);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	}
+];
 // 高级搜索
 const AdvSearch = useAdvSearch({
 	items: [
@@ -1276,7 +1339,7 @@ const AdvSearch = useAdvSearch({
 				props: {
 					clearable: true
 				},
-				options: dict.get("cluesLevel")
+				options: dict.get("cluesLevel").value
 			}
 		},
 		() => {
@@ -1376,6 +1439,7 @@ const AdvSearch = useAdvSearch({
 				name: "el-date-picker",
 				props: {
 					type: "datetimerange",
+					shortcuts: shortcuts,
 					startPlaceholder: "开始日期",
 					endPlaceholder: "结束日期",
 					defaultTime: defaultTime,
@@ -1392,6 +1456,7 @@ const AdvSearch = useAdvSearch({
 				name: "el-date-picker",
 				props: {
 					type: "datetimerange",
+					shortcuts: shortcuts,
 					startPlaceholder: "开始日期",
 					endPlaceholder: "结束日期",
 					defaultTime: defaultTime,

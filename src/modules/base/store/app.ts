@@ -1,11 +1,9 @@
 import { defineStore } from "pinia";
 import { reactive, ref } from "vue";
-import { config, useBrowser, useCool } from "/@/cool";
+import { config, useBrowser } from "/@/cool";
 import { deepMerge, storage } from "/@/cool/utils";
 
 export const useAppStore = defineStore("app", function () {
-	const { service } = useCool();
-
 	const { browser, onScreenChange } = useBrowser();
 
 	// 基本信息
@@ -31,6 +29,10 @@ export const useAppStore = defineStore("app", function () {
 	}
 
 	async function getSetting() {
+		// 延迟获取service，避免在store初始化时调用useCool
+		const { useCool } = await import("/@/cool");
+		const { service } = useCool();
+
 		const result = await service.base.open.getSetting();
 		if (result.siteName) {
 			info.name = result.siteName;

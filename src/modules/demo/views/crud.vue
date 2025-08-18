@@ -126,12 +126,12 @@ const Upsert = useUpsert({
 		// close();
 	},
 	onSubmit(data, { next }) {
-		console.log(data);
+		// console.log(data);
 		next(data);
 		// Upsert.value?.close();
 	},
 	onOpened(data) {
-		console.log(data);
+		// console.log(data);
 	},
 	onClose(done) {
 		console.log("onclose");

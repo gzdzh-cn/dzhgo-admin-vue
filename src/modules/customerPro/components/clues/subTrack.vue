@@ -1,6 +1,6 @@
 <template>
 	<div style="min-height: 100px; height: 400px; overflow: auto">
-		<el-steps :active="trackList.length" direction="vertical" finish-status="" v-if="trackList">
+		<el-steps :active="trackList.length" direction="vertical" v-if="trackList">
 			<el-step
 				:icon="Flag"
 				style="margin: 0 0 10px 0"

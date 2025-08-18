@@ -25,7 +25,7 @@ export default (): ModuleConfig => {
 					options
 				);
 
-			console.log(data);
+			// console.log(data);
 
 			setTheme({ ...data });
 		}

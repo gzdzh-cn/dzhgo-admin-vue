@@ -1,14 +1,14 @@
 <template>
 	<div class="app-process">
 		<div class="app-process__icon" :class="{ active: homeActive }" @click="toHome">
-			<el-icon size="15" color="#8d8989"><HomeFilled /></el-icon>
+			<el-icon size="15" color="#8d8989"><home-filled /></el-icon>
 			<span>首页</span>
 		</div>
 
-		<!--		<div class="app-process__icon" @click="router.back">-->
-		<!--			<el-icon :size="15"><arrow-left-bold /></el-icon>-->
-		<!--			<span>后退</span>-->
-		<!--		</div>-->
+		<!-- <div class="app-process__icon" @click="router.back">
+			<el-icon :size="15"><arrow-left-bold /></el-icon>
+			<span>后退</span>
+		</div> -->
 
 		<el-scrollbar :ref="setRefs('scroller')" class="app-process__scroller">
 			<div
@@ -34,7 +34,7 @@
 import { watch, ref } from "vue";
 import { last } from "lodash-es";
 import { useCool } from "/@/cool";
-import { ArrowLeftBold, Close, HomeFilled } from "@element-plus/icons-vue";
+import { Close, HomeFilled } from "@element-plus/icons-vue";
 import { ContextMenu } from "@cool-vue/crud";
 import { useBase } from "/$/base";
 import { Process } from "/$/base/types";

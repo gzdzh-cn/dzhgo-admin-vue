@@ -9,7 +9,7 @@
 			}"
 			@click="app.fold()"
 		>
-			<el-icon><Operation /></el-icon>
+			<el-icon><operation /></el-icon>
 		</div>
 
 		<!-- 路由导航 -->
@@ -22,6 +22,12 @@
 			<!-- <li>
 				<cl-chat />
 			</li> -->
+			<!-- <li>
+				<cl-feedback />
+			</li> -->
+			<li>
+				<cl-notice ref="noticeRef" />
+			</li>
 
 			<!-- <li>
 				<cl-theme />
@@ -59,10 +65,11 @@ import { useCool } from "/@/cool";
 import RouteNav from "./route-nav.vue";
 import AMenu from "./amenu.vue";
 import { Operation } from "@element-plus/icons-vue";
+import { onMounted, ref } from "vue";
 
-const { router, service, browser } = useCool();
+const { router, service } = useCool();
 const { user, app } = useBase();
-
+const noticeRef = ref<any>(null);
 // 跳转
 async function onCommand(name: string) {
 	switch (name) {
@@ -75,6 +82,10 @@ async function onCommand(name: string) {
 			break;
 	}
 }
+
+onMounted(() => {
+	// noticeRef.value.getMessageList();
+});
 </script>
 
 <style lang="scss" scoped>

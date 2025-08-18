@@ -23,7 +23,7 @@ export default defineComponent({
 
 		const Upsert = useUpsert({
 			onOpened(data) {
-				console.log(data);
+				// console.log(data);
 			}
 		});
 

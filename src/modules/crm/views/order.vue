@@ -388,7 +388,7 @@ const Upsert = useUpsert({
 			required: true,
 			component: {
 				name: "el-select",
-				options: dict.get("orderType")
+				options: dict.get("orderType").value
 			},
 			group: "base"
 		},

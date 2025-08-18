@@ -48,7 +48,7 @@
 			>
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
-						<p v-if="isAdmin">唯一码: {{ scope.row?.id }}</p>
+						<p>唯一码: {{ scope.row?.id }}</p>
 						<p>guestId: {{ scope.row?.guestId }}</p>
 						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
 							创建者: {{ scope.row?.createdName }}
@@ -92,7 +92,7 @@
 		<cl-upsert ref="Upsert" />
 
 		<!-- 项目分配 -->
-		<cl-form ref="DistributeFormRef">
+		<cl-form ref="distributeFormRef">
 			<template #slot-project_id="{ scope }">
 				<el-select v-model="scope.project_id" @change="projectChange">
 					<el-option
@@ -334,7 +334,11 @@ const Upsert = useUpsert({
 		]);
 
 		// 线索级别
-		Upsert.value?.setOptions("level", dict.get("cluesLevel").value);
+		const levelOptions = dict.get("cluesLevel").value || [];
+		Upsert.value?.setOptions(
+			"level",
+			levelOptions.filter((item) => item.value != null)
+		);
 
 		// 性别
 		Upsert.value?.setOptions("gender", [
@@ -501,12 +505,12 @@ const cancel = () => {
 };
 
 // 分配表单打开
-const DistributeFormRef = useForm(); //分配表单
+const distributeFormRef = useForm(); //分配表单
 const openDistribute = async () => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("group_id", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 
 	projectList.value = await service.customer_pro.project.list();
 	const ids = Crud.value?.selection.map((e) => {
@@ -514,7 +518,7 @@ const openDistribute = async () => {
 	});
 
 	// const item: any = [];
-	DistributeFormRef.value?.open({
+	distributeFormRef.value?.open({
 		title: `分配`,
 		items: [
 			{
@@ -570,9 +574,9 @@ const projectId = ref();
 // 项目id改变
 const projectChange = (v: any) => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("group_id", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 	projectId.value = v;
 	getGroupList(v);
 };
@@ -580,7 +584,7 @@ const projectChange = (v: any) => {
 // 组别id改变
 const groupChange = (v: any) => {
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("services_id", null);
 	getKfList(v, projectId.value);
 };
 
@@ -640,20 +644,66 @@ watch(
 );
 // 时间选择器起始
 const defaultTime = new Date();
+const shortcuts = [
+	{
+		text: "最近一天",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一周",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setDate(start.getDate() - 7);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近一个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 1);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	},
+	{
+		text: "最近三个月",
+		value: () => {
+			const end = new Date();
+			end.setHours(0, 0, 0, 0);
+			const start = new Date();
+			start.setMonth(start.getMonth() - 3);
+			start.setHours(0, 0, 0, 0);
+			return [start, end];
+		}
+	}
+];
 // 高级搜索
 const AdvSearch = useAdvSearch({
 	items: [
-		// {
-		// 	label: "线索等级",
-		// 	prop: "levelStatus",
-		// 	component: {
-		// 		name: "el-select",
-		// 		props: {
-		// 			clearable: true
-		// 		},
-		// 		options: dict.get("cluesLevel")
-		// 	}
-		// },
+		{
+			label: "线索等级",
+			prop: "levelStatus",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: dict.get("cluesLevel")
+			}
+		},
 		() => {
 			return {
 				label: "来源",
@@ -719,6 +769,7 @@ const AdvSearch = useAdvSearch({
 				name: "el-date-picker",
 				props: {
 					type: "datetimerange",
+					shortcuts: shortcuts,
 					startPlaceholder: "开始日期",
 					endPlaceholder: "结束日期",
 					defaultTime: defaultTime,

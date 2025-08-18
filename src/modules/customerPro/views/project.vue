@@ -65,7 +65,7 @@
 				<project-move :ref="setRefs('projectMove')" />
 
 				<!-- 客服人员列表 -->
-				<el-drawer v-model="drawerKf" :title="groupTitle" direction="rtl" size="80%">
+				<el-drawer v-model="drawerKf" :title="groupTitle" direction="rtl" size="85%">
 					<sub-kf :key="callKey" :groupId="groupId" :projectId="projectId" />
 				</el-drawer>
 			</cl-crud>
@@ -81,8 +81,10 @@ import { ElDrawer, ElMessageBox } from "element-plus";
 import SubTree from "../components/project/subTree.vue";
 import SubKf from "../components/project/subKf.vue";
 import ProjectMove from "../components/project/move.vue";
-import { ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
+import { useBase } from "/$/base";
 
+const { user } = useBase();
 const { service, refs, setRefs } = useCool();
 const { ViewGroup } = useViewGroup();
 const callKey = ref(0); //重新渲染子组件
@@ -91,16 +93,20 @@ const groupTitle = ref(); // 组别名称
 const projectId = ref(); //项目id
 const subTree = ref(); //子组件
 const weeks = ref(["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]);
+const isAdmin = ref(user.info.roleIds?.split(",").includes("1") || false);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
 		{ label: "客服组名称", prop: "name", required: true, component: { name: "el-input" } },
 		{ label: "项目", prop: "projectId", required: true, component: { name: "el-select" } },
-		{
-			label: "线索规则",
-			prop: "cluesRule",
-			component: { name: "slot-cluesRule" }
+		() => {
+			return {
+				label: "线索规则",
+				prop: "cluesRule",
+				component: { name: "slot-cluesRule" },
+				hidden: !isAdmin.value
+			};
 		},
 		{
 			label: "选中星期",
@@ -177,8 +183,6 @@ const Upsert = useUpsert({
 		}
 	}
 });
-
-// cl-table 配置
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
@@ -186,32 +190,12 @@ const Table = useTable({
 		{
 			label: "每天上限",
 			prop: "receivedCluesNum",
-			formatter(row) {
+			hidden: !isAdmin.value,
+			formatter(row: any) {
 				return row.receivedCluesNum == 0 ? "不限制" : row.receivedCluesNum;
 			}
 		},
 		{ label: "今天总数", prop: "hasReceive" },
-
-		// {
-		// 	label: "状态",
-		// 	prop: "status",
-		// 	component: {
-		// 		name: "cl-switch",
-		// 		props: {
-		// 			activeValue: 1,
-		// 			inactiveValue: 0,
-		// 			activeText: "开启",
-		// 			inactiveText: "关闭",
-		// 			inlinePrompt: true
-		// 		}
-		// 	}
-		// },
-		// {
-		// 	label: "备注",
-		// 	prop: "remark",
-		// 	minWidth: 150,
-		// 	showOverflowTooltip: true
-		// },
 		{ label: "创建时间", prop: "createTime", width: 160 },
 		{ type: "op", width: 220, buttons: ["edit", "slot-add"] }
 	]
@@ -240,21 +224,6 @@ async function toMove(item?: any) {
 	refs.projectMove.open(ids);
 }
 
-// 行点击展开
-function onRowClick(row: any, column: any) {
-	if (column?.property && row.children) {
-		Table.value?.toggleRowExpansion(row);
-	}
-}
-
-// 追加子集
-function append(row: any) {
-	Crud.value?.rowAppend({
-		parentId: row.id,
-		orderNum: 1
-	});
-}
-
 // 打开客服人员列表
 const drawerKf = ref(false);
 const openKf = (row: any) => {
@@ -269,6 +238,16 @@ watch(drawerKf, (v) => {
 	if (!drawerKf.value) {
 		subTree.value.refresh();
 	}
+});
+
+// 获取账号信息
+const getUserInfo = async () => {
+	isAdmin.value = user.info.roleIds?.split(",").includes("1");
+	console.log("isAdmin", isAdmin.value);
+};
+
+onMounted(async () => {
+	await getUserInfo();
 });
 </script>
 

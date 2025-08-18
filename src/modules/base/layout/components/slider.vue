@@ -13,7 +13,7 @@
 
 <script lang="ts" setup>
 import { useBase } from "/$/base";
-import { useBrowser, useCool } from "/@/cool";
+import { useBrowser } from "/@/cool";
 import BMenu from "./bmenu";
 import { onMounted, ref } from "vue";
 
@@ -22,7 +22,6 @@ const { app, setting } = useBase();
 
 const logo = ref(setting.setting.logo || app.info.logo);
 const siteName = ref(setting.setting.siteName || app.info.name);
-const copyright = ref(setting.setting.copyright);
 
 function toHome() {}
 

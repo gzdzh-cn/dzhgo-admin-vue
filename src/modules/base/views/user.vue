@@ -284,11 +284,11 @@ const Table = useTable({
 			label: "姓名",
 			minWidth: 150
 		},
-		{
-			prop: "nickName",
-			label: "昵称",
-			minWidth: 150
-		},
+		// {
+		// 	prop: "nickName",
+		// 	label: "昵称",
+		// 	minWidth: 150
+		// },
 		{
 			prop: "departmentName",
 			label: "部门名称",
@@ -317,6 +317,11 @@ const Table = useTable({
 					inlinePrompt: true
 				}
 			}
+		},
+		{
+			prop: "loginIp",
+			label: "登录IP",
+			minWidth: 150
 		},
 		{
 			prop: "phone",

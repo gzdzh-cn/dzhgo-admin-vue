@@ -37,8 +37,42 @@
 					</span>
 				</template>
 
+				<template #column-status="{ scope }">
+					<div
+						style="
+							display: flex;
+							flex-direction: row;
+							justify-content: center;
+							align-items: center;
+							gap: 10px;
+						"
+					>
+						<el-switch
+							v-model="scope.row.status"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="常规接收"
+							inactive-text="常规禁止"
+							inline-prompt
+							style="width: 80px"
+							@change="changeStatus(scope.row, 'status')"
+						/>
+
+						<el-switch
+							v-model="scope.row.areaStatus"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="地区接收"
+							inactive-text="地区禁止"
+							inline-prompt
+							style="width: 80px"
+							@change="changeStatus(scope.row, 'areaStatus')"
+						/>
+					</div>
+				</template>
+
 				<template #slot-set_Gadmin="{ scope }">
-					<div v-if="service.customer_pro.kf._permission.setProjectRole">
+					<div v-if="service.customer_pro.kf._permission.setGroupRole">
 						<el-button
 							text
 							plain
@@ -96,7 +130,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage } from "element-plus";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import KfMove from "./kfMove.vue";
 
 const { service, refs, setRefs } = useCool();
@@ -108,6 +142,9 @@ const props = defineProps({
 
 const userMap = ref<{ [key: string]: string }>({});
 const weeks = ref(["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]);
+
+// 标志位
+const isTableInited = ref(false);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -195,22 +232,24 @@ const Upsert = useUpsert({
 	],
 	async onOpen(data) {
 		Upsert.value?.setOptions("userId", []);
-		const kfList = await service.customer_pro.kf.getList({
-			roleId: "1815245038695747584",
-			userId: data.userId,
-			mode: Upsert.value?.mode,
-			type: "group"
-		});
-		Upsert.value?.setOptions(
-			"userId",
-			kfList.map((e: { name: any; id: any }) => {
-				userMap.value[e.id] = e.name;
-				return {
-					label: e.name,
-					value: e.id
-				};
-			})
-		);
+		if (service.customer_pro.kf._permission.getList) {
+			const kfList = await service.customer_pro.kf.getList({
+				roleId: "1815245038695747584",
+				userId: data.userId,
+				mode: Upsert.value?.mode,
+				type: "group"
+			});
+			Upsert.value?.setOptions(
+				"userId",
+				kfList.map((e: { name: any; id: any }) => {
+					userMap.value[e.id] = e.name;
+					return {
+						label: e.name,
+						value: e.id
+					};
+				})
+			);
+		}
 	},
 	onSubmit(data, { next }) {
 		let form: any = {
@@ -245,7 +284,7 @@ const Table = useTable({
 		{
 			label: "接收推送",
 			prop: "status",
-			width: 160,
+			width: 200,
 			component: {
 				name: "cl-switch",
 				props: {
@@ -277,6 +316,7 @@ const Crud = useCrud(
 			params.groupId = props.groupId;
 			const { list, pagination } = await next(params);
 			render(list, pagination);
+			isTableInited.value = true; // 数据加载完后设置为 true
 		}
 	},
 	(app) => {
@@ -287,7 +327,7 @@ const Crud = useCrud(
 // 设置主管，action是1未添加主管，是0为取消主管， type是1为组主管，2为项目主管
 const setRole = (row: any, action: boolean, type: number) => {
 	service.customer_pro.kf
-		.setProjectRole({
+		.setGroupRole({
 			action,
 			role: type,
 			id: row.id,
@@ -298,6 +338,7 @@ const setRole = (row: any, action: boolean, type: number) => {
 		})
 		.then(() => {
 			ElMessage.success("设置成功");
+			isTableInited.value = false;
 			Crud.value?.refresh();
 		})
 		.catch((e) => {
@@ -317,6 +358,28 @@ async function toMove(item?: any) {
 
 	refs.kfMove.open(ids);
 }
+// 改变接收状态
+const changeStatus = (row: any, type: string) => {
+	if (!isTableInited.value) return; // 初始化未完成时不执行
+	let status;
+	if (type == "status") {
+		status = row.status;
+	}
+	if (type == "areaStatus") {
+		status = row.areaStatus;
+	}
+	service.customer_pro.kf
+		.update({
+			id: row.id,
+			userId: row.userId,
+			[type]: status
+		})
+		.then(() => {
+			ElMessage.success("设置成功");
+			isTableInited.value = false;
+			Crud.value?.refresh();
+		});
+};
 </script>
 
 <style lang="scss" scoped>

@@ -19,7 +19,7 @@ import { computed } from "vue";
 import { flattenDeep, last } from "lodash-es";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { ArrowRight } from "@element-plus/icons-vue";
+// import { ArrowRight } from "@element-plus/icons-vue";
 
 const { route, browser } = useCool();
 const { menu } = useBase();

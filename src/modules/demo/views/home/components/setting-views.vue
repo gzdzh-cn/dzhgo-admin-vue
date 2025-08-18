@@ -50,8 +50,8 @@
 						<tr>
 							<td class="left">服务器架构：</td>
 							<td class="right">{{ serverInfo?.goHostArch }}</td>
-							<td class="left">Mysql 版本：</td>
-							<td class="right">{{ serverInfo?.mysqlVersion }}</td>
+							<td class="left">数据库 版本：</td>
+							<td class="right">{{ serverInfo?.dBVersion }}</td>
 						</tr>
 
 						<tr>
