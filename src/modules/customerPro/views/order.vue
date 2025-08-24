@@ -160,7 +160,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer_pro-order" setup>
+<script lang="ts" name="customer-pro-order" setup>
 import { useCrud, useTable, useUpsert, useForm } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ref } from "vue";
@@ -591,20 +591,6 @@ const Table = useTable({
 		{
 			label: "审核状态",
 			prop: "audit_status"
-			// formatter(row, column, value, index) {
-			// 	switch (value) {
-			// 		case 1:
-			// 			return "待审核";
-			// 		case 2:
-			// 			return "审核通过";
-			// 		case 3:
-			// 			return "审核失败";
-			// 		case 4:
-			// 			return "已退学";
-			// 		default:
-			// 			break;
-			// 	}
-			// }
 		},
 
 		{ label: "创建时间", prop: "createTime" },

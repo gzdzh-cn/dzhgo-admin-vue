@@ -84,7 +84,7 @@ async function onCommand(name: string) {
 }
 
 onMounted(() => {
-	// noticeRef.value.getMessageList();
+	// noticeRef.value.refresh();
 });
 </script>
 

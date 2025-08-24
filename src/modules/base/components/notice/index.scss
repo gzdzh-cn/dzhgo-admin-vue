@@ -11,7 +11,7 @@
 	.message-title-cell {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: 2px;
 	}
 
 	.unread-dot {
@@ -20,6 +20,11 @@
 		background-color: #f56c6c;
 		border-radius: 50%;
 		display: inline-block;
+	}
+	.unread-row {
+		// background-color: #f0f9ff;
+		// border-left: 3px solid #409eff;
+		--el-table-tr-bg-color: var(--el-color-warning-light-9);
 	}
 
 	// 表格行样式
@@ -91,5 +96,12 @@
 		background-color: #f4f4f5;
 		border-color: #d3d4d6;
 		color: #909399;
+	}
+}
+
+// 高级搜索弹窗样式
+.el-drawer {
+	.el-drawer__header {
+		margin-bottom: 0 !important;
 	}
 }

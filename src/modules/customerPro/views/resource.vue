@@ -15,7 +15,7 @@
 				plain
 				@click="openExcelDialog()"
 				style="margin-right: 10px"
-				v-if="service.customer_pro.clues._permission.excel"
+				v-if="service.customer_pro.resource._permission.excel"
 			>
 				导出Excel
 			</el-button>
@@ -24,30 +24,9 @@
 				type="warning"
 				:disabled="Table?.selection.length == 0"
 				@click="openDistribute"
-				v-permission="service.customer_pro.clues._permission.distribute"
+				v-permission="service.customer_pro.resource._permission.distribute"
 				>分配</el-button
 			>
-			<!-- <el-popconfirm title="会清空当前系统的数据，确定迁移数据吗?" @confirm="migrateData()">
-				<template #reference>
-					<el-button v-if="isAdmin" bg type="danger">迁移数据</el-button>
-				</template>
-			</el-popconfirm> -->
-
-			<!-- <el-popconfirm title="清空当前系统全部数据吗?" @confirm="clearData()">
-				<template #reference>
-					<el-button v-if="isAdmin" bg type="info">清除数据</el-button>
-				</template>
-			</el-popconfirm> -->
-
-			<!-- <el-button plain @click="randomDialog = true" style="margin-right: 10px" v-if="isAdmin">
-				生成随机数据
-			</el-button> -->
-
-			<!-- <cl-export-btn
-				:columns="Table?.columns"
-				:data="onExportData"
-				:disabled="Table?.selection.length == 0"
-			/> -->
 
 			<cl-flex1 />
 
@@ -72,11 +51,9 @@
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p>唯一码: {{ scope.row?.id }}</p>
-						<p>guestId: {{ scope.row?.guestId }}</p>
-						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
-							创建者: {{ scope.row?.createdName }}
-						</p>
-						<p>账户: {{ scope.row?.account_name }}</p>
+						<!-- <p>guestId: {{ scope.row?.guestId }}</p> -->
+						<p v-if="scope.row?.createdName">创建者: {{ scope.row?.createdName }}</p>
+						<!-- <p>账户: {{ scope.row?.account_name }}</p> -->
 						<p v-if="scope.row?.services_names" style="color: #d83b01">
 							分配过的客服: {{ scope.row?.services_names }}
 						</p>
@@ -84,7 +61,7 @@
 						<p v-if="scope.row?.level">
 							线索等级: {{ levelFormatter(scope.row?.level) }}
 						</p>
-						<p>IP归属地: {{ scope.row?.guestIpInfo }}</p>
+						<!-- <p>IP归属地: {{ scope.row?.guestIpInfo }}</p> -->
 						<p>
 							最后跟进时间:
 							{{
@@ -119,18 +96,6 @@
 							gap: 12px;
 						"
 					>
-						<!-- <el-button
-							text
-							bg
-							type="primary"
-							@click="edit(scope.row)"
-							v-if="
-								scope.row.status == 0 &&
-								service.customer_pro.clues._permission.update
-							"
-							>审核</el-button
-						> -->
-
 						<el-button text bg type="info" @click="openFollow(scope.row)"
 							>跟进</el-button
 						>
@@ -139,7 +104,7 @@
 							bg
 							type="warning"
 							@click="openTracks(scope.row)"
-							v-if="service.customer_pro.clues._permission.getTrackList"
+							v-if="service.customer_pro.resource._permission.getTrackList"
 							>轨迹</el-button
 						>
 						<el-button
@@ -160,14 +125,7 @@
 		<cl-row>
 			<cl-flex1 />
 			<!-- 分页控件 -->
-			<cl-pagination
-				:pager-count="browser.isMini ? 3 : 7"
-				:layout="
-					browser.isMini
-						? 'slot,total, prev, pager, next'
-						: 'slot,total, sizes, prev, pager, next, jumper'
-				"
-			/>
+			<cl-pagination />
 		</cl-row>
 
 		<!-- 新增、编辑 -->
@@ -239,7 +197,7 @@
 				ref="FollowRef"
 				:id="cluesId"
 				:status="cluesStatus"
-				dtype="clues"
+				dtype="resource"
 				@cancel="cancel"
 			/>
 		</cl-dialog>
@@ -330,12 +288,12 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-clues" setup>
+<script lang="ts" name="customer-pro-resource" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
-import { ElMessage, ElLoading } from "element-plus";
+import { ElMessage, TabsPaneContext, ElLoading } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import SubFollow from "../components/clues/subFollow.vue";
 import SubTrack from "../components/clues/subTrack.vue";
 import excelDown from "../components/clues/excelDown.vue";
@@ -344,7 +302,6 @@ import { useBase } from "/$/base";
 
 const { service } = useCool();
 const { user } = useBase();
-const { browser } = useCool();
 const FollowRef = ref(); //跟进
 const cluesId = ref(); //线索id
 const cluesStatus = ref(0); //线索状态
@@ -354,10 +311,8 @@ const isExtend = ref(true); //展开
 const serviceGroup = ref(); // 客服组
 const openExcel = ref(false); //打开导出弹窗
 const { dict } = useDict();
-const dtype = ref(0);
-
-// const cluesStatus = ref(0);
 const searchRef = ref();
+const dtype = ref(1);
 // const keyWord = ref();
 
 // cl-upsert 配置
@@ -410,7 +365,8 @@ const Upsert = useUpsert({
 			prop: "source_from",
 			span: 12,
 			required: true,
-			component: { name: "el-select" }
+			value: "6",
+			component: { name: "el-select", props: { disabled: true } }
 		},
 
 		{ label: "关键字", prop: "keywords", span: 12, component: { name: "el-input" } },
@@ -558,6 +514,10 @@ const Upsert = useUpsert({
 			{
 				label: "小红书",
 				value: "5"
+			},
+			{
+				label: "线索资源",
+				value: "6"
 			}
 		]);
 
@@ -650,14 +610,13 @@ const Table = useTable({
 // cl-crud 配置
 const Crud = useCrud(
 	{
-		service: service.customer_pro.clues,
+		service: service.customer_pro.resource,
 		async onRefresh(params, { render }) {
 			searchData.value = params;
 			params.status = 0;
-			params.dtype = 0;
-
+			params.dtype = 1;
 			params.size = 10;
-			const { list, pagination } = await service.customer_pro.clues.page(params);
+			const { list, pagination } = await service.customer_pro.resource.page(params);
 			render(list, pagination);
 		}
 	},
@@ -686,50 +645,10 @@ const randomForm = ref({
 });
 // 生成随机数据
 const randomData = async () => {
-	await service.customer_pro.clues.randomData(randomForm.value);
+	await service.customer_pro.resource.randomData(randomForm.value);
 	randomDialog.value = false;
 	ElMessage.success("数据生成中，请稍等10分钟再刷新页面");
 };
-
-// 迁移数据
-// const migrateData = async () => {
-// 	const info = await service.customer_pro.config.info({ id: 1 });
-// 	service.customer_pro.config
-// 		.migrateData()
-// 		.then(() => {
-// 			ElMessage.success("迁移执行中，请稍等5分钟再刷新页面");
-// 		})
-// 		.catch((e) => {
-// 			ElMessage.error(e.message);
-// 		});
-// };
-
-//清除数据
-// const clearData = async () => {
-// 	service.customer_pro.config.clearTable().then(() => {
-// 		ElMessage.success("清除数据完成");
-// 		refresh();
-// 	});
-// };
-
-// 导出
-// const onExportData = async (params: any) => {
-// 	return Table.value?.selection;
-// };
-
-// 切换类型
-// const handleClick = (tab: TabsPaneContext) => {
-// 	refresh({ followType: tab.index });
-// };
-
-// 编辑
-// const edit = (row: any) => {
-// 	if (row.status == 0) {
-// 		Crud.value?.rowEdit(row);
-// 	} else {
-// 		Crud.value?.rowInfo(row);
-// 	}
-// };
 
 // 轨迹弹窗
 const trackVisible = ref(false);
@@ -746,28 +665,17 @@ const openFollow = (row: any) => {
 	visible.value = true;
 };
 
-// 保存跟进
-// const followSave = () => {
-// 	FollowRef.value.sub();
-// };
-
 // 取消
 const cancel = () => {
 	visible.value = false;
 	refresh();
 };
 
-// 保存到公海
-// const pushCommonClause = () => {
-// 	FollowRef.value.pushCommonClause();
-// 	refresh();
-// };
-
 // 线索成交
 const OrderFormRef = useForm(); //成交表单
 const openOrderAdd = async (row: any) => {
 	cluesId.value = row.id;
-	const cluesOne = await service.customer_pro.clues.info({ id: cluesId.value });
+	const cluesOne = await service.customer_pro.resource.info({ id: cluesId.value });
 	OrderFormRef.value?.open({
 		title: "线索成交",
 		items: [
@@ -1212,7 +1120,7 @@ const openDistribute = async () => {
 		on: {
 			async open() {},
 			submit(data, { done, close }) {
-				service.customer_pro.clues
+				service.customer_pro.resource
 					.distribute({
 						ids: ids,
 						servicesId: data.services_id
@@ -1351,64 +1259,18 @@ const shortcuts = [
 // 高级搜索
 const AdvSearch = useAdvSearch({
 	items: [
-		() => {
-			return {
-				label: "线索等级",
-				prop: "levelStatus",
-				component: {
-					name: "el-select",
-					props: {
-						clearable: true
-					},
-					options: dict.get("cluesLevel")
-				}
-			};
+		{
+			label: "线索等级",
+			prop: "levelStatus",
+			component: {
+				name: "el-select",
+				props: {
+					clearable: true
+				},
+				options: dict.get("cluesLevel")
+			}
 		},
-		() => {
-			return {
-				label: "来源",
-				prop: "sourceStatus",
-				component: {
-					name: "el-select",
-					props: {
-						clearable: true
-					},
-					options: () => {
-						let option = [
-							{
-								label: "手动录入",
-								value: "1"
-							},
-							{
-								label: "百度",
-								value: "2"
-							},
-							{
-								label: "抖音",
-								value: "3"
-							},
-							{
-								label: "53客服",
-								value: "4"
-							},
-							{
-								label: "小红书",
-								value: "5"
-							}
-						];
 
-						if (isAdmin.value) {
-							option.push({
-								label: "测试数据",
-								value: "-1"
-							});
-						}
-
-						return option;
-					}
-				}
-			};
-		},
 		() => {
 			return {
 				label: "客服组",
@@ -1520,6 +1382,8 @@ const sourceFormatter = (v: string) => {
 			return "53客服";
 		case "5":
 			return "小红书";
+		case "6":
+			return "资源";
 		default:
 			break;
 	}
@@ -1564,10 +1428,8 @@ const toexcel = async (isCurrent: boolean) => {
 		text: "Loading",
 		background: "rgba(0, 0, 0, 0.7)"
 	});
-
-	const result = await service.customer_pro.clues.excel({
+	const result = await service.customer_pro.resource.excel({
 		...searchData.value,
-		// keyWord: keyWord.value,
 		isCurrentPage: isCurrent
 	});
 

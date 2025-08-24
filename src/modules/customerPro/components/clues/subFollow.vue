@@ -1,71 +1,20 @@
 <template>
-	<el-tabs v-model="activeName" type="border-card" @tab-click="handleClick">
+	<el-tabs
+		v-model="activeName"
+		type="border-card"
+		@tab-click="handleClick"
+		v-if="hasAnyPermission"
+	>
 		<el-tab-pane
 			label="编辑线索"
 			name="edit"
 			v-if="
-				service.customer_pro.clues._permission.update ||
+				service.customer_pro[dtypeKey]._permission.update ||
 				service.customer_pro.clues_filter._permission.update
 			"
 		>
 			<el-divider content-position="left">编辑线索</el-divider>
 			<div class="sub-follow-container">
-				<!-- <el-form :model="basicForm" :inline="true">
-					<el-form-item label="53标识">
-						<el-input v-model="basicForm.guestId" disabled />
-					</el-form-item>
-					<el-form-item label="项目">
-						<el-select v-model="basicForm.projectId" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="IP">
-						<el-input v-model="basicForm.ip" disabled />
-					</el-form-item>
-					<el-form-item label="IP归属地">
-						<el-input v-model="basicForm.guestIpInfo" disabled />
-					</el-form-item>
-					<el-form-item label="姓名">
-						<el-input v-model="basicForm.name" />
-					</el-form-item>
-					<el-form-item label="来源">
-						<el-select v-model="basicForm.sourceFrom" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="关键字">
-						<el-input v-model="basicForm.keywords" />
-					</el-form-item>
-					<el-form-item label="毕业院校">
-						<el-select v-model="basicForm.graduatedSchool" style="width: 200px">
-						</el-select>
-					</el-form-item>
-					<el-form-item label="意向院校">
-						<el-select v-model="basicForm.schoolId" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="意向专业">
-						<el-select v-model="basicForm.majorsId" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="报读类型">
-						<el-select v-model="basicForm.majorsType" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="户口类型">
-						<el-select v-model="basicForm.householdType" style="width: 200px">
-						</el-select>
-					</el-form-item>
-					<el-form-item label="户籍地址">
-						<el-input v-model="basicForm.householdAddress" />
-					</el-form-item>
-					<el-form-item label="线索等级">
-						<el-select v-model="basicForm.level" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="性别">
-						<el-select v-model="basicForm.gender" style="width: 200px"> </el-select>
-					</el-form-item>
-					<el-form-item label="紧急联系人">
-						<el-input v-model="basicForm.emergencyMobile" />
-					</el-form-item>
-					<el-form-item label="备注">
-						<el-input v-model="basicForm.remark" />
-					</el-form-item>
-				</el-form> -->
-
 				<cl-form ref="FormEdit" :inner="true">
 					<!-- 学校 -->
 					<template #slot-school_id="{ scope }">
@@ -94,11 +43,7 @@
 			</div>
 		</el-tab-pane>
 
-		<el-tab-pane
-			label="创建记录"
-			name="order"
-			v-if="service.customer_pro.clues._permission.followAdd && status == 0"
-		>
+		<el-tab-pane label="创建记录" name="order" v-if="hasFollowAddPermission && status == 0">
 			<div style="min-height: 100px; height: 220px">
 				<el-divider content-position="left">创建记录</el-divider>
 
@@ -128,11 +73,7 @@
 			</div>
 		</el-tab-pane>
 
-		<el-tab-pane
-			label="跟进记录"
-			name="follow"
-			v-if="service.customer_pro.clues._permission.followList && status == 0"
-		>
+		<el-tab-pane label="跟进记录" name="follow" v-if="hasFollowListPermission && status == 0">
 			<el-divider content-position="left">进度</el-divider>
 			<div style="min-height: 100px; height: 400px; overflow: auto">
 				<div style="min-height: 100px">
@@ -169,11 +110,7 @@
 			</div>
 		</el-tab-pane>
 
-		<el-tab-pane
-			label="聊天记录"
-			name="talk"
-			v-if="service.customer_pro.clues._permission.chatContentList"
-		>
+		<el-tab-pane label="聊天记录" name="talk" v-if="hasChatContentListPermission">
 			<el-divider content-position="left">聊天记录</el-divider>
 			<el-tabs tab-position="left" style="min-height: 100px; height: 400px">
 				<el-tab-pane
@@ -235,19 +172,18 @@
 		</el-tab-pane>
 	</el-tabs>
 
+	<div v-else style="text-align: center; padding: 40px; color: #999">暂无权限访问此功能</div>
+
 	<div class="sumit-btn" v-if="activeName == 'order' || activeName == 'edit'">
 		<el-button @click="cancel"> 取消 </el-button>
 		<el-button type="success" @click="submitAll"> 保存 </el-button>
-		<el-popconfirm title="确定放入公海吗?" @confirm="pushCommonClause">
+		<el-popconfirm
+			v-if="cluesStatus == 0 && hasPushCommonClausePermission"
+			title="确定放入公海吗?"
+			@confirm="pushCommonClause"
+		>
 			<template #reference>
-				<el-button
-					type="warning"
-					v-if="
-						cluesStatus == 0 && service.customer_pro.clues._permission.pushCommonClause
-					"
-				>
-					放入公海
-				</el-button>
+				<el-button type="warning"> 放入公海 </el-button>
 			</template>
 		</el-popconfirm>
 	</div>
@@ -255,33 +191,39 @@
 
 <script lang="ts" name="customeer_pro-subFollow" setup>
 import { useCool } from "/@/cool";
-import { computed, onMounted, reactive, ref, watch } from "vue";
-import { useCrud, useTable, useForm } from "@cool-vue/crud";
-import { dayjs, ElMessage, FormInstance } from "element-plus";
+import { computed, onMounted, ref, watch } from "vue";
+import { useForm } from "@cool-vue/crud";
+import { dayjs, ElMessage } from "element-plus";
 import { Edit, ChatLineRound, UserFilled } from "@element-plus/icons-vue";
 import { useDict } from "/$/dict";
 
 const props = defineProps({
 	id: String,
-	status: Number
+	status: Number,
+	dtype: {
+		type: String,
+		default: () => "clues"
+	}
 });
-interface RuleForm {
-	followType: string[];
-	nextFollowupTime: string;
-	remark: string;
-}
 
-interface ChatContent {
-	company_id?: string;
-	id6d?: string;
-	msg?: string;
-	msg_time?: string;
-	msg_type?: string;
-	new_type?: string;
-	talk_id?: string;
-	worker_id?: string;
-	worker_name?: string;
-}
+// interface RuleForm {
+// 	followType: string[];
+// 	nextFollowupTime: string;
+// 	remark: string;
+// }
+
+// interface ChatContent {
+// 	company_id?: string;
+// 	id6d?: string;
+// 	msg?: string;
+// 	msg_time?: string;
+// 	msg_type?: string;
+// 	new_type?: string;
+// 	talk_id?: string;
+// 	worker_id?: string;
+// 	worker_name?: string;
+// }
+
 interface Chat {
 	id?: string;
 	clues_id?: string;
@@ -296,29 +238,29 @@ interface FlolowContent {
 	userName?: string;
 	remark?: string;
 }
-interface CluesRuleForm {
-	guest_id: string;
-	project_id: string;
-	ip: string;
-	guest_ip_info: string;
-	name: string;
-	source_from: string;
-	keywords: string;
-	mobile: string;
-	wechat: string;
-	education: string;
-	graduated_school: string;
-	school_id: string;
-	majors_id: string;
-	majors_type: string;
-	degree_id: string;
-	household_type: string;
-	household_address: string;
-	level: string;
-	gender: string;
-	emergency_mobile: string;
-	remark: string;
-}
+// interface CluesRuleForm {
+// 	guest_id: string;
+// 	project_id: string;
+// 	ip: string;
+// 	guest_ip_info: string;
+// 	name: string;
+// 	source_from: string;
+// 	keywords: string;
+// 	mobile: string;
+// 	wechat: string;
+// 	education: string;
+// 	graduated_school: string;
+// 	school_id: string;
+// 	majors_id: string;
+// 	majors_type: string;
+// 	degree_id: string;
+// 	household_type: string;
+// 	household_address: string;
+// 	level: string;
+// 	gender: string;
+// 	emergency_mobile: string;
+// 	remark: string;
+// }
 
 const { dict } = useDict();
 const emit = defineEmits(["cancel"]);
@@ -326,33 +268,8 @@ const emit = defineEmits(["cancel"]);
 const chatContentList = ref<Chat[]>([]);
 const { service } = useCool();
 const flolowContent = ref<FlolowContent[]>([]);
-const visible = ref(false);
 const cluesStatus = computed(() => props.status);
 
-// cl-crud 配置
-const Crud = useCrud({
-	service: service.customer_pro.clues,
-	async onRefresh(params, { render }) {
-		const list: any = await service.customer_pro.clues.list({ id: params.id });
-
-		// 获取跟进记录
-		if (service.customer_pro.clues._permission.followList) {
-			flolowContent.value = await service.customer_pro.clues.followList({
-				cluesId: params.id
-			});
-		}
-
-		// 获取53客服聊天记录
-		if (service.customer_pro.clues._permission.chatContentList) {
-			chatContentList.value = await service.customer_pro.clues.chatContentList({
-				cluesId: params.id
-			});
-		}
-
-		// 渲染数据
-		render(list);
-	}
-});
 // 标签
 const activeName = ref(props.status == 0 ? "order" : "edit");
 const handleClick = () => {};
@@ -365,29 +282,44 @@ watch(
 	}
 );
 
-// const basicForm = ref({
-// 	guestId: "",
-// 	projectId: 0,
-// 	ip: "",
-// 	guestIpInfo: "",
-// 	name: "",
-// 	sourceFrom: "",
-// 	keywords: "",
-// 	graduatedSchool: "",
-// 	schoolId: "",
-// 	majorsId: "",
-// 	majorsType: "",
-// 	householdType: "",
-// 	householdAddress: "",
-// 	level: "",
-// 	gender: "",
-// 	emergencyMobile: "",
-// 	remark: ""
-// });
+const dtypeKey = computed(() => props.dtype as keyof typeof service.customer_pro);
+
+const hasFollowAddPermission = computed(() => {
+	console.log(
+		"hasFollowAddPermission",
+		(service.customer_pro[dtypeKey.value] as any)?._permission?.followAdd
+	);
+
+	return (service.customer_pro[dtypeKey.value] as any)?._permission?.followAdd || false;
+});
+
+const hasFollowListPermission = computed(() => {
+	return (service.customer_pro[dtypeKey.value] as any)?._permission?.followList || false;
+});
+
+const hasChatContentListPermission = computed(() => {
+	return (service.customer_pro[dtypeKey.value] as any)?._permission?.chatContentList || false;
+});
+
+const hasPushCommonClausePermission = computed(() => {
+	return (service.customer_pro[dtypeKey.value] as any)?._permission?.pushCommonClause || false;
+});
+
+const hasAnyPermission = computed(() => {
+	return (
+		hasFollowAddPermission.value ||
+		hasFollowListPermission.value ||
+		hasChatContentListPermission.value ||
+		(service.customer_pro[dtypeKey.value] as any)?._permission?.update ||
+		service.customer_pro.clues_filter._permission.update
+	);
+});
 
 const FormEdit = useForm();
 async function openEdit() {
-	const item = await service.customer_pro.clues.info({ id: props.id });
+	const item = await service.customer_pro[dtypeKey.value].info({
+		id: props.id
+	});
 	FormEdit.value?.open({
 		title: "编辑线索",
 		items: [
@@ -516,6 +448,15 @@ async function openEdit() {
 			async open() {
 				getSchoolList();
 
+				if (props.dtype == "resource") {
+					FormEdit.value?.setProps("projectId", {
+						disabled: true
+					});
+					FormEdit.value?.setProps("sourceFrom", {
+						disabled: true
+					});
+				}
+
 				// 项目
 				const projectList = await service.customer_pro.project.list();
 				FormEdit.value?.setOptions(
@@ -571,10 +512,10 @@ async function openEdit() {
 				]);
 
 				// 线索级别
-				const levelOptions = dict.get("cluesLevel").value || [];
+				const levelOptions = dict.get("cluesLevel");
 				FormEdit.value?.setOptions(
 					"level",
-					levelOptions.filter((item) => item.value != null)
+					levelOptions.value.filter((item) => item.value != null)
 				);
 
 				// 性别
@@ -614,6 +555,10 @@ async function openEdit() {
 					{
 						label: "小红书",
 						value: "5"
+					},
+					{
+						label: "线索资源",
+						value: "6"
 					}
 				]);
 
@@ -647,7 +592,7 @@ async function openEdit() {
 				emit("cancel");
 			},
 			submit(data, { close, done }) {
-				service.customer_pro.clues
+				service.customer_pro[dtypeKey.value]
 					.update({ ...data })
 					.then(() => {
 						done();
@@ -708,7 +653,7 @@ async function openFollow() {
 						ElMessage.error("请填写备注");
 						return;
 					}
-					service.customer_pro.clues
+					(service.customer_pro[dtypeKey.value] as any)
 						.followAdd({ cluesId: props.id, ...data })
 						.then(() => {
 							done();
@@ -780,64 +725,25 @@ function disabledDate(time: { getTime: () => number }) {
 	//Date.now()是javascript中的内置函数，它返回自1970年1月1日00:00:00 UTC以来经过的毫秒数。
 	return time.getTime() < Date.now() - 8.64e7;
 }
-// cl-table 配置
-const Table = useTable({
-	columns: [
-		{
-			label: "姓名",
-			prop: "name",
-			width: 250
-		},
-
-		{ label: "手机号", prop: "mobile" },
-		{ label: "微信号", prop: "wechat" },
-		{
-			label: "来源",
-			prop: "source_from",
-			dict: [
-				{
-					label: "手动录入",
-					value: 1
-				},
-				{
-					label: "百度",
-					value: 2
-				},
-				{
-					label: "抖音",
-					value: 3
-				},
-				{
-					label: "53客服",
-					value: 4
-				},
-				{
-					label: "小红书",
-					value: 5
-				}
-			]
-		}
-	]
-});
 
 // 表格规则
-const rules = reactive({
-	followType: [{ required: true, message: "选择跟进方式", trigger: "change" }],
-	nextFollowupTime: [
-		{
-			required: true,
-			message: "选择下次跟进时间",
-			trigger: "change"
-		}
-	],
-	remark: [
-		{
-			required: true,
-			message: "填写备注",
-			trigger: "change"
-		}
-	]
-});
+// const rules = reactive({
+// 	followType: [{ required: true, message: "选择跟进方式", trigger: "change" }],
+// 	nextFollowupTime: [
+// 		{
+// 			required: true,
+// 			message: "选择下次跟进时间",
+// 			trigger: "change"
+// 		}
+// 	],
+// 	remark: [
+// 		{
+// 			required: true,
+// 			message: "填写备注",
+// 			trigger: "change"
+// 		}
+// 	]
+// });
 
 // 跟进类型鼠标停留效果
 const followProps = {
@@ -901,35 +807,9 @@ const handleChange = (e: any) => {
 	console.log("handleChange", e);
 };
 
-// 跟进方式提交
-const sub = async () => {
-	// if (activeName.value == "edit") {
-	// }
-	// if (activeName.value == "order") {
-	// 	if (!FormFollow.value) return;
-	// 	await FormFollow.value?.validate((valid, fields) => {
-	// 		if (valid) {
-	// 			service.customer_pro.clues
-	// 				.followAdd({
-	// 					cluesId: props.id,
-	// 					...form
-	// 				})
-	// 				.then((r) => {
-	// 					ElMessage.success("保存成功");
-	// 					emit("cancel");
-	// 				})
-	// 				.finally(() => {});
-	// 		} else {
-	// 			console.log("error submit!", fields);
-	// 			ElMessage.error("错误" + fields);
-	// 		}
-	// 	});
-	// }
-};
-
 // 放入公海
 const pushCommonClause = () => {
-	service.customer_pro.clues.pushCommonClause({ cluesId: props.id });
+	(service.customer_pro[dtypeKey.value] as any).pushCommonClause({ cluesId: props.id });
 	ElMessage.success("保存成功");
 	emit("cancel");
 };
@@ -960,22 +840,23 @@ onMounted(async () => {
 	openFollow();
 	// Crud.value?.refresh({ id: props.id });
 	// 获取跟进记录
-	if (service.customer_pro.clues._permission.followList) {
-		flolowContent.value = await service.customer_pro.clues.followList({
+	if (hasFollowListPermission.value) {
+		flolowContent.value = await (service.customer_pro[dtypeKey.value] as any).followList({
 			cluesId: props.id
 		});
 	}
 
 	// 获取53客服聊天记录
-	if (service.customer_pro.clues._permission.chatContentList) {
-		chatContentList.value = await service.customer_pro.clues.chatContentList({
-			cluesId: props.id
-		});
+	if (hasChatContentListPermission.value) {
+		chatContentList.value = await (service.customer_pro[dtypeKey.value] as any).chatContentList(
+			{
+				cluesId: props.id
+			}
+		);
 	}
 });
 
 defineExpose({
-	sub,
 	pushCommonClause
 });
 </script>

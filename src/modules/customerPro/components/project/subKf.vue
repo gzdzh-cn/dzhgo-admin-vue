@@ -68,6 +68,17 @@
 							style="width: 80px"
 							@change="changeStatus(scope.row, 'areaStatus')"
 						/>
+
+						<el-switch
+							v-model="scope.row.resourceStatus"
+							:active-value="1"
+							:inactive-value="0"
+							active-text="资源接收"
+							inactive-text="资源禁止"
+							inline-prompt
+							style="width: 80px"
+							@change="changeStatus(scope.row, 'resourceStatus')"
+						/>
 					</div>
 				</template>
 
@@ -284,18 +295,9 @@ const Table = useTable({
 		{
 			label: "接收推送",
 			prop: "status",
-			width: 200,
-			component: {
-				name: "cl-switch",
-				props: {
-					activeValue: 1,
-					inactiveValue: 0,
-					activeText: "接收",
-					inactiveText: "禁用",
-					inlinePrompt: true
-				}
-			}
+			width: 260
 		},
+
 		// {
 		// 	label: "备注",
 		// 	prop: "remark",
@@ -367,6 +369,9 @@ const changeStatus = (row: any, type: string) => {
 	}
 	if (type == "areaStatus") {
 		status = row.areaStatus;
+	}
+	if (type == "resourceStatus") {
+		status = row.resourceStatus;
 	}
 	service.customer_pro.kf
 		.update({

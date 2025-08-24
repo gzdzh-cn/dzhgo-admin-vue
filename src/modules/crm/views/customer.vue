@@ -198,7 +198,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("orderType").value
+				options: dict.get("orderType")
 			}
 		},
 		{

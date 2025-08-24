@@ -28,7 +28,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer_pro-readdegree" setup>
+<script lang="ts" name="customer-pro-readdegree" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 

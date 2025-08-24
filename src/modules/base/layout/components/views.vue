@@ -111,8 +111,8 @@ const handleIconClick = () => {
 	// 右侧固定浮动图标样式
 	.floating-icon {
 		position: fixed;
-		right: 30px;
-		bottom: 100px;
+		right: 10px;
+		bottom: 80px;
 		width: 50px;
 		height: 50px;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -73,7 +73,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer_pro-wxTemplate" setup>
+<script lang="ts" name="customer-pro-wxTemplate" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { Plus, Minus } from "@element-plus/icons-vue";

@@ -289,7 +289,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("species").value
+				options: dict.get("species")
 			}
 		},
 		{
@@ -298,7 +298,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("paytype").value
+				options: dict.get("paytype")
 			}
 		},
 		{
@@ -406,7 +406,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [...dict.get("species").value]
+					options: dict.get("species")
 				}
 			}
 		},
@@ -416,7 +416,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [...dict.get("type").value]
+					options: dict.get("type")
 				}
 			}
 		},
@@ -426,7 +426,7 @@ const AdvSearch = useAdvSearch({
 			component: {
 				name: "cl-select",
 				props: {
-					options: [...dict.get("paytype").value]
+					options: dict.get("paytype")
 				}
 			}
 		},

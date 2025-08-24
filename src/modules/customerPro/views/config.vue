@@ -117,7 +117,7 @@
 		</el-form-item>
 	</div>
 </template>
-<script lang="ts" name="customer_pro-setting" setup>
+<script lang="ts" name="customer-pro-setting" setup>
 import { useCool } from "/@/cool";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
@@ -143,8 +143,6 @@ const getForm = async () => {
 
 // 保存
 const save = () => {
-	console.log("basicForm", basicForm.value);
-
 	loading.value = true;
 	service.customer_pro.config
 		.update({

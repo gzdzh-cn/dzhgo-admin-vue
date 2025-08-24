@@ -35,13 +35,17 @@ import { onMounted, ref } from "vue";
 import { isEmpty } from "lodash";
 
 const props = defineProps({
-	clues_status: {
+	cluesStatus: {
 		type: Number,
 		default: 0
 	},
 	isAdmin: {
 		type: Boolean,
 		default: false
+	},
+	dtype: {
+		type: Number,
+		default: 0
 	}
 });
 defineExpose({
@@ -50,13 +54,6 @@ defineExpose({
 });
 
 const { service } = useCool();
-
-const userInfo = ref();
-const isAdmin = ref(false);
-// cl-upsert 配置
-const Upsert = useUpsert({
-	items: []
-});
 
 // cl-table 配置
 const Table = useTable({
@@ -95,7 +92,8 @@ const Table = useTable({
 const Crud = useCrud({
 	service: service.customer_pro.clues_excel,
 	async onRefresh(params, { render }) {
-		params.clues_status = props.clues_status;
+		params.clues_status = props.cluesStatus;
+		params.dtype = props.dtype;
 		const { list, pagination } = await service.customer_pro.clues_excel.page(params);
 		const itemAllComplete = list?.every((item) => item.status == 0);
 
@@ -131,6 +129,8 @@ const download = (downLoadUrl: string) => {
 };
 
 onMounted(async () => {
+	console.log("excelDown");
+
 	refresh();
 });
 </script>

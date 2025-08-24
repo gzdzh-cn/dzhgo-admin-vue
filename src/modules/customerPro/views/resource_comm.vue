@@ -155,7 +155,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-comclues" setup>
+<script lang="ts" name="customer-pro-resourceComm" setup>
 import { useCrud, useTable, useUpsert, useForm, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage, TabsPaneContext } from "element-plus";
@@ -452,7 +452,7 @@ const Crud = useCrud(
 		async onRefresh(params, { next, render }) {
 			params.oceanTime = true;
 			params.status = 2;
-			params.dtype = 0;
+			params.dtype = 1;
 			params.size = 10;
 			const { list, pagination } = await next(params);
 			render(list, pagination);

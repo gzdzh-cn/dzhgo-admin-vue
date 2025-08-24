@@ -187,9 +187,9 @@
 						</el-form-item>
 
 						<el-tabs v-model="allotTab" style="margin-top: 20px">
-							<el-tab-pane label="常规分配" name="public">
+							<el-tab-pane label="线索管理" name="public">
 								<div class="public-allot">
-									<el-form-item label="常规分配">
+									<el-form-item label="线索分配">
 										<el-switch
 											v-model="basicForm.allotOpen"
 											:active-value="1"
@@ -200,7 +200,7 @@
 											style="width: 80px"
 										/>
 										<span style="padding-left: 10px; color: #ff6b6b">
-											设置是否开启常规分配
+											设置是否开启线索分配
 										</span>
 									</el-form-item>
 
@@ -225,7 +225,7 @@
 									</el-form-item>
 								</div>
 							</el-tab-pane>
-							<el-tab-pane label="地区分配" name="area">
+							<el-tab-pane label="线索地区" name="area">
 								<div class="area-allot">
 									<el-form-item label="地区分配">
 										<el-switch
@@ -277,6 +277,50 @@
 									</el-form-item>
 								</div>
 							</el-tab-pane>
+							<el-tab-pane label="资源管理" name="resource">
+								<div class="public-allot">
+									<el-form-item label="资源分配">
+										<el-switch
+											v-model="basicForm.resourceAllotOpen"
+											:active-value="1"
+											:inactive-value="0"
+											active-text="开启"
+											inactive-text="关闭"
+											inline-prompt
+											style="width: 80px"
+										/>
+										<span style="padding-left: 10px; color: #ff6b6b">
+											设置是否开启资源分配
+										</span>
+									</el-form-item>
+
+									<el-row :gutter="20">
+										<el-col :span="12">
+											<el-form-item label="当前分配人数">
+												<el-input
+													v-model="basicForm.resourceSliceNum"
+													disabled
+												/>
+											</el-form-item>
+										</el-col>
+									</el-row>
+									<el-form-item label="分配列表">
+										<el-input
+											v-model="basicForm.resourceAllotServicesNames"
+											type="textarea"
+											:rows="10"
+											disabled
+											style="width: 100%"
+										/>
+									</el-form-item>
+									<el-form-item label="下次分配">
+										<el-input
+											v-model="basicForm.resourceServicesNames"
+											disabled
+										/>
+									</el-form-item>
+								</div>
+							</el-tab-pane>
 						</el-tabs>
 					</div>
 				</el-tab-pane>
@@ -325,7 +369,11 @@ const basicForm = reactive({
 	areaSliceNum: 0,
 	areaAllotServicesNames: "",
 	areaServicesNames: "",
-	areaName: ""
+	areaName: "",
+	resourceAllotOpen: 0,
+	resourceSliceNum: 0,
+	resourceAllotServicesNames: "",
+	resourceServicesNames: ""
 });
 
 const allotTab = ref("public");
@@ -398,6 +446,13 @@ const getBasic = async () => {
 		basicForm.areaSliceNum = basicForm.areaAllotServicesNames.split(",").filter(Boolean).length;
 	} else {
 		basicForm.areaSliceNum = 0;
+	}
+	if (basicForm.resourceAllotServicesNames) {
+		basicForm.resourceSliceNum = basicForm.resourceAllotServicesNames
+			.split(",")
+			.filter(Boolean).length;
+	} else {
+		basicForm.resourceSliceNum = 0;
 	}
 };
 

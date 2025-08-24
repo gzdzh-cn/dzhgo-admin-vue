@@ -168,7 +168,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("domainProvider").value
+				options: dict.get("domainProvider")
 			}
 		},
 		{

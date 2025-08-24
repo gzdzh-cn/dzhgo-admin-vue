@@ -160,7 +160,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-clues_filter" setup>
+<script lang="ts" name="customer-pro-resource_filter" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
@@ -182,7 +182,7 @@ const cluesId = ref(); //线索id
 const cluesStatus = ref(3); //线索状态
 const isExtend = ref(true); //展开
 const serviceGroup = ref(); // 客服组
-const dtype = ref(0);
+const dtype = ref(1);
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -465,7 +465,7 @@ const Crud = useCrud(
 		async onRefresh(params, { render }) {
 			searchData.value = params;
 			params.status = 3;
-			params.dtype = 0;
+			params.dtype = 1;
 			params.size = 10;
 			const { list, pagination } = await service.customer_pro.clues_filter.page(params);
 			render(list, pagination);

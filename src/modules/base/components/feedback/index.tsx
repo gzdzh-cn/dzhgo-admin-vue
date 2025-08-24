@@ -1,5 +1,5 @@
 import { ElDialog } from "element-plus";
-import { defineComponent, ref } from "vue";
+import { defineComponent, inject, provide, ref } from "vue";
 import { Service } from "@element-plus/icons-vue";
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import "./index.scss";
@@ -15,6 +15,12 @@ export default defineComponent({
 	emits: ["update:modelValue", "change"],
 
 	setup(props, { emit, expose }) {
+		const global = inject("globalOptions") as any;
+		provide("globalOptions", {
+			...(global || {}),
+			style: { ...(global?.style || {}), size: "small" } // 仅调整当前子树 cl 组件尺寸
+		});
+
 		const { service } = useCool();
 		const { dict } = useDict();
 		const { user } = useBase();
@@ -115,7 +121,7 @@ export default defineComponent({
 
 					component: {
 						name: "el-select",
-						options: dict.get("process")?.value || []
+						options: dict.get("process")
 					}
 				},
 				{
@@ -124,7 +130,7 @@ export default defineComponent({
 					span: 12,
 					component: {
 						name: "el-select",
-						options: dict.get("feType").value
+						options: dict.get("feType")
 					}
 				},
 				{
@@ -133,7 +139,7 @@ export default defineComponent({
 					span: 12,
 					component: {
 						name: "el-select",
-						options: dict.get("priority").value
+						options: dict.get("priority")
 					}
 				},
 				{
@@ -174,30 +180,30 @@ export default defineComponent({
 				{
 					label: "类型",
 					prop: "feType",
-					width: 100,
+					width: 80,
 					align: "center",
 					dict: {
-						options: dict.get("feType").value
+						options: dict.get("feType")
 					}
 				},
 				{
 					label: "优先级",
 					prop: "priority",
-					width: 100,
+					width: 60,
 					align: "center",
 					dict: {
 						text: true,
-						options: dict.get("priority").value
+						options: dict.get("priority")
 					}
 				},
 				{
-					label: "处理进度",
+					label: "进度",
 					prop: "process",
-					width: 100,
+					width: 80,
 					align: "center",
 					dict: {
 						text: true,
-						options: dict.get("process").value
+						options: dict.get("process")
 					}
 				},
 				{
@@ -218,7 +224,8 @@ export default defineComponent({
 				{
 					label: "提交时间",
 					prop: "createTime",
-					align: "center"
+					align: "center",
+					width: 150
 				},
 				{ type: "op", buttons: ["info", "edit", "delete"] }
 			]
@@ -268,7 +275,7 @@ export default defineComponent({
 								</cl-row>
 
 								<cl-row>
-									<cl-table ref={Table}>
+									<cl-table ref={Table} border={false}>
 										{{
 											"column-feType": ({ scope }: any) => {
 												const typeInfo = getTypeTag(scope.row.feType);
@@ -288,29 +295,31 @@ export default defineComponent({
 											},
 											"column-process": ({ scope }: any) => {
 												const status = scope.row.process;
-												let statusText = "";
+												const processOptions = dict.get("process");
+
+												// 从字典中查找对应的状态信息
+												const statusInfo = processOptions.value.find(
+													(option: any) => option.value === status
+												);
+												const statusText = statusInfo?.label || "未知";
+
+												// 根据状态值设置标签类型
 												let statusType:
 													| "success"
 													| "info"
 													| "warning"
 													| "danger" = "info";
-
-												// 根据状态值设置显示文本和标签类型
 												switch (status) {
 													case "1":
-														statusText = "未处理";
 														statusType = "danger";
 														break;
 													case "2":
-														statusText = "已处理";
-														statusType = "success";
-														break;
-													case "3":
-														statusText = "处理中";
 														statusType = "warning";
 														break;
+													case "3":
+														statusType = "success";
+														break;
 													default:
-														statusText = "未知";
 														statusType = "info";
 												}
 

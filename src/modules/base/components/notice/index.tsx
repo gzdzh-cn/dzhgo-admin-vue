@@ -1,21 +1,20 @@
+import { ElDialog, ElTag, ElButton, ElMessage, ElMessageBox } from "element-plus";
 import {
-	ElDialog,
-	ElTable,
-	ElTableColumn,
-	ElPagination,
-	ElTag,
-	ElButton,
-	ElMessageBox,
-	ElMessage,
-	ElSelect,
-	ElOption,
-	ElInput
-} from "element-plus";
-import { defineComponent, ref, computed, h, onMounted, onUnmounted } from "vue";
-import { BellFilled } from "@element-plus/icons-vue";
+	defineComponent,
+	ref,
+	computed,
+	h,
+	onMounted,
+	onUnmounted,
+	provide,
+	inject,
+	nextTick
+} from "vue";
+import { BellFilled, Search } from "@element-plus/icons-vue";
 import "./index.scss";
 import { useCool } from "/@/cool";
 import dev from "/@/cool/config/dev";
+import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 
 export default defineComponent({
 	name: "cl-notice",
@@ -25,50 +24,38 @@ export default defineComponent({
 	emits: ["update:modelValue", "change"],
 
 	setup(props, { emit, expose }) {
+		const isTask = true;
+
 		const { service } = useCool();
 
+		const global = inject("globalOptions") as any;
+		provide("globalOptions", {
+			...(global || {}),
+			style: { ...(global?.style || {}), size: "small" } // 仅调整当前子树 cl 组件尺寸
+		});
+
+		const searchRef = ref();
 		// 弹窗显示状态
 		const dialogVisible = ref(false);
-
-		// 分页配置
-		const currentPage = ref(1);
-		const pageSize = ref(10);
-
-		const messageList = ref<any[]>([]);
-		const total = ref(0);
-		const totalNoRead = ref(0);
 		const selectedRows = ref<any[]>([]);
+
+		const totalNoRead = ref(0);
 		// 打开通知弹窗
 		const open = async () => {
 			dialogVisible.value = true;
 			emit("change", true);
-			getMessageList();
+			refresh();
 		};
 
-		const getMessageList = async () => {
-			try {
-				console.log("发送分页参数:", {
-					page: currentPage.value,
-					pageSize: pageSize.value,
-					noType: noType.value,
-					keyWord: keyWord.value
-				});
-				const { list, pagination } = await service.base.sys.notice.page({
-					page: currentPage.value,
-					size: pageSize.value,
-					noType: noType.value,
-					keyWord: keyWord.value
-				});
-
-				messageList.value = list || [];
-				currentPageData.value = list || [];
-				total.value = pagination?.total || 0;
+		const refresh = async () => {
+			if (!Crud?.value) {
+				console.log("Crud 还未挂载，等待...");
+				const { pagination } = await service.base.sys.notice.page();
 				totalNoRead.value = (pagination as any)?.totalNoRead || 0;
-				console.log("获取到数据:", { list: list?.length, total: total.value });
-			} catch (error) {
-				console.error("获取消息列表失败:", error);
-				messageList.value = [];
-				total.value = 0;
+				return;
+			}
+			if (Crud?.value?.refresh) {
+				Crud.value.refresh();
 			}
 		};
 
@@ -77,68 +64,12 @@ export default defineComponent({
 			dialogVisible.value = false;
 		};
 
-		// 标记消息为已读
-		const markAsRead = (row: any) => {
-			const isRead = row.status === 1 || row.status === true;
-			if (isRead) {
-				return;
-			}
-
-			service.base.sys.notice
-				.update({
-					id: row.id,
-					status: 1
-				})
-				.then(() => {
-					getMessageList();
-				})
-				.catch((error) => {
-					console.error("标记消息为已读失败:", error);
-				});
-		};
-
-		// 删除消息
-		const deleteMessage = async (row: any) => {
-			try {
-				await ElMessageBox.confirm(`确定要删除消息"${row.title}"吗？`, "确认删除", {
-					confirmButtonText: "确定",
-					cancelButtonText: "取消",
-					type: "warning"
-				});
-
-				// 调用删除API
-				await service.base.sys.notice.delete({
-					ids: [row.id]
-				});
-
-				ElMessage.success("删除成功");
-
-				// 重新获取消息列表
-				await getMessageList();
-			} catch (error) {
-				if (error !== "cancel") {
-					console.error("删除消息失败:", error);
-					ElMessage.error("删除失败");
-				}
-			}
-		};
-
 		// 获取未读消息数量
 		const unreadCount = computed(() => {
-			if (!messageList.value || !Array.isArray(messageList.value)) {
-				return "";
-			}
 			const unreadItems = totalNoRead.value;
 
 			return unreadItems || "";
 		});
-
-		// 当前页的数据（直接使用API返回的数据）
-		const currentPageData = ref<any[]>([]);
-
-		// 查询条件
-		const noType = ref<string>("");
-		const keyWord = ref("");
 
 		// 线索类型选项（可按实际后端字典替换）
 		const noTypeOptions = [
@@ -153,12 +84,207 @@ export default defineComponent({
 			{ label: "培训", value: "train" }
 		];
 
-		// 触发搜索
-		const handleSearch = () => {
-			currentPage.value = 1;
-			getMessageList();
+		// cl-crud（与 feedback 用法保持一致）
+		const Crud = useCrud(
+			{
+				service: service.base.sys.notice,
+				onRefresh: async function (params, { render }) {
+					params.size = 10;
+					const { list, pagination } = await service.base.sys.notice.page(params);
+					totalNoRead.value = (pagination as any)?.totalNoRead || 0;
+					render(list, pagination);
+				}
+			},
+			(app) => {
+				app.refresh();
+			}
+		);
+		// cl-upsert 配置
+		const Upsert = useUpsert({
+			items: [
+				{ label: "标题", prop: "title", span: 12, component: { name: "el-input" } },
+				{
+					label: "类型",
+					prop: "noType",
+					span: 12,
+					component: { name: "el-select", options: noTypeOptions }
+				},
+				{
+					label: "内容",
+					prop: "remark",
+					component: {
+						name: "el-input",
+						props: {
+							type: "textarea",
+							rows: 10
+						}
+					}
+				}
+			]
+		});
+		// 表格
+		const Table = useTable({
+			columns: [
+				{ type: "selection", width: 30 },
+				{ label: "类型", prop: "noType", width: 60, align: "center" },
+				{ label: "标题", prop: "title", width: 120 },
+				{ label: "内容", prop: "remark", minWidth: 200, showOverflowTooltip: true },
+				{ label: "时间", prop: "createTime", width: 130, align: "center" },
+				{ label: "状态", prop: "status", width: 60, align: "center" },
+				{ type: "op", buttons: ["info", "edit", "delete"], width: 150 }
+			]
+		});
+
+		const searchStatus = ref(false); // 搜索状态
+		// 时间选择器起始
+		const defaultTime = new Date();
+		const shortcuts = [
+			{
+				text: "当天",
+				value: () => {
+					const end = new Date();
+					end.setDate(end.getDate() + 1);
+					end.setHours(0, 0, 0, 0);
+					const start = new Date();
+					start.setDate(start.getDate());
+					start.setHours(0, 0, 0, 0);
+					return [start, end];
+				}
+			},
+			{
+				text: "昨天",
+				value: () => {
+					const end = new Date();
+					end.setHours(0, 0, 0, 0);
+					const start = new Date();
+					start.setDate(start.getDate() - 1);
+					start.setHours(0, 0, 0, 0);
+					return [start, end];
+				}
+			},
+			{
+				text: "最近一周",
+				value: () => {
+					const end = new Date();
+					end.setDate(end.getDate() + 1);
+					end.setHours(0, 0, 0, 0);
+					const start = new Date();
+					start.setDate(start.getDate() - 7);
+					start.setHours(0, 0, 0, 0);
+					return [start, end];
+				}
+			},
+			{
+				text: "最近一个月",
+				value: () => {
+					const end = new Date();
+					end.setDate(end.getDate() + 1);
+					end.setHours(0, 0, 0, 0);
+					const start = new Date();
+					start.setMonth(start.getMonth() - 1);
+					start.setHours(0, 0, 0, 0);
+					return [start, end];
+				}
+			},
+			{
+				text: "最近三个月",
+				value: () => {
+					const end = new Date();
+					end.setDate(end.getDate() + 1);
+					end.setHours(0, 0, 0, 0);
+					const start = new Date();
+					start.setMonth(start.getMonth() - 3);
+					start.setHours(0, 0, 0, 0);
+					return [start, end];
+				}
+			}
+		];
+		// 高级搜索
+		const AdvSearch = useAdvSearch({
+			items: [
+				{
+					label: "类型",
+					prop: "noType",
+					component: { name: "el-select", options: noTypeOptions }
+				},
+				{
+					label: "创建时间",
+					prop: "datetimerange",
+					component: {
+						name: "el-date-picker",
+						props: {
+							type: "datetimerange",
+							shortcuts: shortcuts,
+							startPlaceholder: "开始日期",
+							endPlaceholder: "结束日期",
+							defaultTime: defaultTime,
+							value: "YYYY-MM-DD HH:mm",
+							valueFormat: "YYYY-MM-DD HH:mm",
+							timeFormat: "HH:mm"
+						}
+					}
+				}
+			],
+			op: ["close", "reset", "search"],
+			onSearch(data, { next, close }) {
+				next(data);
+				searchStatus.value = false;
+				searchStatus.value = Object.values(data).some((value) => {
+					if (value) return true;
+				});
+			}
+		});
+
+		// 处理选择变化
+		const handleSelectionChange = (selection: any[]) => {
+			selectedRows.value = selection;
 		};
 
+		function copyToClipboard(text: string) {
+			if (navigator.clipboard && window.isSecureContext) {
+				navigator.clipboard.writeText(text).then(() => {
+					ElMessage.success("已复制:" + text);
+				});
+			} else {
+				const textarea = document.createElement("textarea");
+				textarea.value = text;
+				textarea.style.position = "fixed";
+				textarea.style.opacity = "0";
+				document.body.appendChild(textarea);
+				textarea.focus();
+				textarea.select();
+				try {
+					document.execCommand("copy");
+					ElMessage.success("已复制:" + text);
+				} finally {
+					document.body.removeChild(textarea);
+				}
+			}
+		}
+
+		// 标记消息为已读
+		const markAsRead = (row: any) => {
+			const isRead = row.status === 1 || row.status === true;
+			if (isRead) {
+				return;
+			}
+
+			service.base.sys.notice
+				.update({
+					id: row.id,
+					status: 1
+				})
+				.then(() => {
+					refresh();
+				})
+				.catch((error) => {
+					console.error("标记消息为已读失败:", error);
+				});
+		};
+
+		const permissions = computed(() => {
+			return service.base.sys.notice._permission;
+		});
 		// 一键已阅
 		const noticeReadAll = async () => {
 			try {
@@ -176,7 +302,7 @@ export default defineComponent({
 				ElMessage.success("所有消息已标记为已读");
 
 				// 刷新数据
-				getMessageList();
+				refresh();
 			} catch (error) {
 				if (error !== "cancel") {
 					// 如果不是取消操作，显示错误信息
@@ -185,52 +311,6 @@ export default defineComponent({
 				}
 			}
 		};
-
-		// 处理选择变化
-		const handleSelectionChange = (selection: any[]) => {
-			selectedRows.value = selection;
-		};
-
-		// 批量删除
-		const batchDelete = async (ids: string[]) => {
-			try {
-				// 确认弹窗
-				await ElMessageBox.confirm(
-					`确定要删除选中的 ${ids.length} 条消息吗？`,
-					"确认删除",
-					{
-						confirmButtonText: "确定",
-						cancelButtonText: "取消",
-						type: "warning"
-					}
-				);
-
-				// 执行删除操作
-				await service.base.sys.notice.delete({
-					ids: ids
-				});
-
-				// 成功提醒
-				ElMessage.success(`成功删除 ${ids.length} 条消息`);
-
-				// 刷新数据
-				getMessageList();
-			} catch (error) {
-				if (error !== "cancel") {
-					console.error("批量删除失败:", error);
-					ElMessage.error("删除失败，请重试");
-				}
-			}
-		};
-		const permissions = computed(() => {
-			return service.base.sys.notice._permission;
-		});
-
-		// 格式化时间
-		const formatTime = (createTime: string) => {
-			return createTime;
-		};
-
 		// 获取消息类型标签样式
 		const getTypeTag = (noType: string) => {
 			const typeMap: Record<
@@ -252,157 +332,30 @@ export default defineComponent({
 			return typeMap[noType] || { noType: "info", color: "#909399" };
 		};
 
-		// SSE连接管理
-		const sseManager = {
-			connectionID: "",
-			heartbeatTimer: null as number | null,
-			eventSource: null as EventSource | null,
-			isConnecting: false,
-
-			createConnection() {
-				// 防止重复连接
-				if (this.isConnecting || this.eventSource) {
-					return this.eventSource;
-				}
-
-				this.isConnecting = true;
-				this.eventSource = new EventSource(`${dev.baseUrl}/admin/base/open/noticeSse`);
-
-				this.eventSource.onopen = () => {
-					console.log("SSE连接已建立");
-					this.isConnecting = false;
-				};
-
-				this.eventSource.onerror = () => {
-					console.log("SSE连接错误，尝试重连...");
-					this.isConnecting = false;
-					this.cleanup();
-					// 只有在非主动断开的情况下才自动重连
-					if (!this.connectionID) {
-						setTimeout(() => this.createConnection(), 5000);
-					}
-				};
-
-				this.eventSource.onmessage = (event) => {
-					try {
-						const data = JSON.parse(event.data);
-						console.log("SSE收到消息:", data);
-
-						if (data.status === "connected") {
-							this.connectionID = data.connectionID || "";
-							console.log("连接ID:", this.connectionID);
-							// this.startHeartbeat();
-						}
-					} catch (error) {
-						console.error("解析SSE数据失败:", error);
-					}
-				};
-
-				return this.eventSource;
-			},
-
-			startHeartbeat() {
-				// 清理之前的心跳
-				if (this.heartbeatTimer) {
-					clearInterval(this.heartbeatTimer);
-				}
-
-				// 启动新的心跳
-				this.heartbeatTimer = setInterval(() => {
-					this.sendHeartbeat();
-				}, 10000);
-			},
-
-			// 发送心跳
-			sendHeartbeat() {
-				try {
-					if (
-						this.connectionID &&
-						service &&
-						service.base &&
-						service.base.open &&
-						service.base.open.noticeSseChecked
-					) {
-						service.base.open
-							.noticeSseChecked({
-								connectionID: this.connectionID
-							})
-							.then((res: any) => {
-								if (res.status === "Disconnect") {
-									console.log("Disconnect,重连");
-									this.connectionID = "";
-									sseManager.cleanup();
-									setTimeout(() => startNoticeSse(), 1000);
-								}
-								console.log("发送心跳成功:", res);
-							});
-					}
-				} catch (error) {
-					console.error("发送心跳失败:", error);
-				}
-			},
-
-			cleanup() {
-				if (this.heartbeatTimer) {
-					clearInterval(this.heartbeatTimer);
-					this.heartbeatTimer = null;
-				}
-				if (this.eventSource) {
-					this.eventSource.close();
-					this.eventSource = null;
-				}
-				this.isConnecting = false;
-			}
-		};
-
-		const startNoticeSse = async () => {
-			const sse = sseManager.createConnection();
-
-			// 在连接建立后获取消息列表
-			if (sse) {
-				// 移除之前的事件监听器，避免重复
-				sse.removeEventListener("message", handleMessage);
-				sse.addEventListener("message", handleMessage);
-			}
-		};
-
-		// 消息处理函数
-		const handleMessage = (event: MessageEvent) => {
-			try {
-				const data = JSON.parse(event.data);
-				if (data.status === "connected") {
-					getMessageList();
-				}
-			} catch (error) {
-				console.error("解析消息失败:", error);
-			}
-		};
-
 		const taskSetTime = () => {
 			// 设置定时器，每分钟获取一次数据
 			setInterval(() => {
-				getMessageList();
+				refresh();
 			}, 1000 * 60 * 1); //1分钟获取一次
 		};
 
 		// 暴露方法给父组件
-		expose({
-			getMessageList,
-			open
-		});
+		expose({ refresh, open });
 
 		// 组件挂载时自动获取消息列表
 		onMounted(async () => {
-			getMessageList();
+			// 等待下一个 tick 确保 Crud 完全初始化
+			await nextTick();
+			refresh();
 
-			// 启动定时任务
-			taskSetTime();
+			if (isTask) {
+				// 启动定时任务
+				taskSetTime();
+			}
 		});
 
 		// 组件卸载时清理资源
-		onUnmounted(() => {
-			// sseManager.cleanup();
-		});
+		onUnmounted(() => {});
 
 		return () => {
 			return (
@@ -422,106 +375,54 @@ export default defineComponent({
 						width="1000px"
 						destroyOnClose
 					>
-						<div class="message-table-container">
-							<div style={{ marginBottom: "16px", textAlign: "right" }}>
-								{/* 查询条件：线索类型 + 关键字 + 搜索按钮 */}
-								<div
-									style={{
-										display: "inline-flex",
-										gap: "8px",
-										marginRight: "12px",
-										verticalAlign: "middle",
-										alignItems: "center"
-									}}
-								>
-									<ElSelect
-										placeholder="类型"
-										modelValue={noType.value as any}
-										onUpdate:modelValue={(val: any) => (noType.value = val)}
-										size="small"
-										clearable
-										style={{ width: "80px" }}
-									>
-										{noTypeOptions.map((opt) => (
-											<ElOption label={opt.label} value={opt.value as any} />
-										))}
-									</ElSelect>
-									<ElInput
-										placeholder="关键词"
-										modelValue={keyWord.value}
-										onUpdate:modelValue={(val: string) => (keyWord.value = val)}
-										clearable
-										size="small"
-										onKeydown={(e) => {
-											if ((e as KeyboardEvent).key === "Enter") {
-												handleSearch();
-											}
-										}}
-										style={{ width: "120px" }}
-									/>
-									<ElButton type="primary" size="small" onClick={handleSearch}>
-										搜索
-									</ElButton>
-								</div>
+						<div
+							class="message-table-container"
+							style={{ height: "600px", maxHeight: "80vh" }}
+						>
+							<cl-crud ref={Crud}>
+								<cl-row>
+									<cl-refresh-btn />
+									<cl-add-btn />
+									<cl-multi-delete-btn />
+									<cl-flex1 />
 
-								{permissions.value?.delete ? (
-									<ElButton
-										type="danger"
-										size="small"
-										onClick={() => {
-											if (selectedRows.value.length === 0) {
-												ElMessage.warning("请先选择要删除的消息");
-												return;
+									{searchStatus.value && (
+										<ElButton type="info" size="small" text bg icon={Search}>
+											正在搜索中
+										</ElButton>
+									)}
+
+									<cl-adv-btn />
+									<cl-search-key ref={searchRef} />
+									{permissions.value?.noticeReadAll ? (
+										<ElButton
+											type="primary"
+											size="small"
+											onClick={noticeReadAll}
+											disabled={
+												unreadCount.value === 0 || unreadCount.value === ""
 											}
-											const ids = selectedRows.value.map(
-												(item: any) => item.id
-											);
-											batchDelete(ids);
-										}}
-										style={{ marginRight: "10px" }}
-										disabled={selectedRows.value.length === 0}
-									>
-										批量删除 ({selectedRows.value.length})
-									</ElButton>
-								) : null}
-								{permissions.value?.noticeReadAll ? (
-									<ElButton
-										type="primary"
+										>
+											一键已阅
+											{Number(unreadCount.value) > 0
+												? ` (${unreadCount.value})`
+												: ""}
+										</ElButton>
+									) : null}
+								</cl-row>
+								<cl-row>
+									<cl-table
+										ref={Table}
+										border={false}
+										row-key="id"
 										size="small"
-										onClick={noticeReadAll}
-										disabled={
-											unreadCount.value === 0 || unreadCount.value === ""
-										}
+										onRow-click={markAsRead}
+										onSelection-change={handleSelectionChange}
 									>
-										一键已阅
-										{Number(unreadCount.value) > 0
-											? ` (${unreadCount.value})`
-											: ""}
-									</ElButton>
-								) : null}
-							</div>
-							<ElTable
-								data={messageList.value}
-								style={{ width: "100%" }}
-								size="small"
-								onRow-click={markAsRead}
-								onSelection-change={handleSelectionChange}
-								rowClassName={({ row }: any) => {
-									const isRead = row.status === 1 || row.status === true;
-									return isRead ? "read-row" : "unread-row";
-								}}
-							>
-								<ElTableColumn type="selection" width={55} />
-								<ElTableColumn
-									prop="noType"
-									label="类型"
-									width={80}
-									align="center"
-									v-slots={{
-										default: ({ row }: any) => {
-											const tag = getTypeTag(row.noType);
-											const getTypeName = (noType: string) => {
-												const typeMap: Record<string, string> = {
+										{{
+											"column-noType": ({ scope }: any) => {
+												const tag = getTypeTag(scope.row.noType);
+												const map: Record<string, string> = {
 													sys: "系统",
 													task: "任务",
 													approval: "审批",
@@ -531,134 +432,92 @@ export default defineComponent({
 													safe: "安全",
 													train: "培训"
 												};
-												return typeMap[noType] || noType;
-											};
-											return (
-												<ElTag size="small" type={tag.noType}>
-													{getTypeName(row.noType)}
-												</ElTag>
-											);
-										}
-									}}
-								/>
-								<ElTableColumn
-									prop="title"
-									label="标题"
-									width={80}
-									v-slots={{
-										default: ({ row }: any) => {
-											const isRead = row.status === 1 || row.status === true;
-											return (
-												<div class="message-title-cell">
-													{row.title}
-													{!isRead && <span class="unread-dot"></span>}
-												</div>
-											);
-										}
-									}}
-								/>
-								<ElTableColumn
-									prop="remark"
-									label="内容"
-									minWidth={200}
-									showOverflowTooltip
-									v-slots={{
-										default: ({ row }: any) => {
-											// 安全地过滤 HTML 标签
-											const content = row.remark || "";
-											if (typeof content === "string") {
-												return content.replace(/<[^>]*>?/g, "");
-											}
-											return content;
-										}
-									}}
-								/>
-								<ElTableColumn
-									prop="createTime"
-									label="时间"
-									width={150}
-									align="center"
-									v-slots={{
-										default: ({ row }: any) => formatTime(row.createTime)
-									}}
-								/>
-								<ElTableColumn
-									prop="status"
-									label="状态"
-									width={80}
-									align="center"
-									v-slots={{
-										default: ({ row }: any) => {
-											const isRead = row.status === 1 || row.status === true;
-											return (
-												<ElTag
-													size="small"
-													type={isRead ? "success" : "danger"}
-												>
-													{isRead ? "已读" : "未读"}
-												</ElTag>
-											);
-										}
-									}}
-								/>
-								{(() => {
-									if (!permissions.value?.delete) {
-										return null;
-									}
-
-									return (
-										<ElTableColumn
-											label="操作"
-											width={100}
-											align="center"
-											v-slots={{
-												default: ({ row }: any) => {
-													if (!permissions.value?.delete) {
-														return null;
-													}
-													return (
-														<ElButton
-															type="danger"
-															size="small"
-															onClick={(e: Event) => {
-																e.stopPropagation();
-																deleteMessage(row);
-															}}
-														>
-															删除
-														</ElButton>
+												return (
+													<ElTag size="small" type={tag.noType}>
+														{map[scope.row.noType] || scope.row.noType}
+													</ElTag>
+												);
+											},
+											"column-title": ({ scope }: any) => {
+												const isRead =
+													scope.row.status === 1 ||
+													scope.row.status === true;
+												return (
+													<div class="message-title-cell">
+														{scope.row.title}
+														{!isRead && (
+															<span class="unread-dot"></span>
+														)}
+													</div>
+												);
+											},
+											"column-remark": ({ scope }: any) => {
+												const raw = scope.row.remark ?? "";
+												const text =
+													typeof raw === "string"
+														? raw.replace(/<[^>]*>?/g, "")
+														: raw;
+												let copyNode: any = null;
+												if (typeof raw === "string") {
+													const idMatch = raw.match(
+														/(?:^|[^A-Za-z0-9_])id[:：]\s*(\d+)/i
 													);
+													const guestIdMatch =
+														raw.match(/guestId[:：]\s*(\d+)/i);
+													const toCopy =
+														idMatch?.[1] ?? guestIdMatch?.[1] ?? null;
+													if (toCopy) {
+														copyNode = (
+															<ElButton
+																style={{ marginRight: "8px" }}
+																type="primary"
+																size="small"
+																onClick={(e: Event) => {
+																	e.stopPropagation();
+																	copyToClipboard(toCopy);
+																}}
+															>
+																复制
+															</ElButton>
+														);
+													}
 												}
-											}}
-										/>
-									);
-								})()}
-							</ElTable>
+												return (
+													<div
+														style={{
+															display: "inline-flex",
+															alignItems: "center"
+														}}
+													>
+														{copyNode}
+														<span>{text}</span>
+													</div>
+												);
+											},
+											"column-status": ({ scope }: any) => {
+												const isRead =
+													scope.row.status === 1 ||
+													scope.row.status === true;
+												return (
+													<ElTag
+														size="small"
+														type={isRead ? "success" : "danger"}
+													>
+														{isRead ? "已读" : "未读"}
+													</ElTag>
+												);
+											}
+										}}
+									</cl-table>
+								</cl-row>
 
-							<div class="pagination-container">
-								<div class="pagination-container">
-									{h(ElPagination, {
-										"current-page": currentPage.value,
-										"page-size": pageSize.value,
-										onCurrentChange: (val: number) => {
-											console.log("页码切换:", val);
-											currentPage.value = val;
-											// 确保参数更新后再请求数据
-											setTimeout(() => getMessageList(), 0);
-										},
-										onSizeChange: (val: number) => {
-											console.log("每页条数切换:", val);
-											pageSize.value = val;
-											currentPage.value = 1;
-											// 确保参数更新后再请求数据
-											setTimeout(() => getMessageList(), 0);
-										},
-										total: total.value,
-										layout: "total, sizes, prev, pager, next, jumper",
-										background: true
-									})}
-								</div>
-							</div>
+								<cl-row>
+									<cl-flex1 />
+									<cl-pagination />
+								</cl-row>
+								<cl-upsert ref={Upsert} />
+								<cl-adv-search ref={AdvSearch} />
+							</cl-crud>
 						</div>
 					</ElDialog>
 				</>

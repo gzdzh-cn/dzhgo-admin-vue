@@ -1,5 +1,5 @@
 import { useCore, useTools } from "../../hooks";
-import { computed, defineComponent, h, ref, watch } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 interface SlotDomType {
 	style: {
 		color: string;
@@ -51,8 +51,6 @@ export default defineComponent({
 
 		function setPagination(res: DeepPartial<ClCrud.Pagination>) {
 			if (res) {
-				console.log("res", res);
-
 				currentPage.value = res.currentPage || res.page || 1;
 				pageSize.value = res.pageSize || res.size || 20;
 				total.value = res.total || 0;
@@ -76,7 +74,7 @@ export default defineComponent({
 				<el-pagination
 					small={style.size == "small"}
 					background
-					page-sizes={[10, 20, 30, 40, 50, 100]}
+					page-sizes={[5, 10, 20, 30, 40, 50, 100]}
 					layout={
 						browser.isMini
 							? "prev, pager, next"
