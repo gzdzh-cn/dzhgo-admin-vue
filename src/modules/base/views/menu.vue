@@ -262,6 +262,14 @@ const Upsert = useUpsert({
 			}
 		},
 		{
+			prop: "addonsName",
+			label: "插件名称",
+			component: {
+				name: "el-input"
+			},
+			required: true
+		},
+		{
 			prop: "router",
 			label: "节点路由",
 			hidden: ({ scope }) => scope.type != 1,
@@ -342,6 +350,11 @@ const Upsert = useUpsert({
 	],
 	onSubmit(data, { done, close, next }) {
 		let formData = {};
+		if (data.addonsName != "base") {
+			data["menuType"] = data.addonsName;
+		} else {
+			data["menuType"] = "base";
+		}
 		if (Upsert.value?.mode == "add") {
 			formData = {
 				type: data.type,

@@ -53,5 +53,10 @@ export const STATUS_TYPE_MAPPING = {
 		0: "info", // 待审核
 		1: "success", // 通过
 		2: "danger" // 拒绝
+	},
+	// 收入
+	INCOME_TYPE: {
+		out: "success", // 收入
+		in: "danger" // 支出
 	}
 } as const;

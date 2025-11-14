@@ -36,6 +36,17 @@
 							:inactive-value="pushWp.inactive"
 						/>
 					</el-form-item>
+
+					<el-form-item label="接收资源分配" v-if="!isAdmin">
+						<el-switch
+							v-model="basicForm.resourcePublishStatus"
+							inline-prompt
+							active-text="接收"
+							inactive-text="禁止"
+							:active-value="pushWp.active"
+							:inactive-value="pushWp.inactive"
+						/>
+					</el-form-item>
 				</el-form>
 
 				<el-card style="max-width: 600px">
@@ -117,7 +128,7 @@
 		</el-form-item>
 	</div>
 </template>
-<script lang="ts" name="customer-pro-setting" setup>
+<script lang="ts" name="customer_pro-setting" setup>
 import { useCool } from "/@/cool";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
@@ -164,9 +175,7 @@ const save = () => {
 // 获取账号信息
 const getUserInfo = async () => {
 	userInfo.value = await service.customer_pro.comm.person();
-
 	isAdmin.value = user.info.roleIds?.split(",").includes("1");
-	console.log("isAdmin", isAdmin.value);
 };
 
 onMounted(async () => {

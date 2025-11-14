@@ -1,3 +1,6 @@
+// 导出字典工具函数
+export * from "./dict-helper";
+
 //过滤所有的html标签
 export const filterHtml = (str: any) => {
 	var reg = /<[^>]+>/gi;

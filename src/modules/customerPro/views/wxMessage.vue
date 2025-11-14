@@ -27,7 +27,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-wxMessage" setup>
+<script lang="ts" name="customer_pro-wxMessage" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import dayjs from "dayjs";

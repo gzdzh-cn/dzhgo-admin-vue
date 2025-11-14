@@ -203,7 +203,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("paytype").value
+				options: dict.get("paytype")
 			}
 		},
 		{

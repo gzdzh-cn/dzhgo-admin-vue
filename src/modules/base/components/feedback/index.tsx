@@ -99,9 +99,6 @@ export default defineComponent({
 			dialogVisible.value = false;
 		};
 
-		// 获取未读消息数量
-		const unreadCount = ref(0);
-
 		// cl-upsert 配置
 		const Upsert = useUpsert({
 			items: [
@@ -248,14 +245,6 @@ export default defineComponent({
 		return () => {
 			return (
 				<>
-					<div class="cl-notice__icon" onClick={open}>
-						<el-badge value={unreadCount.value || ""}>
-							<el-icon size={15}>
-								<Service />
-							</el-icon>
-						</el-badge>
-					</div>
-
 					<ElDialog
 						modelValue={dialogVisible.value}
 						onUpdate:modelValue={closeDialog}

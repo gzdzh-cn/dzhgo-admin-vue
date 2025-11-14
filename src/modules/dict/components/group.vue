@@ -127,6 +127,14 @@ function edit(item?: Eps.DictTypeEntity) {
 					}
 				},
 				required: true
+			},
+			{
+				prop: "addonsName",
+				label: "插件",
+				component: {
+					name: "el-input"
+				},
+				required: true
 			}
 		],
 		form: {

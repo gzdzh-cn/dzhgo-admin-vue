@@ -20,8 +20,14 @@
 					<!-- 数据表格 -->
 					<cl-table ref="Table" row-key="id" @row-click="onRowClick">
 						<template #slot-btn="{ scope }">
-							<el-button text bg type="success" v-permission="service.dict.info.permission.add"
-								@click="append(scope.row)">新增</el-button>
+							<el-button
+								text
+								bg
+								type="success"
+								v-permission="service.dict.info.permission.add"
+								@click="append(scope.row)"
+								>新增</el-button
+							>
 						</template>
 					</cl-table>
 				</cl-row>

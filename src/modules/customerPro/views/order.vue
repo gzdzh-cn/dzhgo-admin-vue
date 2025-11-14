@@ -160,7 +160,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-order" setup>
+<script lang="ts" name="customer_pro-order" setup>
 import { useCrud, useTable, useUpsert, useForm } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ref } from "vue";
@@ -503,30 +503,6 @@ const Upsert = useUpsert({
 		}
 	],
 	async onOpen() {
-		// // 学校
-		// const schoolList = await service.customer_pro.school.list();
-		// Upsert.value?.setOptions(
-		// 	"school_id",
-		// 	schoolList.map((e) => {
-		// 		return {
-		// 			label: e.name,
-		// 			value: e.id
-		// 		};
-		// 	})
-		// );
-
-		// // 专业
-		// const majorsList = await service.customer_pro.majors.list();
-		// Upsert.value?.setOptions(
-		// 	"majors_id",
-		// 	majorsList.map((e) => {
-		// 		return {
-		// 			label: e.name,
-		// 			value: e.id
-		// 		};
-		// 	})
-		// );
-
 		// 学校列表
 		getSchoolList();
 
@@ -647,7 +623,6 @@ const cancelPopver = (v?: number) => {
 		}
 	}
 	hideEvent();
-	console.log(popoverVisible.value);
 };
 
 // 审核按钮弹出

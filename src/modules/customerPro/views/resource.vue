@@ -288,7 +288,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-resource" setup>
+<script lang="ts" name="customer_pro-resource" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage, TabsPaneContext, ElLoading } from "element-plus";
@@ -611,12 +611,12 @@ const Table = useTable({
 const Crud = useCrud(
 	{
 		service: service.customer_pro.resource,
-		async onRefresh(params, { render }) {
+		async onRefresh(params, { next, render }) {
 			searchData.value = params;
 			params.status = 0;
 			params.dtype = 1;
-			params.size = 10;
-			const { list, pagination } = await service.customer_pro.resource.page(params);
+			//params.size = 10;
+			const { list, pagination } = await next(params);
 			render(list, pagination);
 		}
 	},

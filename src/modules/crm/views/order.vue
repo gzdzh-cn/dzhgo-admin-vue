@@ -228,7 +228,7 @@ const stateList = reactive([
 	}
 ]);
 const userData = ref<any>({});
-const customData = ref<any>({});
+
 const orderTypeObj: any = ref({});
 const nowTime = new Date();
 const currentDate = ref(dayjs(nowTime).format("YYYY-MM-DD"));
@@ -388,7 +388,7 @@ const Upsert = useUpsert({
 			required: true,
 			component: {
 				name: "el-select",
-				options: dict.get("orderType").value
+				options: dict.get("orderType")
 			},
 			group: "base"
 		},
@@ -705,7 +705,13 @@ const Table = useTable({
 				prop: "detail"
 			};
 		},
-		{ label: "下单者", prop: "userName", hidden: uidDisabled },
+		() => {
+			return {
+				label: "下单者",
+				prop: "userName",
+				hidden: uidDisabled.value
+			};
+		},
 		{ label: "项目订单", prop: "orderCode" },
 		{
 			label: "域名",
@@ -817,7 +823,7 @@ const AdvSearch = useAdvSearch({
 				props: {
 					clearable: true
 				},
-				options: dict.get("orderType").value
+				options: dict.get("orderType")
 			}
 		},
 		{

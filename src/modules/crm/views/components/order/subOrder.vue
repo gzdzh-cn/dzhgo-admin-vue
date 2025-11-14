@@ -394,7 +394,7 @@ const Table = useTable({
 			dict: {
 				text: true,
 				separator: "",
-				options: dict.get("subOrderType").value
+				options: dict.get("subOrderType")
 			}
 		},
 		{ label: "项目订单", prop: "orderCode", width: 300 },

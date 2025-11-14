@@ -42,8 +42,15 @@
 <script lang="ts" name="member" setup>
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
+import { useBase } from "/$/base";
+import { computed, onMounted } from "vue";
 
+const { user } = useBase();
 const { service } = useCool();
+
+const hidden = computed(() => {
+	return !user.info?.roleIds.split(",").includes("1");
+});
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -67,9 +74,17 @@ const Upsert = useUpsert({
 				]
 			}
 		},
+		// {
+		// 	label: "租户标识",
+		// 	prop: "userId",
+		// 	span: 12,
+		// 	hidden: hidden.value,
+		// 	component: { name: "el-select", options: [] },
+		// 	group: "base"
+		// },
 		{
 			label: "会员账号",
-			prop: "username",
+			prop: "memberName",
 			span: 12,
 			required: true,
 			component: { name: "el-input" },
@@ -82,7 +97,14 @@ const Upsert = useUpsert({
 				span: 12,
 				required: Upsert.value?.mode == "add" ? true : false,
 				value: "",
-				component: { name: "el-input", props: { type: "password" } },
+				component: {
+					name: "el-input",
+					props: {
+						type: "password",
+						autocomplete: "new-password",
+						showPassword: true
+					}
+				},
 				group: "base"
 			};
 		},
@@ -93,7 +115,6 @@ const Upsert = useUpsert({
 			component: { name: "el-input" },
 			group: "base"
 		},
-
 		{
 			label: "手机号码",
 			prop: "mobile",
@@ -101,6 +122,7 @@ const Upsert = useUpsert({
 			component: { name: "el-input" },
 			group: "base"
 		},
+
 		{
 			label: "状态",
 			prop: "status",
@@ -242,7 +264,16 @@ const Upsert = useUpsert({
 			group: "other"
 		}
 	],
-	onSubmit(data, { done, close, next }) {
+	async onOpen() {
+		const userList = await service.base.sys.user.list();
+		Upsert.value?.setOptions(
+			"userId",
+			userList.map((e: any) => {
+				return { label: e.username || "", value: e.id || "" };
+			})
+		);
+	},
+	onSubmit(data, { next }) {
 		data.levelName = data.level == 1 ? "普通会员" : data.level == 2 ? "vip会员" : "至尊会员";
 		next({
 			...data
@@ -254,8 +285,9 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
-		{ label: "id", prop: "id" },
-		{ label: "会员账号", prop: "username" },
+		{ label: "唯一码", prop: "id", formatter: (row) => row.id.slice(-6) },
+		// { label: "租户", prop: "username", hidden: hidden.value },
+		{ label: "会员账号", prop: "memberName" },
 		{ label: "会员昵称", prop: "nickname" },
 		{ label: "会员等级", prop: "levelName" },
 		{ label: "手机号码", prop: "mobile" },
@@ -302,6 +334,8 @@ const AdvSearch = useAdvSearch({
 		}
 	]
 });
+
+onMounted(() => {});
 </script>
 
 <style scoped lang="scss">

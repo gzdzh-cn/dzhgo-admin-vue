@@ -330,7 +330,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-clues" setup>
+<script lang="ts" name="customer_pro-clues" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage, ElLoading } from "element-plus";
@@ -651,13 +651,13 @@ const Table = useTable({
 const Crud = useCrud(
 	{
 		service: service.customer_pro.clues,
-		async onRefresh(params, { render }) {
+		async onRefresh(params, { next, render }) {
 			searchData.value = params;
 			params.status = 0;
 			params.dtype = 0;
 
-			params.size = 10;
-			const { list, pagination } = await service.customer_pro.clues.page(params);
+			//params.size = 10;
+			const { list, pagination } = await next(params);
 			render(list, pagination);
 		}
 	},
@@ -1397,12 +1397,12 @@ const AdvSearch = useAdvSearch({
 							}
 						];
 
-						if (isAdmin.value) {
-							option.push({
-								label: "测试数据",
-								value: "-1"
-							});
-						}
+						// if (isAdmin.value) {
+						// 	option.push({
+						// 		label: "测试数据",
+						// 		value: "-1"
+						// 	});
+						// }
 
 						return option;
 					}

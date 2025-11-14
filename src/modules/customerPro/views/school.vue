@@ -28,7 +28,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-school" setup>
+<script lang="ts" name="customer_pro-school" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 

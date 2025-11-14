@@ -60,18 +60,20 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-restore" setup>
+<script lang="ts" name="customer_pro-restore" setup>
 import { Search } from "@element-plus/icons-vue";
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ref, computed } from "vue";
 import { useDict } from "/$/dict";
-import { addTypeToDictOptions, STATUS_TYPE_MAPPING } from "/$/customerPro/utils/dict-helper";
+import { addTypeToDictOptions, STATUS_TYPE_MAPPING } from "/@/dzh";
 import { ElMessage } from "element-plus";
+import { useBase } from "/$/base";
 
 const { dict } = useDict();
 const { service } = useCool();
-
+const { user } = useBase();
+const isAdmin = ref(user.info.roleIds?.split(",").includes("1") || false);
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
@@ -284,6 +286,9 @@ const Upsert = useUpsert({
 			label: "状态",
 			prop: "status",
 			span: 12,
+			hidden: () => {
+				return Upsert.value?.mode == "add";
+			},
 			component: {
 				name: "el-switch",
 				props: {
@@ -307,6 +312,11 @@ const Upsert = useUpsert({
 			};
 		}
 	],
+	onOpen(data) {
+		if (Upsert.value?.mode == "add") {
+			data.type = "resource";
+		}
+	},
 
 	async onOpened(data) {
 		console.log("data?.type == 'customer'", data.type);
@@ -509,13 +519,22 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
-		{ label: "53标识", prop: "guestId" },
+		{
+			label: "创建者",
+			prop: "createdName",
+			hidden: !isAdmin.value
+		},
 		{
 			label: "类型",
 			prop: "type",
+			width: 250,
 			dict: {
 				text: true,
 				options: dict.get("cluesType")
+			},
+			formatter(row) {
+				const v = dict.get("cluesType").value.find((item) => item.value == row.type);
+				return `${row.guestId ? row.guestId + ": " : ""} ${v?.label}`;
 			}
 		},
 		{ label: "关键字", prop: "keywords" },

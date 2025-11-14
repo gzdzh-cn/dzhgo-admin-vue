@@ -159,7 +159,7 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
-		{ label: "会员", prop: "userName", hidden: uidDisabled },
+		{ label: "会员", prop: "userName", hidden: uidDisabled.value },
 		{ label: "项目", prop: "orderCode" },
 		{ label: "域名", prop: "domain" },
 		{

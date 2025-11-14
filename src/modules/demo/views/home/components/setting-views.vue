@@ -2,7 +2,7 @@
 	<div class="setting">
 		<div class="floor">
 			<div class="title">
-				<el-icon><Setting /></el-icon>
+				<el-icon><setting /></el-icon>
 				系统信息
 			</div>
 			<div class="table">
@@ -33,7 +33,7 @@
 
 		<div class="floor">
 			<div class="title">
-				<el-icon><Odometer /></el-icon>
+				<el-icon><odometer /></el-icon>
 				服务器信息
 			</div>
 			<div class="table">
@@ -50,14 +50,14 @@
 						<tr>
 							<td class="left">服务器架构：</td>
 							<td class="right">{{ serverInfo?.goHostArch }}</td>
-							<td class="left">数据库 版本：</td>
+							<td class="left">数据库版本：</td>
 							<td class="right">{{ serverInfo?.dBVersion }}</td>
 						</tr>
 
 						<tr>
-							<td class="left">go 版本：</td>
+							<td class="left">go版本：</td>
 							<td class="right">{{ serverInfo?.goVersion }}</td>
-							<td class="left">goframe 版本</td>
+							<td class="left">goframe版本</td>
 							<td class="right">{{ serverInfo?.gfVersion }}</td>
 						</tr>
 					</tbody>

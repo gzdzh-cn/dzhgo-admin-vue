@@ -93,7 +93,7 @@ export const useMenuStore = defineStore("menu", function () {
 							isShow: e.isShow === undefined ? true : e.isShow,
 							meta: {
 								label: e.name,
-								keepAlive: e.keepAlive || 0
+								keepAlive: Boolean(e.keepAlive)
 							},
 							children: []
 						};

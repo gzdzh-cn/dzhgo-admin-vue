@@ -160,7 +160,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-resource_filter" setup>
+<script lang="ts" name="customer_pro-resource_filter" setup>
 import { useCrud, useForm, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
@@ -453,7 +453,7 @@ const Table = useTable({
 // cl-crud 配置
 const Crud = useCrud(
 	{
-		service: service.customer_pro.clues_filter,
+		service: service.customer_pro.resource_filter,
 		permission: {
 			page: true,
 			list: true,
@@ -462,12 +462,12 @@ const Crud = useCrud(
 			update: false,
 			info: false
 		},
-		async onRefresh(params, { render }) {
+		async onRefresh(params, { next, render }) {
 			searchData.value = params;
 			params.status = 3;
 			params.dtype = 1;
-			params.size = 10;
-			const { list, pagination } = await service.customer_pro.clues_filter.page(params);
+			//params.size = 10;
+			const { list, pagination } = await next(params);
 			render(list, pagination);
 		}
 	},
@@ -779,19 +779,19 @@ const AdvSearch = useAdvSearch({
 				}
 			};
 		},
-		// () => {
-		// 	return {
-		// 		label: "客服组",
-		// 		prop: "serviceGroup",
-		// 		component: {
-		// 			name: "el-select",
-		// 			props: {
-		// 				clearable: true
-		// 			},
-		// 			options: serviceGroup.value
-		// 		}
-		// 	};
-		// },
+		() => {
+			return {
+				label: "客服组",
+				prop: "serviceGroup",
+				component: {
+					name: "el-select",
+					props: {
+						clearable: true
+					},
+					options: serviceGroup.value
+				}
+			};
+		},
 		{
 			label: "时间",
 			prop: "datetimerange",

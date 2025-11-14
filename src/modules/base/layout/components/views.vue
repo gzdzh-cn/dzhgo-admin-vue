@@ -5,7 +5,7 @@
 				<el-scrollbar>
 					<transition :name="app.info.router.transition">
 						<keep-alive :include="caches">
-							<component :is="Component" />
+							<component :is="Component" :key="$route.path" />
 						</keep-alive>
 					</transition>
 				</el-scrollbar>
@@ -39,18 +39,22 @@ const copyright = ref(setting.setting.copyright);
 // 通知弹窗引用
 const feedbackRef = ref();
 
+// 生成缓存名称的函数
+function generateCacheName(item: any) {
+	return item.path.substring(1, item.path.length).replace(/\//g, "-");
+}
+
 // 缓存列表
 const caches = computed(() => {
-	return process.list
+	const cacheList = process.list
 		.filter((e) => e.meta?.keepAlive)
-		.map((e) => {
-			return e.path.substring(1, e.path.length).replace(/\//g, "-");
-		});
+		.map((e) => generateCacheName(e));
+
+	return cacheList;
 });
 
 // 处理图标点击事件
 const handleIconClick = () => {
-	console.log("浮动图标被点击了！");
 	// 调用 cl-notice 组件的 open 方法
 	if (feedbackRef.value) {
 		feedbackRef.value.open();

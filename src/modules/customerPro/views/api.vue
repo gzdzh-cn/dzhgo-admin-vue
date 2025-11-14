@@ -34,7 +34,7 @@
 	</cl-crud>
 </template>
 
-<script lang="ts" name="customer-pro-api" setup>
+<script lang="ts" name="customer_pro-api" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { ElMessage, ElMessageBox } from "element-plus";

@@ -39,18 +39,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue"]);
-
 const { service } = useCool();
-
-// el-tree
 const Tree = ref();
-
 // 树形列表
 const list = ref();
-
 // 关键字搜素
 const keyword = ref("");
-
 // 刷新树形列表
 async function refresh() {
 	return service.base.sys.department.list().then((res) => {

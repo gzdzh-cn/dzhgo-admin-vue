@@ -13,8 +13,8 @@ import {
 import { BellFilled, Search } from "@element-plus/icons-vue";
 import "./index.scss";
 import { useCool } from "/@/cool";
-import dev from "/@/cool/config/dev";
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
+import { useBase } from "/$/base";
 
 export default defineComponent({
 	name: "cl-notice",
@@ -27,6 +27,7 @@ export default defineComponent({
 		const isTask = true;
 
 		const { service } = useCool();
+		const { user } = useBase();
 
 		const global = inject("globalOptions") as any;
 		provide("globalOptions", {
@@ -346,9 +347,11 @@ export default defineComponent({
 		onMounted(async () => {
 			// 等待下一个 tick 确保 Crud 完全初始化
 			await nextTick();
-			refresh();
+			if (user.token) {
+				refresh();
+			}
 
-			if (isTask) {
+			if (isTask && user.token) {
 				// 启动定时任务
 				taskSetTime();
 			}
