@@ -9,13 +9,7 @@
 					:disabled="loading"
 				>
 					<el-form-item label="选题内容">
-						<el-input
-							v-model="basicForm.topic_planning"
-							placeholder="请填写选题内容"
-							:rows="8"
-							type="textarea"
-							clearable
-						/>
+						<cl-editor-quill v-model="basicForm.topic_planning" />
 					</el-form-item>
 				</el-form>
 			</el-tab-pane>
