@@ -327,6 +327,8 @@
 				</el-form-item>
 			</el-form>
 		</cl-dialog>
+
+
 	</cl-crud>
 </template>
 
@@ -436,7 +438,10 @@ const Upsert = useUpsert({
 			span: 12,
 			component: {
 				name: "el-select",
-				options: []
+				options: [],
+				props: {
+					multiple: true
+				}
 			}
 		},
 		{
@@ -1526,12 +1531,38 @@ const sourceFormatter = (v: string) => {
 };
 
 // 线索等级
-const levelFormatter = (v: string) => {
+const levelFormatter = (v: any) => {
+	let levelArray = [];
+
+	// 处理不同类型的输入
+	if (Array.isArray(v)) {
+		levelArray = v;
+	} else if (typeof v === "string") {
+		try {
+			levelArray = JSON.parse(v);
+			// 确保解析后是数组
+			if (!Array.isArray(levelArray)) {
+				levelArray = [v];
+			}
+		} catch {
+			// 如果解析失败，将其作为单个值处理
+			levelArray = [v];
+		}
+	} else {
+		// 其他类型作为单个值处理
+		levelArray = [v];
+	}
+
 	const cluesLevel = dict.get("cluesLevel");
 
-	// 如果字典中有对应的值，返回字典中的标签
-	const dictItem = cluesLevel.value?.find((item: any) => item.value === v);
-	return dictItem ? dictItem.label : v;
+	// 从字典中查找对应的值
+	const labels = levelArray.map((item: any) => {
+		const dictItem = cluesLevel.value?.find((dict: any) => dict.value === item);
+		return dictItem ? dictItem.label : item;
+	});
+
+	// 用逗号连接所有标签
+	return labels.join(",");
 };
 
 // 客服组

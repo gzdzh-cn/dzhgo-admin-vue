@@ -206,24 +206,6 @@ const props = defineProps({
 	}
 });
 
-// interface RuleForm {
-// 	followType: string[];
-// 	nextFollowupTime: string;
-// 	remark: string;
-// }
-
-// interface ChatContent {
-// 	company_id?: string;
-// 	id6d?: string;
-// 	msg?: string;
-// 	msg_time?: string;
-// 	msg_type?: string;
-// 	new_type?: string;
-// 	talk_id?: string;
-// 	worker_id?: string;
-// 	worker_name?: string;
-// }
-
 interface Chat {
 	id?: string;
 	clues_id?: string;
@@ -238,29 +220,6 @@ interface FlolowContent {
 	userName?: string;
 	remark?: string;
 }
-// interface CluesRuleForm {
-// 	guest_id: string;
-// 	project_id: string;
-// 	ip: string;
-// 	guest_ip_info: string;
-// 	name: string;
-// 	source_from: string;
-// 	keywords: string;
-// 	mobile: string;
-// 	wechat: string;
-// 	education: string;
-// 	graduated_school: string;
-// 	school_id: string;
-// 	majors_id: string;
-// 	majors_type: string;
-// 	degree_id: string;
-// 	household_type: string;
-// 	household_address: string;
-// 	level: string;
-// 	gender: string;
-// 	emergency_mobile: string;
-// 	remark: string;
-// }
 
 const { dict } = useDict();
 const emit = defineEmits(["cancel"]);
@@ -285,11 +244,6 @@ watch(
 const dtypeKey = computed(() => props.dtype as keyof typeof service.customer_pro);
 
 const hasFollowAddPermission = computed(() => {
-	console.log(
-		"hasFollowAddPermission",
-		(service.customer_pro[dtypeKey.value] as any)?._permission?.followAdd
-	);
-
 	return (service.customer_pro[dtypeKey.value] as any)?._permission?.followAdd || false;
 });
 
@@ -320,6 +274,33 @@ async function openEdit() {
 	const item = await service.customer_pro[dtypeKey.value].info({
 		id: props.id
 	});
+	console.log("从服务返回的原始 item:", item);
+	console.log("原始 item.level:", item.level);
+
+	// 处理 level 字段
+	if (typeof item.level === "string") {
+		try {
+			const parsed = JSON.parse(item.level);
+			// 确保结果是数组，并且所有元素都是字符串
+			if (Array.isArray(parsed)) {
+				item.level = parsed.map(String);
+			} else {
+				item.level = [String(parsed)];
+			}
+		} catch {
+			// 如果解析失败，将其作为单个字符串处理
+			item.level = [item.level];
+		}
+	} else if (!Array.isArray(item.level)) {
+		// 如果不是字符串也不是数组，包装成字符串数组
+		item.level = [String(item.level)];
+	} else {
+		// 如果已经是数组，确保所有元素都是字符串
+		item.level = item.level.map(String);
+	}
+
+	console.log("处理后的 level:", item.level);
+
 	FormEdit.value?.open({
 		title: "编辑线索",
 		items: [
@@ -408,14 +389,16 @@ async function openEdit() {
 				span: 12,
 				component: { name: "el-input" }
 			},
-
 			{
 				label: "线索等级",
 				prop: "level",
 				span: 12,
 				component: {
 					name: "el-select",
-					options: []
+					options: [],
+					props: {
+						multiple: true
+					}
 				}
 			},
 			{
@@ -447,7 +430,6 @@ async function openEdit() {
 		on: {
 			async open() {
 				getSchoolList();
-
 				if (props.dtype == "resource") {
 					FormEdit.value?.setProps("projectId", {
 						disabled: true
@@ -704,7 +686,7 @@ const schoolList = ref();
 const majorsList = ref();
 const getSchoolList = async () => {
 	schoolList.value = await service.customer_pro.school.list();
-	getMajorList(schoolList.value[0].id);
+	schoolList.value[0]?.id && getMajorList(schoolList.value[0]?.id);
 };
 // 学校改变
 const schoolChange = async (v: any) => {
