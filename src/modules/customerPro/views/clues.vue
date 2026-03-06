@@ -1363,7 +1363,8 @@ const AdvSearch = useAdvSearch({
 				component: {
 					name: "el-select",
 					props: {
-						clearable: true
+						clearable: true,
+						multiple: true
 					},
 					options: dict.get("cluesLevel")
 				}
@@ -1495,7 +1496,12 @@ const AdvSearch = useAdvSearch({
 		}
 	],
 	op: ["reset", "close", "search"],
-	onSearch(data, { next, close }) {
+	onSearch(data, { next }) {
+		console.log("data1", data);
+		if (Array.isArray(data.levelStatus) && data.levelStatus.length === 0) {
+			data.levelStatus = "";
+		}
+		console.log("data2", data);
 		next(data);
 		searchStatus.value = false;
 		searchStatus.value = Object.values(data).some((value) => {
