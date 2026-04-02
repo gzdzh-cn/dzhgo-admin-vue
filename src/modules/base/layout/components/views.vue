@@ -32,9 +32,9 @@ import { computed, ref } from "vue";
 import { useBase } from "/$/base";
 import { ChatDotRound } from "@element-plus/icons-vue";
 
-const { process, app, setting } = useBase();
+const { process, app } = useBase();
 
-const copyright = ref(setting.setting.copyright);
+const copyright = computed(() => app.info.copyright);
 
 // 通知弹窗引用
 const feedbackRef = ref();

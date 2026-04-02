@@ -31,6 +31,7 @@ export const useSettingStore = defineStore("setting", () => {
 	return {
 		setting,
 		get,
+		set,
 		refresh
 	};
 });

@@ -28,19 +28,19 @@ export const useAppStore = defineStore("app", function () {
 		isFold.value = v;
 	}
 
-	async function getSetting() {
-		// 延迟获取service，避免在store初始化时调用useCool
-		const { useCool } = await import("/@/cool");
-		const { service } = useCool();
+	// async function getSetting() {
+	// 	// 延迟获取service，避免在store初始化时调用useCool
+	// 	const { useCool } = await import("/@/cool");
+	// 	const { service } = useCool();
 
-		const result = await service.base.open.getSetting();
-		if (result.siteName) {
-			info.name = result.siteName;
-		}
-		if (result.logo) {
-			info.logo = result.logo;
-		}
-	}
+	// 	const result = await service.base.open.getSetting();
+	// 	if (result.siteName) {
+	// 		info.name = result.siteName;
+	// 	}
+	// 	if (result.logo) {
+	// 		info.logo = result.logo;
+	// 	}
+	// }
 
 	// 设置基本信息
 	async function set(data: any) {
@@ -66,7 +66,7 @@ export const useAppStore = defineStore("app", function () {
 		fold,
 		events,
 		set,
-		addEvent,
-		getSetting
+		addEvent
+		// getSetting
 	};
 });

@@ -68,7 +68,7 @@ export const useUserStore = defineStore("user", function () {
 	}
 
 	async function getSetting() {
-		const result = await service.base.open.getSetting();
+		// const result = await service.base.open.getSetting();
 		// if (result.siteName) {
 		// 	info.name = result.siteName;
 		// }
@@ -93,7 +93,7 @@ export const useUserStore = defineStore("user", function () {
 		logout,
 		clear,
 		setToken,
-		refreshToken,
-		getSetting
+		refreshToken
+		// getSetting
 	};
 });

@@ -13,7 +13,7 @@
 
 					<h2 class="outline-none">
 						<div>
-							<span class="type-it" data-typeit-id="0904744">
+							<span class="type-it">
 								{{ siteName }}
 							</span>
 						</div>
@@ -133,26 +133,37 @@
 </template>
 
 <script lang="ts" name="login" setup>
-import { onMounted, reactive, ref, toRaw } from "vue";
+import { computed, onMounted, reactive, ref, toRaw } from "vue";
 import { ElMessage } from "element-plus";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
 import Captcha from "./components/captcha.vue";
 import { User, Lock, Key, Iphone } from "@element-plus/icons-vue";
 import LoginLeft from "./svg/login-left.vue";
-import { request } from "/@/cool/service/request";
+import { watch } from "vue";
 
 const { refs, setRefs, router, service } = useCool();
-const { user, app, setting } = useBase();
+const { user, app } = useBase();
 
-const logo = ref(setting.setting.logo || app.info.logo);
-const siteName = ref(setting.setting.siteName || app.info.name);
-const copyright = ref(setting.setting.copyright);
-
-const currentPage = ref(0);
 const disabled = ref(false);
-// const bg = ref("./static/img/bg.png");
-const illustration = ref("");
+const logo = ref(app.info.logo);
+const siteName = ref(app.info.name);
+const copyright = ref(app.info.copyright);
+
+watch(
+	() => app.info,
+	(newInfo) => {
+		logo.value = newInfo.logo;
+		siteName.value = newInfo.name;
+	},
+	{ deep: true }
+);
+
+onMounted(() => {
+	// 初始化时设置值
+	// logo.value = setting.setting.logo || app.info.logo;
+	// siteName.value = setting.setting.siteName || app.info.name;
+});
 const operates = [
 	{
 		title: "账号登录",
@@ -266,8 +277,6 @@ async function toLogin() {
 	}
 	saving.value = false;
 }
-
-onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>

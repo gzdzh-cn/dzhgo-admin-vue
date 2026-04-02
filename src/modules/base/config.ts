@@ -63,21 +63,27 @@ export default (): ModuleConfig => {
 		},
 		async onLoad() {
 			const { user, menu, app, setting } = useStore();
-
 			const res = await setting.get();
-			// 设置标题
-			if (res.value?.siteName) {
-				document.title = res.value?.siteName;
-			} else {
-				document.title = config.app.name;
-			}
 
-			// 设置logo
-			if (res.value?.logo) {
-				document.querySelector("link[rel='icon']").href = res.value?.logo;
-			} else {
-				document.querySelector("link[rel='icon']").href = config.app.logo;
-			}
+			await app.set({
+				logo: res.value?.logo || config.app.logo,
+				name: res.value?.siteName || config.app.name,
+				copyright: res.value?.copyright || config.app.copyright
+			});
+
+			// 设置登录页的标题
+			// if (res.value?.siteName) {
+			// 	document.title = res.value?.siteName;
+			// } else {
+			// 	document.title = config.app.name;
+			// }
+			document.title = res.value?.siteName || config.app.name;
+
+			// 设置登录页的logo
+			// if (res.value?.logo) {
+			// 	document.querySelector("link[rel='icon']").href = res.value?.logo;
+			// }
+			document.querySelector("link[rel='icon']").href = res.value?.logo || config.app.logo;
 
 			// token 事件
 			async function hasToken(cb: () => Promise<any> | void) {

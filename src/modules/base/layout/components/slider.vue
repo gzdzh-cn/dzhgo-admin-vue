@@ -15,17 +15,31 @@
 import { useBase } from "/$/base";
 import { useBrowser } from "/@/cool";
 import BMenu from "./bmenu";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 const { browser } = useBrowser();
-const { app, setting } = useBase();
+const { app } = useBase();
 
-const logo = ref(setting.setting.logo || app.info.logo);
-const siteName = ref(setting.setting.siteName || app.info.name);
+const logo = ref(app.info.logo);
+const siteName = ref(app.info.name);
 
 function toHome() {}
 
-onMounted(() => {});
+// 监听 app.info 变化
+watch(
+	() => app.info,
+	(newInfo) => {
+		logo.value = newInfo.logo;
+		siteName.value = newInfo.name;
+	},
+	{ deep: true }
+);
+
+onMounted(() => {
+	// 初始化时设置值
+	// logo.value = setting.setting.logo || app.info.logo;
+	// siteName.value = setting.setting.siteName || app.info.name;
+});
 </script>
 
 <style lang="scss">

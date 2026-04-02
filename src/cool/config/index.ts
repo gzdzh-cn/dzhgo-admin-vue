@@ -12,6 +12,7 @@ export const config = {
 		name: "dzhgo管理系统",
 		logo: "/logo.png",
 		version: "v0.0.93",
+		copyright: "管理系统 @2026",
 
 		// 菜单
 		menu: {

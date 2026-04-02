@@ -68,7 +68,6 @@ export default defineComponent({
 		// 获取未读消息数量
 		const unreadCount = computed(() => {
 			const unreadItems = totalNoRead.value;
-
 			return unreadItems || "";
 		});
 
@@ -353,7 +352,7 @@ export default defineComponent({
 
 			if (isTask && user.token) {
 				// 启动定时任务
-				taskSetTime();
+				// taskSetTime();
 			}
 		});
 

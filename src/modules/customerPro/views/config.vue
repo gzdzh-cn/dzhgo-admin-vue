@@ -4,9 +4,9 @@
 			<el-tab-pane label="绑定微信">
 				<el-form :model="basicForm" label-width="auto" style="max-width: 600px">
 					<div v-if="isAdmin">
-						<el-form-item label="公众号订阅链接">
+						<el-form-item label="公众号订阅链接" v-if="user.info.name === '技术维护'">
 							<el-input
-								v-model="basicForm.wpSubscribeUrl"
+								v-model="form.wpSubscribeUrl"
 								placeholder="格式：http://移动端域名/#/pages/index/wxSubscribe<"
 							/>
 							<span style="color: #ea4300; font-size: 14px"
@@ -16,7 +16,7 @@
 
 						<el-form-item label="公众号消息推送">
 							<el-switch
-								v-model="basicForm.pushWp"
+								v-model="form.pushWp"
 								inline-prompt
 								active-text="推送"
 								inactive-text="禁止"
@@ -25,28 +25,29 @@
 							/>
 						</el-form-item>
 					</div>
+					<div v-if="!isAdmin">
+						<el-form-item label="接收线索分配">
+							<el-switch
+								v-model="basicForm.publishStatus"
+								inline-prompt
+								active-text="接收"
+								inactive-text="禁止"
+								:active-value="pushWp.active"
+								:inactive-value="pushWp.inactive"
+							/>
+						</el-form-item>
 
-					<el-form-item label="接收线索分配" v-if="!isAdmin">
-						<el-switch
-							v-model="basicForm.publishStatus"
-							inline-prompt
-							active-text="接收"
-							inactive-text="禁止"
-							:active-value="pushWp.active"
-							:inactive-value="pushWp.inactive"
-						/>
-					</el-form-item>
-
-					<el-form-item label="接收资源分配" v-if="!isAdmin">
-						<el-switch
-							v-model="basicForm.resourcePublishStatus"
-							inline-prompt
-							active-text="接收"
-							inactive-text="禁止"
-							:active-value="pushWp.active"
-							:inactive-value="pushWp.inactive"
-						/>
-					</el-form-item>
+						<el-form-item label="接收资源分配">
+							<el-switch
+								v-model="basicForm.resourcePublishStatus"
+								inline-prompt
+								active-text="接收"
+								inactive-text="禁止"
+								:active-value="pushWp.active"
+								:inactive-value="pushWp.inactive"
+							/>
+						</el-form-item>
+					</div>
 				</el-form>
 
 				<el-card style="max-width: 600px">
@@ -98,8 +99,8 @@
 					>
 						<vue-qr
 							id="payQR"
-							v-if="basicForm.wpSubscribeUrl"
-							:text="basicForm.wpSubscribeUrl"
+							v-if="form.wpSubscribeUrl"
+							:text="form.wpSubscribeUrl"
 							:size="248"
 							colorDark="#f76707"
 							colorLight="#ffffff"
@@ -130,18 +131,36 @@
 </template>
 <script lang="ts" name="customer_pro-setting" setup>
 import { useCool } from "/@/cool";
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import vueQr from "vue-qr/src/packages/vue-qr.vue";
 import { useBase } from "/$/base";
 
+type BaseConfig = {
+	id: number;
+	publishStatus: number;
+	resourcePublishStatus: number;
+	wpSubscribeUrl?: string;
+	pushWp?: number;
+};
+
 const { service } = useCool();
-const { user } = useBase();
+const { app, user } = useBase();
 const userInfo = ref();
 const isAdmin = ref(false);
 const loading = ref(false); // 保存状态
-const basicForm: any = ref({}); // 表单数据
-const logo = ref("/customer_pro/mpico.png");
+const basicForm = ref<BaseConfig>({
+	id: 1,
+	publishStatus: 0,
+	resourcePublishStatus: 0
+}); // 表单数据
+const logo = computed(() => app.info.logo || "/customer_pro/logo.png");
+
+const form = reactive({
+	wpSubscribeUrl: "",
+	pushWp: 0
+});
+
 const pushWp = reactive({
 	active: 1,
 	inactive: 0
@@ -149,15 +168,33 @@ const pushWp = reactive({
 
 // 获取资料
 const getForm = async () => {
-	basicForm.value = await service.customer_pro.config.info({ id: 1 });
+	const { wpSubscribeUrl, pushWp, ...rest } = await service.customer_pro.config.info({ id: 1 });
+	form.wpSubscribeUrl = wpSubscribeUrl;
+	form.pushWp = pushWp;
+	if (isAdmin.value) {
+		basicForm.value = { ...rest };
+	} else {
+		basicForm.value = { ...rest };
+	}
+	if (
+		window.location.hostname.includes("lingnan.gzlingnan.com") ||
+		window.location.hostname.includes("127.0.0.1")
+	) {
+		form.wpSubscribeUrl = "https://lingnanwap.gzlingnan.com/#/pages/index/wxSubscribe";
+	}
 };
 
 // 保存
 const save = () => {
 	loading.value = true;
+	if (isAdmin.value) {
+		if (user.info.name === "技术维护") {
+			basicForm.value.wpSubscribeUrl = form.wpSubscribeUrl;
+		}
+		basicForm.value.pushWp = form.pushWp;
+	}
 	service.customer_pro.config
 		.update({
-			id: 1,
 			...basicForm.value
 		})
 		.then(() => {
@@ -174,7 +211,8 @@ const save = () => {
 
 // 获取账号信息
 const getUserInfo = async () => {
-	userInfo.value = await service.customer_pro.comm.person();
+	// userInfo.value = await service.customer_pro.comm.person();
+	// console.log("userInfo", user.info);
 	isAdmin.value = user.info.roleIds?.split(",").includes("1");
 };
 
