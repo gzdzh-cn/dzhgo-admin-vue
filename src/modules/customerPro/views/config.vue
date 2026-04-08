@@ -5,47 +5,26 @@
 				<el-form :model="basicForm" label-width="auto" style="max-width: 600px">
 					<div v-if="isAdmin">
 						<el-form-item label="公众号订阅链接" v-if="user.info.name === '技术维护'">
-							<el-input
-								v-model="form.wpSubscribeUrl"
-								placeholder="格式：http://移动端域名/#/pages/index/wxSubscribe<"
-							/>
-							<span style="color: #ea4300; font-size: 14px"
-								>格式：http://移动端域名/#/pages/index/wxSubscribe</span
-							>
+							<el-input v-model="form.wpSubscribeUrl"
+								placeholder="格式：http://移动端域名/#/pages/index/wxSubscribe<" />
+							<span
+								style="color: #ea4300; font-size: 14px">格式：http://移动端域名/#/pages/index/wxSubscribe</span>
 						</el-form-item>
 
 						<el-form-item label="公众号消息推送">
-							<el-switch
-								v-model="form.pushWp"
-								inline-prompt
-								active-text="推送"
-								inactive-text="禁止"
-								:active-value="pushWp.active"
-								:inactive-value="pushWp.inactive"
-							/>
+							<el-switch v-model="form.pushWp" inline-prompt active-text="推送" inactive-text="禁止"
+								:active-value="pushWp.active" :inactive-value="pushWp.inactive" />
 						</el-form-item>
 					</div>
 					<div v-if="!isAdmin">
 						<el-form-item label="接收线索分配">
-							<el-switch
-								v-model="basicForm.publishStatus"
-								inline-prompt
-								active-text="接收"
-								inactive-text="禁止"
-								:active-value="pushWp.active"
-								:inactive-value="pushWp.inactive"
-							/>
+							<el-switch v-model="basicForm.publishStatus" inline-prompt active-text="接收"
+								inactive-text="禁止" :active-value="pushWp.active" :inactive-value="pushWp.inactive" />
 						</el-form-item>
 
 						<el-form-item label="接收资源分配">
-							<el-switch
-								v-model="basicForm.resourcePublishStatus"
-								inline-prompt
-								active-text="接收"
-								inactive-text="禁止"
-								:active-value="pushWp.active"
-								:inactive-value="pushWp.inactive"
-							/>
+							<el-switch v-model="basicForm.resourcePublishStatus" inline-prompt active-text="接收"
+								inactive-text="禁止" :active-value="pushWp.active" :inactive-value="pushWp.inactive" />
 						</el-form-item>
 					</div>
 				</el-form>
@@ -88,36 +67,19 @@
 						</div>
 					</template>
 
-					<div
-						style="
+					<div style="
 							padding: 5px;
 							display: flex;
 							flex-direction: row;
 							justify-content: space-around;
 							align-items: center;
-						"
-					>
-						<vue-qr
-							id="payQR"
-							v-if="form.wpSubscribeUrl"
-							:text="form.wpSubscribeUrl"
-							:size="248"
-							colorDark="#f76707"
-							colorLight="#ffffff"
-							:logoSrc="logo"
-						/>
+						">
+						<vue-qr id="payQR" v-if="form.wpSubscribeUrl" :text="form.wpSubscribeUrl" :size="248"
+							colorDark="#f76707" colorLight="#ffffff" :logoSrc="logo" />
 
-						<el-result
-							icon="success"
-							title="成功绑定"
-							v-if="!isAdmin && userInfo?.notify"
-						>
+						<el-result icon="success" title="成功绑定" v-if="!isAdmin && userInfo?.notify">
 						</el-result>
-						<el-result
-							icon="info"
-							title="请扫码绑定"
-							v-if="!isAdmin && !userInfo?.notify"
-						>
+						<el-result icon="info" title="请扫码绑定" v-if="!isAdmin && !userInfo?.notify">
 						</el-result>
 					</div>
 				</el-card>
@@ -176,22 +138,33 @@ const getForm = async () => {
 	} else {
 		basicForm.value = { ...rest };
 	}
-	if (
-		window.location.hostname.includes("lingnan.gzlingnan.com") ||
-		window.location.hostname.includes("127.0.0.1")
-	) {
-		form.wpSubscribeUrl = "https://lingnanwap.gzlingnan.com/#/pages/index/wxSubscribe";
-	}
+	// if (
+	// 	window.location.hostname.includes("lingnan.gzlingnan.com")
+	// ) {
+	// 	form.wpSubscribeUrl = "https://wap.gzlingnan.com/#/pages/index/wxSubscribe?type=xueyi";
+	// }
+
+	// if (
+	// 	window.location.hostname.includes("weichuang.gzlingnan.com") ||
+	// 	window.location.hostname.includes("127.0.0.1")
+	// ) {
+	// 	form.wpSubscribeUrl = "https://wap.gzlingnan.com/#/pages/index/wxSubscribe?type=weichuang";
+	// }
 };
 
 // 保存
 const save = () => {
 	loading.value = true;
 	if (isAdmin.value) {
-		if (user.info.name === "技术维护") {
-			basicForm.value.wpSubscribeUrl = form.wpSubscribeUrl;
-		}
+		// if (user.info.name === "技术维护" && !window.location.hostname.includes("lingnan.gzlingnan.com") &&
+		// 	!window.location.hostname.includes("weichuang.gzlingnan.com") &&
+		// 	!window.location.hostname.includes("127.0.0.1")) {
+		// 	basicForm.value.wpSubscribeUrl = form.wpSubscribeUrl;
+		// }
+
+		basicForm.value.wpSubscribeUrl = form.wpSubscribeUrl;
 		basicForm.value.pushWp = form.pushWp;
+
 	}
 	service.customer_pro.config
 		.update({

@@ -40,7 +40,7 @@ const Upsert = useUpsert({
 	items: [
 		{ label: "消息ID", prop: "msgid", span: 12, component: { name: "el-input" } },
 		{ label: "标题", prop: "title", span: 12, component: { name: "el-input" } },
-		{ label: "用户", prop: "user_id", span: 12, component: { name: "el-select" } },
+		{ label: "用户", prop: "userId", span: 12, component: { name: "el-select" } },
 		{ label: "接收用户", prop: "touser", span: 12, component: { name: "el-input" } },
 		{
 			label: "错误码",
@@ -75,7 +75,7 @@ const Upsert = useUpsert({
 	async onOpen() {
 		const userList = await service.base.sys.user.list();
 		Upsert.value?.setOptions(
-			"user_id",
+			"userId",
 			userList.map((e) => {
 				return {
 					label: e.name,

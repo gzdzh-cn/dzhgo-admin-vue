@@ -26,22 +26,14 @@
 			<cl-table ref="Table" :border="false">
 				<template #column-domain="{ scope }">
 					<template v-if="scope.row?.domain !== ''">
-						<el-tag
-							v-for="(item, index) in scope.row?.domain?.split('\n')"
-							:key="index"
-							size="small"
-							effect="plain"
-						>
+						<el-tag v-for="(item, index) in scope.row?.domain?.split('\n')" :key="index" size="small"
+							effect="plain">
 							{{ item }}
 						</el-tag>
 					</template>
 					<template v-if="scope.row?.subDomain !== ''">
-						<el-tag
-							v-for="(item, index) in scope.row?.subDomain?.split('\n')"
-							:key="index"
-							size="small"
-							effect="plain"
-						>
+						<el-tag v-for="(item, index) in scope.row?.subDomain?.split('\n')" :key="index" size="small"
+							effect="plain">
 							{{ item }}
 						</el-tag>
 					</template>
@@ -53,11 +45,7 @@
 							{{ doFilterState(scope.row?.state)?.label }}
 						</el-button>
 					</template>
-					<el-popconfirm
-						title="项目进度更新?"
-						@confirm="clickState(scope.row)"
-						v-if="scope.row?.state != 2"
-					>
+					<el-popconfirm title="项目进度更新?" @confirm="clickState(scope.row)" v-if="scope.row?.state != 2">
 						<template #reference>
 							<el-button text bg :type="doFilterState(scope.row?.state)?.type">
 								{{ doFilterState(scope.row?.state)?.label }}
@@ -77,25 +65,16 @@
 				<template #slot-subOp="{ scope }">
 					<el-button text bg type="primary" @click="edit(scope.row)">编辑</el-button>
 					<el-button text bg type="info" @click="doHistory(scope.row)">跟踪</el-button>
-					<el-popover
-						placement="right"
-						:width="80"
-						trigger="click"
-						popper-class="dzh_popover"
-					>
+					<el-popover placement="right" :width="80" trigger="click" popper-class="dzh_popover">
 						<template #reference>
 							<el-button text bg type="success">更多</el-button>
 						</template>
 						<div class="more">
 							<div class="more_btn" v-permission="service.crm.order.permission.add">
-								<el-button text bg type="warning" @click="subList(scope.row)"
-									>追加</el-button
-								>
+								<el-button text bg type="warning" @click="subList(scope.row)">追加</el-button>
 							</div>
 							<div v-permission="service.crm.finance.permission.page">
-								<el-button text bg type="danger" @click="financeList(scope.row)"
-									>财务</el-button
-								>
+								<el-button text bg type="danger" @click="financeList(scope.row)">财务</el-button>
 							</div>
 						</div>
 					</el-popover>
@@ -124,41 +103,25 @@
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
 			<template #slot-newDomain="{ scope }">
-				<cl-row>
-					<cl-col :span="18">
+				<el-row :gutter="10">
+					<el-col :span="18">
 						<el-input v-model="newDomain" placeholder="不要添加http或https" />
-					</cl-col>
-					<cl-col>
+					</el-col>
+					<el-col>
 						<el-button @click="addDomin(scope.domain)">添加</el-button>
-					</cl-col>
-					<cl-col>
+					</el-col>
+					<el-col>
 						<el-button @click="resetDomin(scope.domain)">重置</el-button>
-					</cl-col>
-				</cl-row>
+					</el-col>
+				</el-row>
 			</template>
 			<template #slot-customerId="{ scope }">
-				<el-select-v2
-					v-model="scope.customerId"
-					filterable
-					remote
-					:remote-method="remoteMethodCustomer"
-					clearable
-					:options="optionsCustomerId"
-					:loading="loading"
-					placeholder="请输入名称模糊搜索"
-				/>
+				<el-select-v2 v-model="scope.customerId" filterable remote :remote-method="remoteMethodCustomer"
+					clearable :options="optionsCustomerId" :loading="loading" placeholder="请输入名称模糊搜索" />
 			</template>
 			<template #slot-agentId="{ scope }">
-				<el-select-v2
-					v-model="scope.agentId"
-					filterable
-					remote
-					:remote-method="remoteMethodAgent"
-					clearable
-					:options="optionsAgentId"
-					:loading="loading"
-					placeholder="请输入名称模糊搜索"
-				/>
+				<el-select-v2 v-model="scope.agentId" filterable remote :remote-method="remoteMethodAgent" clearable
+					:options="optionsAgentId" :loading="loading" placeholder="请输入名称模糊搜索" />
 			</template>
 		</cl-upsert>
 
@@ -186,7 +149,7 @@
 import { useCrud, useTable, useUpsert, useAdvSearch } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { useBase } from "/$/base";
-import { reactive, ref } from "vue";
+import { markRaw, reactive, ref } from "vue";
 import { ElDrawer, dayjs } from "element-plus";
 import OrderSub from "./components/order/sub.vue";
 import OrderFinance from "./components/order/finance.vue";
@@ -239,6 +202,7 @@ const toggleExtendBt = () => {
 	isExtend.value = !isExtend.value;
 };
 
+
 // cl-upsert 配置
 const Upsert = useUpsert({
 	items: [
@@ -290,22 +254,22 @@ const Upsert = useUpsert({
 			},
 			group: "base"
 		},
-		{
-			label: "项目订单",
-			span: 12,
-			prop: "orderCode",
-			hidden: () => {
-				return Upsert.value?.mode == "add";
-			},
-			component: {
-				name: "el-input",
-				props: {
-					disabled: () => {
-						return Upsert.value?.mode !== "add";
+		() => {
+			return {
+				label: "项目订单",
+				span: 12,
+				prop: "orderCode",
+				hidden: () => {
+					return Upsert.value?.mode == "add";
+				},
+				component: {
+					name: "el-input",
+					props: {
+						disabled: Upsert.value?.mode != "add" ? true : false
 					}
-				}
-			},
-			group: "base"
+				},
+				group: "base"
+			}
 		},
 		{
 			label: "域名归属我司",
@@ -428,7 +392,7 @@ const Upsert = useUpsert({
 					multiple: true,
 					showFileList: true,
 					draggable: true,
-					rename: false
+					// rename: false
 				}
 			},
 			group: "base"
@@ -557,7 +521,7 @@ const Upsert = useUpsert({
 					multiple: true,
 					showFileList: true,
 					draggable: true,
-					rename: false
+					// rename: false
 				}
 			},
 			group: "finance"
@@ -572,23 +536,25 @@ const Upsert = useUpsert({
 					multiple: true,
 					showFileList: true,
 					draggable: true,
-					rename: false
+					// rename: false
 				}
 			},
 			group: "finance"
 		},
-		{
-			label: "项目总价",
-			prop: "price",
-			span: 12,
-			required: true,
-			component: {
-				name: "el-input",
-				props: {
-					suffixIcon: Money
-				}
-			},
-			group: "finance"
+		() => {
+			return {
+				label: "项目总价",
+				prop: "price",
+				span: 12,
+				required: true,
+				component: {
+					name: "el-input",
+					props: {
+						suffixIcon: markRaw(Money)
+					}
+				},
+				group: "finance"
+			}
 		},
 		{
 			label: "续费价格",
@@ -598,7 +564,7 @@ const Upsert = useUpsert({
 			component: {
 				name: "el-input",
 				props: {
-					suffixIcon: Money
+					suffixIcon: markRaw(Money)
 				}
 			},
 			group: "finance"
@@ -612,7 +578,7 @@ const Upsert = useUpsert({
 			component: {
 				name: "el-input",
 				props: {
-					suffixIcon: Money
+					suffixIcon: markRaw(Money)
 				}
 			},
 			group: "finance"
