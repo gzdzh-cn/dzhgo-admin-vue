@@ -40,16 +40,16 @@
 				<template #column-detail="{ scope }">
 					<div style="padding: 0 30px">
 						<p v-if="scope.row?.userName">创建者: {{ scope.row?.userName }}</p>
-						<p v-if="scope.row?.ocean_time">公海时间: {{ scope.row?.ocean_time }}</p>
-						<p>账户: {{ scope.row?.account_name }}</p>
+						<p v-if="scope.row?.oceanTime">公海时间: {{ scope.row?.oceanTime }}</p>
+						<p>账户: {{ scope.row?.accountName }}</p>
 						<!-- <p v-if="scope.row?.keywords">关键字: {{ scope.row?.keywords }}</p> -->
-						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
-						<p>IP归属地: {{ scope.row?.guest_ip_info }}</p>
+						<p>来源: {{ sourceFormatter(scope.row?.sourceFrom) }}</p>
+						<p>IP归属地: {{ scope.row?.guestIpInfo }}</p>
 						<p>
 							最后跟进时间:
 							{{
-								scope.row?.last_followup_time
-									? scope.row?.last_followup_time
+								scope.row?.lastFollowupTime
+									? scope.row?.lastFollowupTime
 									: scope.row?.createTime
 							}}
 						</p>
@@ -106,8 +106,8 @@
 
 		<!-- 项目分配 -->
 		<cl-form ref="DistributeFormRef">
-			<template #slot-project_id="{ scope }">
-				<el-select v-model="scope.project_id" @change="projectChange">
+			<template #slot-projectId="{ scope }">
+				<el-select v-model="scope.projectId" @change="projectChange">
 					<el-option
 						v-for="item in projectList"
 						:key="item.value"
@@ -117,8 +117,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-group_id="{ scope }">
-				<el-select v-model="scope.group_id" @change="groupChange">
+			<template #slot-groupId="{ scope }">
+				<el-select v-model="scope.groupId" @change="groupChange">
 					<el-option
 						v-for="item in groupList"
 						:key="item.value"
@@ -128,8 +128,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-services_id="{ scope }">
-				<el-select v-model="scope.services_id">
+			<template #slot-servicesId="{ scope }">
+				<el-select v-model="scope.servicesId">
 					<el-option
 						v-for="item in kfList"
 						:key="item.value"
@@ -187,7 +187,7 @@ const Upsert = useUpsert({
 				component: { name: "el-input" }
 			};
 		},
-		{ label: "来源", prop: "source_from", span: 12, component: { name: "el-select" } },
+		{ label: "来源", prop: "sourceFrom", span: 12, component: { name: "el-select" } },
 
 		{ label: "手机号", prop: "mobile", span: 12, component: { name: "el-input" } },
 		{ label: "微信号", prop: "wechat", span: 12, component: { name: "el-input" } },
@@ -208,14 +208,14 @@ const Upsert = useUpsert({
 		}
 	],
 	async onOpen(data) {
-		if (data.source_from != 1) {
+		if (data.sourceFrom != 1) {
 			data.name = (data?.city ? data?.city : "") + (data?.guest_id ? data?.guest_id : "");
 		}
 
 		// 项目
 		const projectList = await service.customer_pro.project.list();
 		Upsert.value?.setOptions(
-			"project_id",
+			"projectId",
 			projectList.map((e) => {
 				return {
 					label: e.name,
@@ -227,7 +227,7 @@ const Upsert = useUpsert({
 		// 学校
 		const schoolList = await service.customer_pro.school.list();
 		Upsert.value?.setOptions(
-			"school_id",
+			"schoolId",
 			schoolList.map((e) => {
 				return {
 					label: e.name,
@@ -239,7 +239,7 @@ const Upsert = useUpsert({
 		// 专业
 		const majorsList = await service.customer_pro.majors.list();
 		Upsert.value?.setOptions(
-			"majors_id",
+			"majorsId",
 			majorsList.map((e) => {
 				return {
 					label: e.name,
@@ -251,7 +251,7 @@ const Upsert = useUpsert({
 		// 报读类型
 		const majorsTypeList = await service.customer_pro.readtypes.list();
 		Upsert.value?.setOptions(
-			"majors_type",
+			"majorsType",
 			majorsTypeList.map((e) => {
 				return {
 					label: e.name,
@@ -263,7 +263,7 @@ const Upsert = useUpsert({
 		// 报读层次
 		const degreeList = await service.customer_pro.readdegree.list();
 		Upsert.value?.setOptions(
-			"degree_id",
+			"degreeId",
 			degreeList.map((e) => {
 				return {
 					label: e.name,
@@ -273,7 +273,7 @@ const Upsert = useUpsert({
 		);
 
 		// 户口性质
-		Upsert.value?.setOptions("household_type", [
+		Upsert.value?.setOptions("householdType", [
 			{
 				label: "城镇",
 				value: "1"
@@ -317,7 +317,7 @@ const Upsert = useUpsert({
 		]);
 
 		// 来源
-		Upsert.value?.setOptions("source_from", [
+		Upsert.value?.setOptions("sourceFrom", [
 			{
 				label: "手动录入",
 				value: "1"
@@ -378,13 +378,13 @@ const Table = useTable({
 			};
 		},
 		{ label: "序号", prop: "id" },
-		{ label: "项目", prop: "project_name" },
+		{ label: "项目", prop: "projectName" },
 		{
 			label: "姓名",
 			prop: "name",
 			width: 150,
 			formatter(row) {
-				if (row.source_from == 1) {
+				if (row.sourceFrom == 1) {
 					return row.name;
 				} else if (row.city) {
 					return row.city + row.guest_id;
@@ -399,7 +399,7 @@ const Table = useTable({
 		{ label: "关键词", prop: "keywords" },
 		// {
 		// 	label: "来源",
-		// 	prop: "source_from",
+		// 	prop: "sourceFrom",
 		// 	dict: [
 		// 		{
 		// 			label: "手动录入",
@@ -477,9 +477,9 @@ const handleClick = (tab: TabsPaneContext) => {
 const DistributeFormRef = useForm(); //分配表单
 const openDistribute = async () => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	DistributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	DistributeFormRef.value?.setForm("servicesId", null);
 
 	projectList.value = await service.customer_pro.project.list();
 	const ids = Crud.value?.selection.map((e) => {
@@ -492,25 +492,25 @@ const openDistribute = async () => {
 		items: [
 			{
 				label: "项目",
-				prop: "project_id",
+				prop: "projectId",
 				component: {
-					name: "slot-project_id"
+					name: "slot-projectId"
 				},
 				required: true
 			},
 			{
 				label: "客服组",
-				prop: "group_id",
+				prop: "groupId",
 				component: {
-					name: "slot-group_id"
+					name: "slot-groupId"
 				},
 				required: true
 			},
 			{
 				label: "接收人",
-				prop: "services_id",
+				prop: "servicesId",
 				component: {
-					name: "slot-services_id"
+					name: "slot-servicesId"
 				},
 				required: true
 			}
@@ -522,7 +522,7 @@ const openDistribute = async () => {
 				service.customer_pro.clues
 					.distribute({
 						ids: ids,
-						servicesId: data.services_id
+						servicesId: data.servicesId
 					})
 					.then(() => {
 						ElMessage.success("分配完成");
@@ -543,9 +543,9 @@ const projectId = ref();
 // 项目id改变
 const projectChange = (v: any) => {
 	groupList.value = [];
-	DistributeFormRef.value?.setForm("group_id", null);
+	DistributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	DistributeFormRef.value?.setForm("servicesId", null);
 	projectId.value = v;
 	getGroupList(v);
 };
@@ -553,7 +553,7 @@ const projectChange = (v: any) => {
 // 组别id改变
 const groupChange = (v: any) => {
 	kfList.value = [];
-	DistributeFormRef.value?.setForm("services_id", null);
+	DistributeFormRef.value?.setForm("servicesId", null);
 	getKfList(v, projectId.value);
 };
 

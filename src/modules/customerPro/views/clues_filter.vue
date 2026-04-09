@@ -50,11 +50,11 @@
 					<div style="padding: 0 30px">
 						<p>唯一码: {{ scope.row?.id }}</p>
 						<p>guestId: {{ scope.row?.guestId }}</p>
-						<p v-if="scope.row?.source_from == 1 && scope.row?.createdName">
+						<p v-if="scope.row?.sourceFrom == 1 && scope.row?.createdName">
 							创建者: {{ scope.row?.createdName }}
 						</p>
-						<p>账户: {{ scope.row?.account_name }}</p>
-						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
+						<p>账户: {{ scope.row?.accountName }}</p>
+						<p>来源: {{ sourceFormatter(scope.row?.sourceFrom) }}</p>
 						<p>IP归属地: {{ scope.row?.guestIpInfo }}</p>
 						<p>
 							创建时间:
@@ -93,8 +93,8 @@
 
 		<!-- 项目分配 -->
 		<cl-form ref="distributeFormRef">
-			<template #slot-project_id="{ scope }">
-				<el-select v-model="scope.project_id" @change="projectChange">
+			<template #slot-projectId="{ scope }">
+				<el-select v-model="scope.projectId" @change="projectChange">
 					<el-option
 						v-for="item in projectList"
 						:key="item.value"
@@ -104,8 +104,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-group_id="{ scope }">
-				<el-select v-model="scope.group_id" @change="groupChange">
+			<template #slot-groupId="{ scope }">
+				<el-select v-model="scope.groupId" @change="groupChange">
 					<el-option
 						v-for="item in groupList"
 						:key="item.value"
@@ -115,8 +115,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-services_id="{ scope }">
-				<el-select v-model="scope.services_id">
+			<template #slot-servicesId="{ scope }">
+				<el-select v-model="scope.servicesId">
 					<el-option
 						v-for="item in kfList"
 						:key="item.value"
@@ -199,7 +199,7 @@ const Upsert = useUpsert({
 		() => {
 			return {
 				label: "项目",
-				prop: "project_id",
+				prop: "projectId",
 				span: 12,
 				required: true,
 				component: { name: "el-select", props: { disabled: Upsert.value?.mode !== "add" } }
@@ -217,7 +217,7 @@ const Upsert = useUpsert({
 		() => {
 			return {
 				label: "IP归属地",
-				prop: "guest_ip_info",
+				prop: "guestIpInfo",
 				span: 12,
 				hidden: Upsert.value?.mode == "add",
 				component: { name: "el-input", props: { disabled: true } }
@@ -231,7 +231,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "来源",
-			prop: "source_from",
+			prop: "sourceFrom",
 			span: 12,
 			required: true,
 			component: { name: "el-select" }
@@ -243,16 +243,16 @@ const Upsert = useUpsert({
 		{ label: "微信号", prop: "wechat", span: 12, component: { name: "el-input" } },
 
 		{ label: "学历", prop: "education", span: 12, component: { name: "el-select" } },
-		{ label: "毕业院校", prop: "graduated_school", span: 12, component: { name: "el-input" } },
+		{ label: "毕业院校", prop: "graduatedSchool", span: 12, component: { name: "el-input" } },
 
-		{ label: "意向院校", prop: "school_id", span: 12, component: { name: "slot-school_id" } },
-		{ label: "意向专业", prop: "majors_id", span: 12, component: { name: "slot-majors_id" } },
+		{ label: "意向院校", prop: "schoolId", span: 12, component: { name: "slot-schoolId" } },
+		{ label: "意向专业", prop: "majorsId", span: 12, component: { name: "slot-majorsId" } },
 
-		{ label: "报读类型", prop: "majors_type", span: 12, component: { name: "el-select" } },
-		{ label: "报读层次", prop: "degree_id", span: 12, component: { name: "el-select" } },
+		{ label: "报读类型", prop: "majorsType", span: 12, component: { name: "el-select" } },
+		{ label: "报读层次", prop: "degreeId", span: 12, component: { name: "el-select" } },
 
-		{ label: "户口类型", prop: "household_type", span: 12, component: { name: "el-select" } },
-		{ label: "户籍地址", prop: "household_address", span: 12, component: { name: "el-input" } },
+		{ label: "户口类型", prop: "householdType", span: 12, component: { name: "el-select" } },
+		{ label: "户籍地址", prop: "householdAddress", span: 12, component: { name: "el-input" } },
 
 		{
 			label: "线索等级",
@@ -273,7 +273,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "紧急联系人电话",
-			prop: "emergency_mobile",
+			prop: "emergencyMobile",
 			props: {
 				labelWidth: "130px"
 			},
@@ -293,7 +293,7 @@ const Upsert = useUpsert({
 		// 项目
 		const projectList = await service.customer_pro.project.list();
 		Upsert.value?.setOptions(
-			"project_id",
+			"projectId",
 			projectList.map((e) => {
 				return {
 					label: e.name,
@@ -305,7 +305,7 @@ const Upsert = useUpsert({
 		// 报读类型
 		const majorsTypeList = await service.customer_pro.readtypes.list();
 		Upsert.value?.setOptions(
-			"majors_type",
+			"majorsType",
 			majorsTypeList.map((e) => {
 				return {
 					label: e.name,
@@ -317,7 +317,7 @@ const Upsert = useUpsert({
 		// 报读层次
 		const degreeList = await service.customer_pro.readdegree.list();
 		Upsert.value?.setOptions(
-			"degree_id",
+			"degreeId",
 			degreeList.map((e) => {
 				return {
 					label: e.name,
@@ -327,7 +327,7 @@ const Upsert = useUpsert({
 		);
 
 		// 户口性质
-		Upsert.value?.setOptions("household_type", [
+		Upsert.value?.setOptions("householdType", [
 			{
 				label: "城镇",
 				value: "1"
@@ -362,7 +362,7 @@ const Upsert = useUpsert({
 		]);
 
 		// 来源
-		Upsert.value?.setOptions("source_from", [
+		Upsert.value?.setOptions("sourceFrom", [
 			{
 				label: "手动录入",
 				value: "1"
@@ -435,7 +435,7 @@ const Table = useTable({
 			}
 		},
 
-		{ label: "项目", prop: "project_name" },
+		{ label: "项目", prop: "projectName" },
 		{
 			label: "姓名",
 			prop: "name",
@@ -523,9 +523,9 @@ const cancel = () => {
 const distributeFormRef = useForm(); //分配表单
 const openDistribute = async () => {
 	groupList.value = [];
-	distributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 
 	projectList.value = await service.customer_pro.project.list();
 	const ids = Crud.value?.selection.map((e) => {
@@ -538,25 +538,25 @@ const openDistribute = async () => {
 		items: [
 			{
 				label: "项目",
-				prop: "project_id",
+				prop: "projectId",
 				component: {
-					name: "slot-project_id"
+					name: "slot-projectId"
 				},
 				required: true
 			},
 			{
 				label: "客服组",
-				prop: "group_id",
+				prop: "groupId",
 				component: {
-					name: "slot-group_id"
+					name: "slot-groupId"
 				},
 				required: true
 			},
 			{
 				label: "接收人",
-				prop: "services_id",
+				prop: "servicesId",
 				component: {
-					name: "slot-services_id"
+					name: "slot-servicesId"
 				},
 				required: true
 			}
@@ -568,7 +568,7 @@ const openDistribute = async () => {
 				service.customer_pro.clues_filter
 					.distribute({
 						ids: ids,
-						servicesId: data.services_id
+						servicesId: data.servicesId
 					})
 					.then(() => {
 						ElMessage.success("分配完成");
@@ -589,9 +589,9 @@ const projectId = ref();
 // 项目id改变
 const projectChange = (v: any) => {
 	groupList.value = [];
-	distributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 	projectId.value = v;
 	getGroupList(v);
 };
@@ -599,7 +599,7 @@ const projectChange = (v: any) => {
 // 组别id改变
 const groupChange = (v: any) => {
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 	getKfList(v, projectId.value);
 };
 

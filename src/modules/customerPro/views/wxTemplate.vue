@@ -122,7 +122,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "模板ID",
-			prop: "template_id",
+			prop: "templateId",
 			required: true,
 			component: { name: "el-input" }
 		},
@@ -224,7 +224,7 @@ const Table = useTable({
 			]
 		},
 		{ label: "模板名称", prop: "name" },
-		{ label: "模板ID", prop: "template_id" },
+		{ label: "模板ID", prop: "templateId" },
 		{ label: "状态", prop: "status" },
 		{ label: "创建时间", prop: "createTime" },
 		{ type: "op", buttons: ["edit"] }

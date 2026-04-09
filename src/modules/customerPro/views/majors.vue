@@ -40,7 +40,7 @@ const Upsert = useUpsert({
 		{ label: "名称", prop: "name", required: true, component: { name: "el-input" } },
 		{
 			label: "院校",
-			prop: "school_id",
+			prop: "schoolId",
 			span: 12,
 			required: true,
 			component: {
@@ -57,14 +57,14 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "招生人数",
-			prop: "planned_numbers",
+			prop: "plannedNumbers",
 			span: 12,
 			value: 0,
 			component: { name: "el-input-number", props: { min: 0 } }
 		},
 		{
 			label: "报名人数",
-			prop: "registered_numbers",
+			prop: "registeredNumbers",
 			span: 12,
 			value: 0,
 			component: { name: "el-input-number", props: { min: 0 } }
@@ -93,7 +93,7 @@ const Upsert = useUpsert({
 	async onOpen() {
 		const schoolList = await service.customer_pro.school.list();
 		Upsert.value?.setOptions(
-			"school_id",
+			"schoolId",
 			schoolList.map((e) => {
 				return {
 					label: e.name,
@@ -111,8 +111,8 @@ const Table = useTable({
 		{ label: "名称", prop: "name" },
 		{ label: "院校", prop: "schoolName" },
 		{ label: "定位金", prop: "amount" },
-		{ label: "招生人数", prop: "planned_numbers" },
-		{ label: "报名人数", prop: "registered_numbers" },
+		{ label: "招生人数", prop: "plannedNumbers" },
+		{ label: "报名人数", prop: "registeredNumbers" },
 		{
 			label: "备注",
 			prop: "remark",

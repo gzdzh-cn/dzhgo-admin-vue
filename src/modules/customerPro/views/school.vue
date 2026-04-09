@@ -40,7 +40,7 @@ const Upsert = useUpsert({
 		{ label: "院校名称", prop: "name", required: true, component: { name: "el-input" } },
 		{ label: "Logo", prop: "logo", component: { name: "cl-upload" } },
 		{ label: "项目地点", prop: "address", component: { name: "el-input" } },
-		{ label: "总报名", prop: "total_order", component: { name: "el-input" } },
+		{ label: "总报名", prop: "totalOrder", component: { name: "el-input" } },
 		{
 			label: "项目描述",
 			prop: "desc",
@@ -82,7 +82,7 @@ const Table = useTable({
 		{ type: "selection" },
 		{ label: "院校名称", prop: "name" },
 		{ label: "Logo", prop: "logo", component: { name: "cl-image", props: { size: 40 } } },
-		{ label: "总报名", prop: "total_order" },
+		{ label: "总报名", prop: "totalOrder" },
 		{
 			label: "备注",
 			prop: "remark",

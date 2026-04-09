@@ -19,20 +19,20 @@
 					<div style="padding: 0 30px">
 						<p v-if="scope.row?.userName">创建者: {{ scope.row?.userName }}</p>
 						<p>接待人员: {{ scope.row?.receiver }}</p>
-						<p>学方收定位金: {{ scope.row?.school_payment }}</p>
-						<p>自收定位金: {{ scope.row?.teams_payment }}</p>
+						<p>学方收定位金: {{ scope.row?.schoolPayment }}</p>
+						<p>自收定位金: {{ scope.row?.teamsPayment }}</p>
 						<p>支付编号: {{ scope.row?.serial }}</p>
 						<p>备注: {{ scope.row?.remark }}</p>
 					</div>
 				</template>
 
-				<template #column-audit_status="{ scope }">
-					<span style="color: #d83b01" v-if="scope.row.audit_status == 1"> 待审核 </span>
-					<span style="color: #00b294" v-if="scope.row.audit_status == 2">
+				<template #column-auditStatus="{ scope }">
+					<span style="color: #d83b01" v-if="scope.row.auditStatus == 1"> 待审核 </span>
+					<span style="color: #00b294" v-if="scope.row.auditStatus == 2">
 						审核通过
 					</span>
 
-					<span style="color: #ff8c00" v-if="scope.row.audit_status == 3">
+					<span style="color: #ff8c00" v-if="scope.row.auditStatus == 3">
 						审核驳回
 					</span>
 				</template>
@@ -44,7 +44,7 @@
 						type="primary"
 						@click="edit(scope.row)"
 						v-if="
-							scope.row.audit_status == 1 &&
+							scope.row.auditStatus == 1 &&
 							service.customer_pro.order._permission.update
 						"
 						>编辑</el-button
@@ -55,7 +55,7 @@
 						type="primary"
 						@click="edit(scope.row)"
 						v-if="
-							scope.row.audit_status > 1 &&
+							scope.row.auditStatus > 1 &&
 							service.customer_pro.order._permission.info
 						"
 						>查看</el-button
@@ -103,7 +103,7 @@
 								bg
 								type="info"
 								@click="doPopoverVisible(scope.row, scope.column)"
-								:disabled="scope.row.audit_status > 1"
+								:disabled="scope.row.auditStatus > 1"
 								v-permission="service.customer_pro.order.permission.verify"
 								>审核</el-button
 							>
@@ -121,9 +121,9 @@
 
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
-			<template #slot-school_id="{ scope }">
+			<template #slot-schoolId="{ scope }">
 				<!-- 学校 -->
-				<el-select v-model="scope.school_id" @change="schoolChange">
+				<el-select v-model="scope.schoolId" @change="schoolChange">
 					<el-option
 						v-for="item in schoolList"
 						:key="item.value"
@@ -134,8 +134,8 @@
 			</template>
 
 			<!-- 专业 -->
-			<template #slot-majors_id="{ scope }">
-				<el-select v-model="scope.majors_id">
+			<template #slot-majorsId="{ scope }">
+				<el-select v-model="scope.majorsId">
 					<el-option
 						v-for="item in majorsList"
 						:key="item.value"
@@ -239,7 +239,7 @@ const Upsert = useUpsert({
 
 		{
 			label: "身份证",
-			prop: "idcard_number",
+			prop: "idcardNumber",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -273,10 +273,10 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "意向院校",
-			prop: "school_id",
+			prop: "schoolId",
 			span: 8,
 			component: {
-				name: "slot-school_id",
+				name: "slot-schoolId",
 				options: []
 			},
 			required: true,
@@ -285,10 +285,10 @@ const Upsert = useUpsert({
 
 		{
 			label: "意向专业",
-			prop: "majors_id",
+			prop: "majorsId",
 			span: 8,
 			component: {
-				name: "slot-majors_id",
+				name: "slot-majorsId",
 				options: []
 			},
 			required: true,
@@ -296,7 +296,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "报读类型",
-			prop: "majors_type",
+			prop: "majorsType",
 			span: 8,
 			component: {
 				name: "el-select",
@@ -307,7 +307,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "报读层次",
-			prop: "degree_id",
+			prop: "degreeId",
 			span: 8,
 			component: {
 				name: "el-select",
@@ -328,7 +328,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "紧急联系人",
-			prop: "emergency_contact",
+			prop: "emergencyContact",
 			span: 12,
 			component: {
 				name: "el-input"
@@ -338,7 +338,7 @@ const Upsert = useUpsert({
 
 		{
 			label: "紧急联系人电话",
-			prop: "emergency_mobile",
+			prop: "emergencyMobile",
 			props: {
 				labelWidth: "130px"
 			},
@@ -368,7 +368,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "籍贯",
-			prop: "native_place",
+			prop: "nativePlace",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -378,7 +378,7 @@ const Upsert = useUpsert({
 
 		{
 			label: "政治面貌",
-			prop: "politics_status",
+			prop: "politicsStatus",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -387,7 +387,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "户口性质",
-			prop: "household_type",
+			prop: "householdType",
 			span: 8,
 			component: {
 				name: "el-select"
@@ -396,7 +396,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "户口所在地",
-			prop: "household_address",
+			prop: "householdAddress",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -424,7 +424,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "毕业学校",
-			prop: "graduated_school",
+			prop: "graduatedSchool",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -434,7 +434,7 @@ const Upsert = useUpsert({
 
 		{
 			label: "毕业时间",
-			prop: "graduated_date",
+			prop: "graduatedDate",
 			span: 8,
 			component: {
 				name: "el-input"
@@ -457,7 +457,7 @@ const Upsert = useUpsert({
 
 		{
 			label: "校方收定位金",
-			prop: "school_payment",
+			prop: "schoolPayment",
 			span: 8,
 			value: 0.0,
 			component: {
@@ -471,7 +471,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "自收定位金",
-			prop: "teams_payment",
+			prop: "teamsPayment",
 			span: 8,
 			value: 0.0,
 			component: {
@@ -509,7 +509,7 @@ const Upsert = useUpsert({
 		// 报读类型
 		const majorsTypeList = await service.customer_pro.readtypes.list();
 		Upsert.value?.setOptions(
-			"majors_type",
+			"majorsType",
 			majorsTypeList.map((e) => {
 				return {
 					label: e.name,
@@ -521,7 +521,7 @@ const Upsert = useUpsert({
 		// 报读层次
 		const degreeList = await service.customer_pro.readdegree.list();
 		Upsert.value?.setOptions(
-			"degree_id",
+			"degreeId",
 			degreeList.map((e) => {
 				return {
 					label: e.name,
@@ -531,7 +531,7 @@ const Upsert = useUpsert({
 		);
 
 		// 户口性质
-		Upsert.value?.setOptions("household_type", [
+		Upsert.value?.setOptions("householdType", [
 			{
 				label: "城镇",
 				value: "1"
@@ -559,14 +559,14 @@ const Table = useTable({
 		{ label: "手机号码", prop: "mobile" },
 		{ label: "微信号", prop: "wechat" },
 
-		{ label: "专业", prop: "majors_name" },
-		{ label: "专业类型", prop: "majors_type_name" },
-		{ label: "报读层次", prop: "degree_name" },
-		{ label: "项目", prop: "project_name" },
-		{ label: "客服", prop: "services_name" },
+		{ label: "专业", prop: "majorsName" },
+		{ label: "专业类型", prop: "majorsTypeName" },
+		{ label: "报读层次", prop: "degreeName" },
+		{ label: "项目", prop: "projectName" },
+		{ label: "客服", prop: "servicesName" },
 		{
 			label: "审核状态",
-			prop: "audit_status"
+			prop: "auditStatus"
 		},
 
 		{ label: "创建时间", prop: "createTime" },
@@ -594,7 +594,7 @@ const Crud = useCrud(
 
 // 编辑
 const edit = (row: any) => {
-	if (row.audit_status == 1) {
+	if (row.auditStatus == 1) {
 		Crud.value?.rowEdit(row);
 	} else {
 		Crud.value?.rowInfo(row);
@@ -608,7 +608,7 @@ const refresh = () => {
 // 轨迹弹窗
 const trackVisible = ref(false);
 const openTracks = (row: any) => {
-	cluesId.value = row.clues_id;
+	cluesId.value = row.cluesId;
 	trackVisible.value = true;
 };
 
@@ -640,14 +640,14 @@ const verify = (row: any, type: number) => {
 	}
 
 	if (action) {
-		orderUpdate({ id: row.id, audit_status: type, clues_id: row.clues_id });
+		orderUpdate({ id: row.id, auditStatus: type, cluesId: row.cluesId });
 	} else {
 		RejectRef.value?.open({
 			title: "审核失败意见",
 			items: [
 				{
 					label: "审核意见",
-					prop: "audit_note",
+					prop: "auditNote",
 					component: {
 						name: "el-input",
 						props: {
@@ -661,9 +661,9 @@ const verify = (row: any, type: number) => {
 				submit(data, { close }) {
 					orderUpdate({
 						id: row.id,
-						audit_status: type,
-						audit_note: data.audit_note,
-						clues_id: row.clues_id
+						auditStatus: type,
+						auditNote: data.auditNote,
+						cluesId: row.cluesId
 					});
 					close();
 				}
@@ -704,7 +704,7 @@ const getSchoolList = async () => {
 
 // 学校改变
 const schoolChange = async (v: any) => {
-	Upsert.value?.setForm("majors_id", null);
+	Upsert.value?.setForm("majorsId", null);
 	getMajorList(v);
 };
 

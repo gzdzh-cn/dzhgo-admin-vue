@@ -53,11 +53,11 @@
 						<p>唯一码: {{ scope.row?.id }}</p>
 						<!-- <p>guestId: {{ scope.row?.guestId }}</p> -->
 						<p v-if="scope.row?.createdName">创建者: {{ scope.row?.createdName }}</p>
-						<!-- <p>账户: {{ scope.row?.account_name }}</p> -->
-						<p v-if="scope.row?.services_names" style="color: #d83b01">
-							分配过的客服: {{ scope.row?.services_names }}
+						<!-- <p>账户: {{ scope.row?.accountName }}</p> -->
+						<p v-if="scope.row?.servicesNames" style="color: #d83b01">
+							分配过的客服: {{ scope.row?.servicesNames }}
 						</p>
-						<p>来源: {{ sourceFormatter(scope.row?.source_from) }}</p>
+						<p>来源: {{ sourceFormatter(scope.row?.sourceFrom) }}</p>
 						<p v-if="scope.row?.level">
 							线索等级: {{ levelFormatter(scope.row?.level) }}
 						</p>
@@ -65,8 +65,8 @@
 						<p>
 							最后跟进时间:
 							{{
-								scope.row?.last_followup_time
-									? scope.row?.last_followup_time
+								scope.row?.lastFollowupTime
+									? scope.row?.lastFollowupTime
 									: scope.row?.createTime
 							}}
 						</p>
@@ -130,9 +130,9 @@
 
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
-			<template #slot-school_id="{ scope }">
+			<template #slot-schoolId="{ scope }">
 				<!-- 学校 -->
-				<el-select v-model="scope.school_id" @change="schoolChange">
+				<el-select v-model="scope.schoolId" @change="schoolChange">
 					<el-option
 						v-for="item in schoolList"
 						:key="item.value"
@@ -143,8 +143,8 @@
 			</template>
 
 			<!-- 专业 -->
-			<template #slot-majors_id="{ scope }">
-				<el-select v-model="scope.majors_id">
+			<template #slot-majorsId="{ scope }">
+				<el-select v-model="scope.majorsId">
 					<el-option
 						v-for="item in majorsList"
 						:key="item.value"
@@ -157,8 +157,8 @@
 
 		<!-- 项目分配 -->
 		<cl-form ref="distributeFormRef">
-			<template #slot-project_id="{ scope }">
-				<el-select v-model="scope.project_id" @change="projectChange">
+			<template #slot-projectId="{ scope }">
+				<el-select v-model="scope.projectId" @change="projectChange">
 					<el-option
 						v-for="item in projectList"
 						:key="item.value"
@@ -168,8 +168,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-group_id="{ scope }">
-				<el-select v-model="scope.group_id" @change="groupChange">
+			<template #slot-groupId="{ scope }">
+				<el-select v-model="scope.groupId" @change="groupChange">
 					<el-option
 						v-for="item in groupList"
 						:key="item.value"
@@ -179,8 +179,8 @@
 				</el-select>
 			</template>
 
-			<template #slot-services_id="{ scope }">
-				<el-select v-model="scope.services_id">
+			<template #slot-servicesId="{ scope }">
+				<el-select v-model="scope.servicesId">
 					<el-option
 						v-for="item in kfList"
 						:key="item.value"
@@ -215,8 +215,8 @@
 		<!-- 成交弹窗 -->
 		<cl-form ref="OrderFormRef">
 			<!-- 学校 -->
-			<template #slot-school_id="{ scope }">
-				<el-select v-model="scope.school_id" @change="schoolChange">
+			<template #slot-schoolId="{ scope }">
+				<el-select v-model="scope.schoolId" @change="schoolChange">
 					<el-option
 						v-for="item in schoolList"
 						:key="item.value"
@@ -227,8 +227,8 @@
 			</template>
 
 			<!-- 专业 -->
-			<template #slot-majors_id="{ scope }">
-				<el-select v-model="scope.majors_id">
+			<template #slot-majorsId="{ scope }">
+				<el-select v-model="scope.majorsId">
 					<el-option
 						v-for="item in majorsList"
 						:key="item.value"
@@ -362,7 +362,7 @@ const Upsert = useUpsert({
 		},
 		{
 			label: "来源",
-			prop: "source_from",
+			prop: "sourceFrom",
 			span: 12,
 			required: true,
 			value: "6",
@@ -377,8 +377,8 @@ const Upsert = useUpsert({
 		{ label: "学历", prop: "education", span: 12, component: { name: "el-select" } },
 		{ label: "毕业院校", prop: "graduatedSchool", span: 12, component: { name: "el-input" } },
 
-		{ label: "意向院校", prop: "schoolId", span: 12, component: { name: "slot-school_id" } },
-		{ label: "意向专业", prop: "majorsId", span: 12, component: { name: "slot-majors_id" } },
+		{ label: "意向院校", prop: "schoolId", span: 12, component: { name: "slot-schoolId" } },
+		{ label: "意向专业", prop: "majorsId", span: 12, component: { name: "slot-majorsId" } },
 
 		{ label: "报读类型", prop: "majorsType", span: 12, component: { name: "el-select" } },
 		{ label: "报读层次", prop: "degreeId", span: 12, component: { name: "el-select" } },
@@ -494,7 +494,7 @@ const Upsert = useUpsert({
 		]);
 
 		// 来源
-		Upsert.value?.setOptions("source_from", [
+		Upsert.value?.setOptions("sourceFrom", [
 			{
 				label: "手动录入",
 				value: "1"
@@ -572,7 +572,7 @@ const Table = useTable({
 			}
 		},
 		// { label: "序号", prop: "serialId" },
-		{ label: "项目", prop: "project_name" },
+		{ label: "项目", prop: "projectName" },
 		{
 			label: "姓名",
 			prop: "name",
@@ -731,7 +731,7 @@ const openOrderAdd = async (row: any) => {
 
 			{
 				label: "身份证",
-				prop: "idcard_number",
+				prop: "idcardNumber",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -765,21 +765,21 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "意向院校",
-				prop: "school_id",
+				prop: "schoolId",
 				span: 8,
-				component: { name: "slot-school_id" },
+				component: { name: "slot-schoolId" },
 				group: "base"
 			},
 			{
 				label: "意向专业",
-				prop: "majors_id",
+				prop: "majorsId",
 				span: 8,
-				component: { name: "slot-majors_id" },
+				component: { name: "slot-majorsId" },
 				group: "base"
 			},
 			{
 				label: "报读类型",
-				prop: "majors_type",
+				prop: "majorsType",
 				span: 8,
 				component: {
 					name: "el-select",
@@ -790,7 +790,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "报读层次",
-				prop: "degree_id",
+				prop: "degreeId",
 				span: 8,
 				component: {
 					name: "el-select",
@@ -811,7 +811,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "紧急联系人",
-				prop: "emergency_contact",
+				prop: "emergencyContact",
 				span: 12,
 				component: {
 					name: "el-input"
@@ -821,7 +821,7 @@ const openOrderAdd = async (row: any) => {
 
 			{
 				label: "紧急联系人电话",
-				prop: "emergency_mobile",
+				prop: "emergencyMobile",
 				props: {
 					labelWidth: "130px"
 				},
@@ -851,7 +851,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "籍贯",
-				prop: "native_place",
+				prop: "nativePlace",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -861,7 +861,7 @@ const openOrderAdd = async (row: any) => {
 
 			{
 				label: "政治面貌",
-				prop: "politics_status",
+				prop: "politicsStatus",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -870,7 +870,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "户口性质",
-				prop: "household_type",
+				prop: "householdType",
 				span: 8,
 				component: {
 					name: "el-select"
@@ -879,7 +879,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "户口所在地",
-				prop: "household_address",
+				prop: "householdAddress",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -907,7 +907,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "毕业学校",
-				prop: "graduated_school",
+				prop: "graduatedSchool",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -917,7 +917,7 @@ const openOrderAdd = async (row: any) => {
 
 			{
 				label: "毕业时间",
-				prop: "graduated_date",
+				prop: "graduatedDate",
 				span: 8,
 				component: {
 					name: "el-input"
@@ -940,7 +940,7 @@ const openOrderAdd = async (row: any) => {
 
 			{
 				label: "校方收定位金",
-				prop: "school_payment",
+				prop: "schoolPayment",
 				span: 8,
 				value: 0.0,
 				component: {
@@ -954,7 +954,7 @@ const openOrderAdd = async (row: any) => {
 			},
 			{
 				label: "自收定位金",
-				prop: "teams_payment",
+				prop: "teamsPayment",
 				span: 8,
 				value: 0.0,
 				component: {
@@ -996,7 +996,7 @@ const openOrderAdd = async (row: any) => {
 				// 报读类型
 				const majorsTypeList = await service.customer_pro.readtypes.list();
 				OrderFormRef.value?.setOptions(
-					"majors_type",
+					"majorsType",
 					majorsTypeList.map((e) => {
 						return {
 							label: e.name,
@@ -1008,7 +1008,7 @@ const openOrderAdd = async (row: any) => {
 				// 报读层次
 				const degreeList = await service.customer_pro.readdegree.list();
 				OrderFormRef.value?.setOptions(
-					"degree_id",
+					"degreeId",
 					degreeList.map((e) => {
 						return {
 							label: e.name,
@@ -1018,7 +1018,7 @@ const openOrderAdd = async (row: any) => {
 				);
 
 				// 户口性质
-				OrderFormRef.value?.setOptions("household_type", [
+				OrderFormRef.value?.setOptions("householdType", [
 					{
 						label: "城镇",
 						value: "1"
@@ -1054,9 +1054,9 @@ const openOrderAdd = async (row: any) => {
 				]);
 			},
 			submit(data, { close, done }) {
-				data.clues_id = cluesId.value;
-				data.services_id = row.services_id;
-				data.project_id = row.project_id;
+				data.cluesId = cluesId.value;
+				data.servicesId = row.servicesId;
+				data.projectId = row.projectId;
 				service.customer_pro.order
 					.add({ ...data })
 					.then((r: any) => {
@@ -1078,9 +1078,9 @@ const openOrderAdd = async (row: any) => {
 const distributeFormRef = useForm(); //分配表单
 const openDistribute = async () => {
 	groupList.value = [];
-	distributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 
 	projectList.value = await service.customer_pro.project.list();
 	const ids = Crud.value?.selection.map((e) => {
@@ -1093,25 +1093,25 @@ const openDistribute = async () => {
 		items: [
 			{
 				label: "项目",
-				prop: "project_id",
+				prop: "projectId",
 				component: {
-					name: "slot-project_id"
+					name: "slot-projectId"
 				},
 				required: true
 			},
 			{
 				label: "客服组",
-				prop: "group_id",
+				prop: "groupId",
 				component: {
-					name: "slot-group_id"
+					name: "slot-groupId"
 				},
 				required: true
 			},
 			{
 				label: "接收人",
-				prop: "services_id",
+				prop: "servicesId",
 				component: {
-					name: "slot-services_id"
+					name: "slot-servicesId"
 				},
 				required: true
 			}
@@ -1123,7 +1123,7 @@ const openDistribute = async () => {
 				service.customer_pro.resource
 					.distribute({
 						ids: ids,
-						servicesId: data.services_id
+						servicesId: data.servicesId
 					})
 					.then(() => {
 						ElMessage.success("分配完成");
@@ -1144,9 +1144,9 @@ const projectId = ref();
 // 项目id改变
 const projectChange = (v: any) => {
 	groupList.value = [];
-	distributeFormRef.value?.setForm("group_id", null);
+	distributeFormRef.value?.setForm("groupId", null);
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 	projectId.value = v;
 	getGroupList(v);
 };
@@ -1154,7 +1154,7 @@ const projectChange = (v: any) => {
 // 组别id改变
 const groupChange = (v: any) => {
 	kfList.value = [];
-	distributeFormRef.value?.setForm("services_id", null);
+	distributeFormRef.value?.setForm("servicesId", null);
 	getKfList(v, projectId.value);
 };
 
@@ -1183,7 +1183,7 @@ const getSchoolList = async () => {
 // 学校改变
 const schoolChange = async (v: any) => {
 	majorsList.value = [];
-	OrderFormRef.value?.setForm("majors_id", null);
+	OrderFormRef.value?.setForm("majorsId", null);
 	getMajorList(v);
 };
 

@@ -319,7 +319,7 @@ const perm: any = computed(() => service.task.info.permission);
 
 // 更多列表
 function moreList(res: any, { list, pagination }: any) {
-	if (!res) {
+	if (!res || !res.list) {
 		return;
 	}
 	const { page, size } = res.pagination;

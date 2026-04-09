@@ -38,7 +38,7 @@ const Crud = useCrud();
 
 async function open(ids: any[]) {
 	groupList.value = [];
-	Form.value?.setForm("group_id", null);
+	Form.value?.setForm("groupId", null);
 	projectList.value = await service.customer_pro.project.list();
 
 	Form.value?.open({

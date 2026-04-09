@@ -97,7 +97,7 @@ const Upsert = useUpsert({
 		},
 		// {
 		// 	label: "分配方式",
-		// 	prop: "allot_type",
+		// 	prop: "allotType",
 		// 	value: 1,
 		// 	component: {
 		// 		name: "el-select",

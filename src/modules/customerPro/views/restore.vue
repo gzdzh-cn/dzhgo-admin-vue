@@ -30,9 +30,9 @@
 
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
-			<template #slot-school_id="{ scope }">
+			<template #slot-schoolId="{ scope }">
 				<!-- 学校 -->
-				<el-select v-model="scope.school_id" @change="schoolChange">
+				<el-select v-model="scope.schoolId" @change="schoolChange">
 					<el-option
 						v-for="item in schoolList"
 						:key="item.value"
@@ -43,8 +43,8 @@
 			</template>
 
 			<!-- 专业 -->
-			<template #slot-majors_id="{ scope }">
-				<el-select v-model="scope.majors_id">
+			<template #slot-majorsId="{ scope }">
+				<el-select v-model="scope.majorsId">
 					<el-option
 						v-for="item in majorsList"
 						:key="item.value"
@@ -132,7 +132,7 @@ const Upsert = useUpsert({
 		() => {
 			return {
 				label: "来源",
-				prop: "source_from",
+				prop: "sourceFrom",
 				span: 12,
 				hidden: (options: { scope: any }) => {
 					return Upsert.value?.mode == "update" && options.scope.type == "talk_info";
@@ -197,7 +197,7 @@ const Upsert = useUpsert({
 			hidden: (options: { scope: any }) => {
 				return Upsert.value?.mode == "update" && options.scope.type !== "resource";
 			},
-			component: { name: "slot-school_id" }
+			component: { name: "slot-schoolId" }
 		},
 		{
 			label: "意向专业",
@@ -206,7 +206,7 @@ const Upsert = useUpsert({
 			hidden: (options: { scope: any }) => {
 				return Upsert.value?.mode == "update" && options.scope.type !== "resource";
 			},
-			component: { name: "slot-majors_id" }
+			component: { name: "slot-majorsId" }
 		},
 
 		{
@@ -322,10 +322,10 @@ const Upsert = useUpsert({
 		console.log("data?.type == 'customer'", data.type);
 
 		if (data.type == "resource") {
-			data.source_from = "6";
+			data.sourceFrom = "6";
 		}
 		if (data.type == "customer") {
-			data.source_from = "4";
+			data.sourceFrom = "4";
 		}
 
 		if (
@@ -395,7 +395,7 @@ const Upsert = useUpsert({
 			]);
 
 			// 来源
-			Upsert.value?.setOptions("source_from", [
+			Upsert.value?.setOptions("sourceFrom", [
 				{
 					label: "手动录入",
 					value: "1"
@@ -447,7 +447,7 @@ const Upsert = useUpsert({
 			]);
 
 			if (data.type == "customer") {
-				data.source_from = "4";
+				data.sourceFrom = "4";
 			}
 
 			if (data.remark && typeof data.remark === "string") {
@@ -455,7 +455,7 @@ const Upsert = useUpsert({
 					const parsedData = JSON.parse(data.remark);
 					if (parsedData.guest_ip) {
 						(data as any).ip = parsedData.guest_ip;
-						(data as any).guestIpInfo = parsedData.guest_ip_info;
+						(data as any).guestIpInfo = parsedData.guestIpInfo;
 					}
 					// 姓名：guest_name -> name
 					if (parsedData.guest_name) {
@@ -500,7 +500,7 @@ const Upsert = useUpsert({
 
 		const dataJson = {
 			guest_ip: data.ip,
-			guest_ip_info: data.guestIpInfo
+			guestIpInfo: data.guestIpInfo
 		};
 		// 提取除 ip 和 guestIpInfo 外的其他字段
 		const { ip, guestIpInfo, remark, ...rest } = data;

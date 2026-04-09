@@ -17,7 +17,7 @@
 			<div class="sub-follow-container">
 				<cl-form ref="FormEdit" :inner="true">
 					<!-- 学校 -->
-					<template #slot-school_id="{ scope }">
+					<template #slot-schoolId="{ scope }">
 						<el-select v-model="scope.schoolId" @change="schoolChange">
 							<el-option
 								v-for="item in schoolList"
@@ -29,7 +29,7 @@
 					</template>
 
 					<!-- 专业 -->
-					<template #slot-majors_id="{ scope }">
+					<template #slot-majorsId="{ scope }">
 						<el-select v-model="scope.majorsId">
 							<el-option
 								v-for="item in majorsList"
@@ -120,18 +120,18 @@
 				>
 					<div style="min-height: 100px; height: 500px; overflow: auto">
 						<el-steps
-							v-if="chatContent && chatContent?.chat_content"
-							:active="strToJson(chatContent?.chat_content).length"
+							v-if="chatContent && chatContent?.chatContent"
+							:active="strToJson(chatContent?.chatContent).length"
 							direction="vertical"
 						>
 							<el-step
 								:icon="
-									strToJson(chatContent?.chat_content).msg_type == 'g'
+									strToJson(chatContent?.chatContent).msg_type == 'g'
 										? UserFilled
 										: ChatLineRound
 								"
 								style="margin: 0 0 10px 0"
-								v-for="(item, index) in strToJson(chatContent?.chat_content)"
+								v-for="(item, index) in strToJson(chatContent?.chatContent)"
 								:key="index"
 							>
 								<template #title>
@@ -208,9 +208,9 @@ const props = defineProps({
 
 interface Chat {
 	id?: string;
-	clues_id?: string;
+	cluesId?: string;
 	guest_id?: string;
-	chat_content: string;
+	chatContent: string;
 	chatContentVersion?: number;
 }
 interface FlolowContent {
@@ -365,13 +365,13 @@ async function openEdit() {
 				label: "意向院校",
 				prop: "schoolId",
 				span: 12,
-				component: { name: "slot-school_id" }
+				component: { name: "slot-schoolId" }
 			},
 			{
 				label: "意向专业",
 				prop: "majorsId",
 				span: 12,
-				component: { name: "slot-majors_id" }
+				component: { name: "slot-majorsId" }
 			},
 
 			{ label: "报读类型", prop: "majorsType", span: 12, component: { name: "el-select" } },
@@ -691,7 +691,7 @@ const getSchoolList = async () => {
 // 学校改变
 const schoolChange = async (v: any) => {
 	majorsList.value = [];
-	FormEdit.value?.setForm("majors_id", null);
+	FormEdit.value?.setForm("majorsId", null);
 	getMajorList(v);
 };
 
