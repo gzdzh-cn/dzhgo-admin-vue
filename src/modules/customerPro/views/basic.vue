@@ -18,9 +18,9 @@
 						>
 					</el-form-item>
 
-					<el-form-item label="全量同步数据">
+					<el-form-item label="启动同步">
 						<el-switch
-							v-model="basicForm.esSyncFullEnable"
+							v-model="basicForm.esSyncImmediately"
 							:active-value="1"
 							:inactive-value="0"
 							active-text="开启"
@@ -29,91 +29,61 @@
 							style="width: 80px"
 						/>
 						<span style="padding-left: 10px; color: #ff6b6b">
-							第一次开启es搜索才需要开启，开启后，将立即开始同步数据到ES，建议在业务低峰期开启</span
+							开启后，将立即开始同步数据到ES，建议在业务低峰期开启</span
 						>
 					</el-form-item>
 
-					<el-form-item label="增量同步数据">
-						<el-switch
-							v-model="basicForm.esSyncIncrementEnable"
-							:active-value="1"
-							:inactive-value="0"
-							active-text="开启"
-							inactive-text="关闭"
-							inline-prompt
-							style="width: 80px"
-						/>
-						<span style="padding-left: 10px; color: #ff6b6b">
-							开启后，增量同步数据到ES</span
-						>
-					</el-form-item>
-
-					<el-form-item label="流式同步数据">
-						<el-switch
-							v-model="basicForm.fullUseStreaming"
-							:active-value="1"
-							:inactive-value="0"
-							active-text="开启"
-							inactive-text="关闭"
-							inline-prompt
-							style="width: 80px"
-						/>
-						<span style="padding-left: 10px; color: #ff6b6b">
-							开启后，流式同步数据到ES，减轻服务器压力</span
-						>
-					</el-form-item>
-
-					<!-- esSyncFullStatus 显示同步状态是否完成，0 未完成 1 完成 -->
+					<!-- esSyncStatus 显示同步状态，0 未同步 1 同步中 2 同步完成 3 同步失败 -->
 					<el-form-item label="es同步状态">
 						<el-tag
 							:type="
-								basicForm.esSyncFullStatus === 0
+								basicForm.esSyncStatus === 0
 									? 'info'
-									: basicForm.esSyncFullStatus === 1
+									: basicForm.esSyncStatus === 1
 									? 'warning'
-									: basicForm.esSyncFullStatus === 2
+									: basicForm.esSyncStatus === 2
 									? 'success'
-									: basicForm.esSyncFullStatus === 3
+									: basicForm.esSyncStatus === 3
 									? 'danger'
 									: 'info'
 							"
 							:icon="
-								basicForm.esSyncFullStatus === 0
+								basicForm.esSyncStatus === 0
 									? 'Close'
-									: basicForm.esSyncFullStatus === 1
+									: basicForm.esSyncStatus === 1
 									? 'Clock'
-									: basicForm.esSyncFullStatus === 2
+									: basicForm.esSyncStatus === 2
 									? 'Check'
-									: basicForm.esSyncFullStatus === 3
+									: basicForm.esSyncStatus === 3
 									? 'Warning'
 									: 'Close'
 							"
 						>
 							{{
-								basicForm.esSyncFullStatus === 0
+								basicForm.esSyncStatus === 0
 									? "未同步"
-									: basicForm.esSyncFullStatus === 1
+									: basicForm.esSyncStatus === 1
 									? "同步中..."
-									: basicForm.esSyncFullStatus === 2
+									: basicForm.esSyncStatus === 2
 									? "同步完成"
-									: basicForm.esSyncFullStatus === 3
+									: basicForm.esSyncStatus === 3
 									? "同步失败"
 									: "未同步"
 							}}
 						</el-tag>
 						<span style="padding-left: 10px; color: #ff6b6b">
 							{{
-								basicForm.esSyncFullStatus === 1
+								basicForm.esSyncStatus === 1
 									? "ES数据正在同步中，一般同步需要10分钟左右，请稍候"
-									: basicForm.esSyncFullStatus === 2
+									: basicForm.esSyncStatus === 2
 									? "ES数据同步已完成，搜索功能正常"
-									: basicForm.esSyncFullStatus === 3
+									: basicForm.esSyncStatus === 3
 									? "ES数据同步失败，请检查网络连接或联系管理员"
 									: "ES同步功能已开启"
 							}}（过几秒，手动刷新页面看同步状态）
 						</span>
 					</el-form-item>
-					<!-- esSyncFullStatus -->
+					<!-- esSyncStatus -->
 				</el-tab-pane>
 
 				<el-tab-pane label="项目配置">
@@ -351,10 +321,8 @@ const { service } = useCool();
 
 const basicForm = reactive({
 	esOpen: 0,
-	esSyncFullEnable: 0,
-	esSyncIncrementEnable: 0,
-	fullUseStreaming: 0,
-	esSyncFullStatus: 0,
+	esSyncImmediately: 0,
+	esSyncStatus: 0,
 	projectAllGroup: 0,
 	projectMultiManger: 0,
 	groupMultiManger: 0,

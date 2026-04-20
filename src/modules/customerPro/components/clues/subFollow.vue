@@ -112,26 +112,30 @@
 
 		<el-tab-pane label="聊天记录" name="talk" v-if="hasChatContentListPermission">
 			<el-divider content-position="left">聊天记录</el-divider>
-			<el-tabs tab-position="left" style="min-height: 100px; height: 400px">
+			<div v-if="!chatContentList || chatContentList.length == 0" style="text-align: center; padding: 40px; color: #999">
+				暂无聊天记录
+			</div>
+			<el-tabs v-else tab-position="left" style="min-height: 100px; height: 400px">
 				<el-tab-pane
 					v-for="(chatContent, index) in chatContentList"
 					:key="index"
 					:label="`版本${chatContent.chatContentVersion}`"
 				>
 					<div style="min-height: 100px; height: 500px; overflow: auto">
+						<div v-if="!chatContent?.chat_content" style="text-align: center; padding: 40px; color: #999">该版本暂无聊天内容</div>
 						<el-steps
-							v-if="chatContent && chatContent?.chatContent"
-							:active="strToJson(chatContent?.chatContent).length"
+							v-else
+							:active="strToJson(chatContent?.chat_content).length"
 							direction="vertical"
 						>
 							<el-step
 								:icon="
-									strToJson(chatContent?.chatContent).msg_type == 'g'
+									strToJson(chatContent?.chat_content)[0]?.msg_type == 'g'
 										? UserFilled
 										: ChatLineRound
 								"
 								style="margin: 0 0 10px 0"
-								v-for="(item, index) in strToJson(chatContent?.chatContent)"
+								v-for="(item, index) in strToJson(chatContent?.chat_content)"
 								:key="index"
 							>
 								<template #title>
@@ -210,7 +214,7 @@ interface Chat {
 	id?: string;
 	cluesId?: string;
 	guest_id?: string;
-	chatContent: string;
+	chat_content: string;
 	chatContentVersion?: number;
 }
 interface FlolowContent {
@@ -812,8 +816,14 @@ const extractImgTags = (content: any) => {
 
 // 转json对象
 const strToJson = (str: string) => {
-	if (str) {
+	if (!str) {
+		return [];
+	}
+	try {
 		return JSON.parse(str);
+	} catch (e) {
+		console.warn("chatContent JSON解析失败:", e, str);
+		return [];
 	}
 };
 
@@ -830,11 +840,15 @@ onMounted(async () => {
 
 	// 获取53客服聊天记录
 	if (hasChatContentListPermission.value) {
-		chatContentList.value = await (service.customer_pro[dtypeKey.value] as any).chatContentList(
-			{
+		try {
+			const res = await (service.customer_pro[dtypeKey.value] as any).chatContentList({
 				cluesId: props.id
-			}
-		);
+			});
+			chatContentList.value = Array.isArray(res) ? res : [];
+		} catch (e) {
+			console.error("获取聊天记录失败:", e);
+			chatContentList.value = [];
+		}
 	}
 });
 
