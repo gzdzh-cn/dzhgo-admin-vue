@@ -631,7 +631,7 @@ const Table = useTable({
 			prop: "followupType",
 			width: 100,
 			formatter(row) {
-				return row.followupType.split(",")[0];
+				return row.followupType?.split(",")[0] || "";
 			},
 			dict: [
 				{ label: "待跟进", value: "1", type: "danger" },

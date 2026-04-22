@@ -1,42 +1,25 @@
 <template>
-	<el-tabs
-		v-model="activeName"
-		type="border-card"
-		@tab-click="handleClick"
-		v-if="hasAnyPermission"
-	>
-		<el-tab-pane
-			label="编辑线索"
-			name="edit"
-			v-if="
-				service.customer_pro[dtypeKey]._permission.update ||
-				service.customer_pro.clues_filter._permission.update
-			"
-		>
+	<el-tabs v-model="activeName" type="border-card" @tab-click="handleClick" v-if="hasAnyPermission">
+		<el-tab-pane label="编辑线索" name="edit" v-if="
+			service.customer_pro[dtypeKey]._permission.update ||
+			service.customer_pro.clues_filter._permission.update
+		">
 			<el-divider content-position="left">编辑线索</el-divider>
 			<div class="sub-follow-container">
 				<cl-form ref="FormEdit" :inner="true">
 					<!-- 学校 -->
 					<template #slot-schoolId="{ scope }">
 						<el-select v-model="scope.schoolId" @change="schoolChange">
-							<el-option
-								v-for="item in schoolList"
-								:key="item.value"
-								:label="item.name"
-								:value="item.id"
-							/>
+							<el-option v-for="item in schoolList" :key="item.value" :label="item.name"
+								:value="item.id" />
 						</el-select>
 					</template>
 
 					<!-- 专业 -->
 					<template #slot-majorsId="{ scope }">
 						<el-select v-model="scope.majorsId">
-							<el-option
-								v-for="item in majorsList"
-								:key="item.value"
-								:label="item.name"
-								:value="item.id"
-							/>
+							<el-option v-for="item in majorsList" :key="item.value" :label="item.name"
+								:value="item.id" />
 						</el-select>
 					</template>
 				</cl-form>
@@ -49,25 +32,13 @@
 
 				<cl-form ref="FormFollow" :inner="true">
 					<template #slot-followType="{ scope }">
-						<el-cascader
-							v-model="scope.followType"
-							:options="followOptions"
-							@change="handleChange"
-							:props="followProps"
-							clearable
-							placeholder="选择跟进方式"
-						/>
+						<el-cascader v-model="scope.followType" :options="followOptions" @change="handleChange"
+							:props="followProps" clearable placeholder="选择跟进方式" />
 					</template>
 					<template #slot-nextFollowupTime="{ scope }">
-						<el-date-picker
-							v-model="scope.nextFollowupTime"
-							type="datetime"
-							:default-time="defaultTime"
-							value-format="YYYY-MM-DD HH:mm"
-							time-format="HH:mm"
-							:disabled-date="disabledDate"
-							placeholder="选择跟进时间"
-						/>
+						<el-date-picker v-model="scope.nextFollowupTime" type="datetime" :default-time="defaultTime"
+							value-format="YYYY-MM-DD HH:mm" time-format="HH:mm" :disabled-date="disabledDate"
+							placeholder="选择跟进时间" />
 					</template>
 				</cl-form>
 			</div>
@@ -77,17 +48,9 @@
 			<el-divider content-position="left">进度</el-divider>
 			<div style="min-height: 100px; height: 400px; overflow: auto">
 				<div style="min-height: 100px">
-					<el-steps
-						:active="flolowContent.length"
-						direction="vertical"
-						v-if="flolowContent"
-					>
-						<el-step
-							:icon="Edit"
-							style="margin: 0 0 10px 0"
-							v-for="(item, index) in flolowContent"
-							:key="index"
-						>
+					<el-steps :active="flolowContent.length" direction="vertical" v-if="flolowContent">
+						<el-step :icon="Edit" style="margin: 0 0 10px 0" v-for="(item, index) in flolowContent"
+							:key="index">
 							<template #title>
 								<h4>{{ item.followTypeName }}</h4>
 							</template>
@@ -112,32 +75,22 @@
 
 		<el-tab-pane label="聊天记录" name="talk" v-if="hasChatContentListPermission">
 			<el-divider content-position="left">聊天记录</el-divider>
-			<div v-if="!chatContentList || chatContentList.length == 0" style="text-align: center; padding: 40px; color: #999">
+			<div v-if="!chatContentList || chatContentList.length == 0"
+				style="text-align: center; padding: 40px; color: #999">
 				暂无聊天记录
 			</div>
 			<el-tabs v-else tab-position="left" style="min-height: 100px; height: 400px">
-				<el-tab-pane
-					v-for="(chatContent, index) in chatContentList"
-					:key="index"
-					:label="`版本${chatContent.chatContentVersion}`"
-				>
+				<el-tab-pane v-for="(chatContent, index) in chatContentList" :key="index"
+					:label="`版本${chatContent.chatContentVersion}`">
 					<div style="min-height: 100px; height: 500px; overflow: auto">
-						<div v-if="!chatContent?.chat_content" style="text-align: center; padding: 40px; color: #999">该版本暂无聊天内容</div>
-						<el-steps
-							v-else
-							:active="strToJson(chatContent?.chat_content).length"
-							direction="vertical"
-						>
-							<el-step
-								:icon="
-									strToJson(chatContent?.chat_content)[0]?.msg_type == 'g'
-										? UserFilled
-										: ChatLineRound
-								"
-								style="margin: 0 0 10px 0"
-								v-for="(item, index) in strToJson(chatContent?.chat_content)"
-								:key="index"
-							>
+						<div v-if="!chatContent?.chat_content" style="text-align: center; padding: 40px; color: #999">
+							该版本暂无聊天内容
+						</div>
+						<el-steps v-else :active="strToJson(chatContent?.chat_content).length" direction="vertical">
+							<el-step :icon="strToJson(chatContent?.chat_content)[0]?.msg_type == 'g'
+								? UserFilled
+								: ChatLineRound
+								" style="margin: 0 0 10px 0" v-for="(item, index) in strToJson(chatContent?.chat_content)" :key="index">
 								<template #title>
 									<h4>
 										{{ item.msg_type == "g" ? "访客" : item.worker_name }}
@@ -146,10 +99,7 @@
 								<template #description>
 									<div style="">
 										<template v-if="item.msg?.includes('[IMG]')">
-											<div
-												v-for="(v, index) in extractImgTags(item.msg)"
-												:key="index"
-											>
+											<div v-for="(v, index) in extractImgTags(item.msg)" :key="index">
 												<img :src="v" style="width: 180px" />
 											</div>
 										</template>
@@ -181,11 +131,8 @@
 	<div class="sumit-btn" v-if="activeName == 'order' || activeName == 'edit'">
 		<el-button @click="cancel"> 取消 </el-button>
 		<el-button type="success" @click="submitAll"> 保存 </el-button>
-		<el-popconfirm
-			v-if="cluesStatus == 0 && hasPushCommonClausePermission"
-			title="确定放入公海吗?"
-			@confirm="pushCommonClause"
-		>
+		<el-popconfirm v-if="cluesStatus == 0 && hasPushCommonClausePermission" title="确定放入公海吗?"
+			@confirm="pushCommonClause">
 			<template #reference>
 				<el-button type="warning"> 放入公海 </el-button>
 			</template>
@@ -235,7 +182,7 @@ const cluesStatus = computed(() => props.status);
 
 // 标签
 const activeName = ref(props.status == 0 ? "order" : "edit");
-const handleClick = () => {};
+const handleClick = () => { };
 
 // 监听status变化，更新activeName
 watch(
@@ -282,12 +229,15 @@ async function openEdit() {
 	console.log("原始 item.level:", item.level);
 
 	// 处理 level 字段
-	if (typeof item.level === "string") {
+	if (item.level === '' || item.level === null || item.level === undefined) {
+		// 空值设置为空数组
+		item.level = [];
+	} else if (typeof item.level === "string") {
 		try {
 			const parsed = JSON.parse(item.level);
 			// 确保结果是数组，并且所有元素都是字符串
 			if (Array.isArray(parsed)) {
-				item.level = parsed.map(String);
+				item.level = parsed.map(String).filter(Boolean);
 			} else {
 				item.level = [String(parsed)];
 			}
@@ -299,8 +249,8 @@ async function openEdit() {
 		// 如果不是字符串也不是数组，包装成字符串数组
 		item.level = [String(item.level)];
 	} else {
-		// 如果已经是数组，确保所有元素都是字符串
-		item.level = item.level.map(String);
+		// 如果已经是数组，确保所有元素都是字符串，并过滤掉空值
+		item.level = item.level.map(String).filter(Boolean);
 	}
 
 	console.log("处理后的 level:", item.level);
@@ -578,6 +528,10 @@ async function openEdit() {
 				emit("cancel");
 			},
 			submit(data, { close, done }) {
+				// 处理 level 字段：空数组时发送 null
+				if (Array.isArray(data.level) && data.level.length === 0) {
+					data.level = null;
+				}
 				service.customer_pro[dtypeKey.value]
 					.update({ ...data })
 					.then(() => {
@@ -863,16 +817,21 @@ defineExpose({
 	justify-content: right;
 	padding-top: 20px;
 }
+
 .container {
 	display: flex;
-	flex-wrap: wrap; /* 允许子元素换行 */
+	flex-wrap: wrap;
+	/* 允许子元素换行 */
 	gap: 10px;
 }
 
 .item {
-	flex-basis: calc(50% - 8px); /* 每行两个子元素，占据50%的宽度 */
-	box-sizing: border-box; /* 包括内边距和边框在内 */
+	flex-basis: calc(50% - 8px);
+	/* 每行两个子元素，占据50%的宽度 */
+	box-sizing: border-box;
+	/* 包括内边距和边框在内 */
 }
+
 .sub-follow-container {
 	height: 450px;
 	overflow-y: auto;
