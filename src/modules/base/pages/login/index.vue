@@ -22,44 +22,24 @@
 						<!-- 账号登录 -->
 						<div v-show="loginM == 'account'">
 							<el-form-item prop="username">
-								<el-input
-									v-model="form.username"
-									clearable
-									placeholder="请输入用户名"
-									maxlength="20"
-									autocomplete="on"
-									:prefix-icon="User"
-								/>
+								<el-input v-model="form.username" clearable placeholder="请输入用户名" maxlength="20"
+									autocomplete="on" :prefix-icon="User" />
 							</el-form-item>
 
 							<el-form-item prop="password">
-								<el-input
-									v-model="form.password"
-									clearable
-									show-password
-									placeholder="请输入密码"
-									:prefix-icon="Lock"
-								/>
+								<el-input v-model="form.password" clearable show-password placeholder="请输入密码"
+									:prefix-icon="Lock" />
 							</el-form-item>
 
 							<el-form-item prop="verifyCode">
-								<el-input
-									v-model="form.verifyCode"
-									clearable
-									placeholder="请输入验证码"
-									:prefix-icon="Key"
-									@keyup.enter="toLogin"
-								>
+								<el-input v-model="form.verifyCode" clearable placeholder="请输入验证码" :prefix-icon="Key"
+									@keyup.enter="toLogin">
 									<template v-slot:append>
-										<captcha
-											:ref="setRefs('captcha')"
-											v-model="form.captchaId"
-											@change="
-												() => {
-													form.verifyCode = '';
-												}
-											"
-										/>
+										<captcha :ref="setRefs('captcha')" v-model="form.captchaId" @change="
+											() => {
+												form.verifyCode = '';
+											}
+										" />
 									</template>
 								</el-input>
 							</el-form-item>
@@ -69,57 +49,34 @@
 						<div v-show="loginM == 'mobile'">
 							<el-form ref="ruleFormRef" size="large">
 								<el-form-item prop="phone">
-									<el-input
-										v-model="form.phone"
-										class="code"
-										placeholder="请输入手机号"
-										:prefix-icon="Iphone"
-									>
+									<el-input v-model="form.phone" class="code" placeholder="请输入手机号"
+										:prefix-icon="Iphone">
 										<template #suffix>
 											<el-button @click="getCode" style="border: none">
 												<span v-show="show">发送验证码</span>
-												<span v-show="!show" class="count"
-													>{{ count }} s</span
-												>
+												<span v-show="!show" class="count">{{ count }} s</span>
 											</el-button>
 										</template>
 									</el-input>
 								</el-form-item>
 								<el-form-item label="验证码">
-									<el-input
-										v-model="form.code"
-										type="text"
-										placeholder="请输入手机验证码"
-										:prefix-icon="Key"
-										maxlength="4"
-										autocomplete="off"
-										@keyup.enter="toLogin"
-									/>
+									<el-input v-model="form.code" type="text" placeholder="请输入手机验证码" :prefix-icon="Key"
+										maxlength="4" autocomplete="off" @keyup.enter="toLogin" />
 								</el-form-item>
 							</el-form>
 						</div>
 
 						<el-form-item>
-							<el-button
-								class="w-full mt-4"
-								size="default"
-								type="primary"
-								:loading="saving"
-								@click="toLogin"
-								:disabled="disabled"
-							>
+							<el-button class="w-full mt-4" size="default" type="primary" :loading="saving"
+								@click="toLogin" :disabled="disabled">
 								登录
 							</el-button>
 						</el-form-item>
 
 						<el-form-item>
 							<div class="mutiType">
-								<el-button
-									v-for="(item, index) in operates"
-									:key="index"
-									:class="loginM == item.type ? 'active' : ''"
-									@click="loginChange(item.type)"
-								>
+								<el-button v-for="(item, index) in operates" :key="index"
+									:class="loginM == item.type ? 'active' : ''" @click="loginChange(item.type)">
 									{{ item.title }}
 								</el-button>
 							</div>
@@ -309,15 +266,19 @@ async function toLogin() {
 		left: 20px;
 	}
 }
+
 .w-full {
 	width: 100%;
 }
+
 .form-box {
 	width: 80%;
+
 	.logo {
 		width: 100%;
 	}
 }
+
 .mutiType {
 	width: 100%;
 	display: flex;
@@ -333,11 +294,13 @@ async function toLogin() {
 	color: #999;
 	position: absolute;
 	bottom: 20px;
+
 	:deep a {
 		text-align: center;
 		color: #999 !important;
 	}
 }
+
 .active {
 	background-color: var(--color-primary);
 	color: #fff;

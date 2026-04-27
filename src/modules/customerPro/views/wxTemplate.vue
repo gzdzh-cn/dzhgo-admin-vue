@@ -14,12 +14,7 @@
 
 		<cl-row>
 			<!-- 数据表格 -->
-			<cl-table ref="Table" :border="false">
-				<template #column-status="{ scope }">
-					<span style="color: #d83b01" v-if="scope.row.status == 0"> 禁止 </span>
-					<span style="color: #00b294" v-if="scope.row.status == 1"> 正常 </span>
-				</template>
-			</cl-table>
+			<cl-table ref="Table" :border="false" />
 		</cl-row>
 
 		<cl-row>
@@ -31,40 +26,21 @@
 		<!-- 新增、编辑 -->
 		<cl-upsert ref="Upsert">
 			<template #slot-fields="{ scope }">
-				<el-button
-					size="large"
-					:icon="Plus"
-					style="width: 100%"
-					@click="btn = false"
-					v-show="btn"
-					>添加</el-button
-				>
+				<el-button size="large" :icon="Plus" style="width: 100%" @click="btn = false"
+					v-show="btn">添加</el-button>
 
 				<div v-show="!btn">
 					<el-row :gutter="10" v-for="(item, index) in scope.fields" :key="index">
-						<el-col :span="9"
-							><el-input placeholder="属性名" v-model="item.name"
-						/></el-col>
-						<el-col :span="1"><div style="text-align: center">=</div></el-col>
+						<el-col :span="9"><el-input placeholder="属性名" v-model="item.name" /></el-col>
+						<el-col :span="1">
+							<div style="text-align: center">=</div>
+						</el-col>
 
-						<el-col :span="9"
-							><el-input placeholder="属性值" v-model="item.value"
-						/></el-col>
+						<el-col :span="9"><el-input placeholder="属性值" v-model="item.value" /></el-col>
 						<el-col :span="5">
-							<el-button
-								type="primary"
-								size="small"
-								:icon="Minus"
-								circle
-								@click="editAttr('reduce', index)"
-							/>
-							<el-button
-								type="primary"
-								size="small"
-								:icon="Plus"
-								circle
-								@click="editAttr('add')"
-							/>
+							<el-button type="primary" size="small" :icon="Minus" circle
+								@click="editAttr('reduce', index)" />
+							<el-button type="primary" size="small" :icon="Plus" circle @click="editAttr('add')" />
 						</el-col>
 					</el-row>
 				</div>
@@ -77,7 +53,7 @@
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
 import { Plus, Minus } from "@element-plus/icons-vue";
-import { ref } from "vue";
+import { h, ref } from "vue";
 import { forEach, min } from "lodash";
 import { ElMessage } from "element-plus";
 
@@ -121,8 +97,15 @@ const Upsert = useUpsert({
 			component: { name: "el-input" }
 		},
 		{
+			label: "公众号",
+			prop: "mp_id",
+			span: 12,
+			required: true,
+			component: { name: "el-input" }
+		},
+		{
 			label: "模板ID",
-			prop: "templateId",
+			prop: "template_id",
 			required: true,
 			component: { name: "el-input" }
 		},
@@ -206,26 +189,50 @@ const Table = useTable({
 			prop: "type",
 			dict: [
 				{
-					label: "线索分配",
+					label: "线索自动分配",
 					value: 1
 				},
 				{
-					label: "线索跟进",
+					label: "线索手动分配",
 					value: 2
 				},
 				{
-					label: "订单成交",
+					label: "线索跟进",
 					value: 3
 				},
 				{
-					label: "考勤打卡",
+					label: "订单成交",
 					value: 4
 				}
 			]
 		},
+		{
+			label: "公众号",
+			prop: "mp_id",
+			formatter(row) {
+				const map: Record<number, string> = {
+					1: "明鸿教育",
+					2: "同伈服务",
+					3: "炜创科技"
+				};
+				return map[row.mp_id] || row.mp_id;
+			}
+		},
 		{ label: "模板名称", prop: "name" },
-		{ label: "模板ID", prop: "templateId" },
-		{ label: "状态", prop: "status" },
+		{ label: "模板ID", prop: "template_id" },
+		{
+			label: "状态",
+			prop: "status",
+			formatter(row) {
+				if (row.status === 0) {
+					return h("span", { style: { color: "#d83b01" } }, "禁止");
+				}
+				if (row.status === 1) {
+					return h("span", { style: { color: "#00b294" } }, "正常");
+				}
+				return row.status;
+			}
+		},
 		{ label: "创建时间", prop: "createTime" },
 		{ type: "op", buttons: ["edit"] }
 	]

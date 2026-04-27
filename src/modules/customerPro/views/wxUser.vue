@@ -13,7 +13,18 @@
 
 		<cl-row>
 			<!-- 数据表格 -->
-			<cl-table ref="Table" :border="false" />
+			<cl-table ref="Table" :border="false">
+				<template #column-subscribe="{ scope }">
+					<template v-if="scope.row._subscribeChecked">
+						<el-tag v-if="scope.row.subscribe === 1" type="success" size="small">已关注</el-tag>
+						<el-tag v-else type="info" size="small">未关注</el-tag>
+					</template>
+					<el-button v-else type="primary" link size="small" :loading="scope.row._subscribeLoading"
+						@click="checkSubscribe(scope.row)">
+						查询
+					</el-button>
+				</template>
+			</cl-table>
 		</cl-row>
 
 		<cl-row>
@@ -30,8 +41,24 @@
 <script lang="ts" name="customer_pro-wxUser" setup>
 import { useCrud, useTable, useUpsert } from "@cool-vue/crud";
 import { useCool } from "/@/cool";
+import { ElMessage } from "element-plus";
 
 const { service } = useCool();
+
+// 查询关注状态
+const checkSubscribe = async (row: any) => {
+	row._subscribeLoading = true;
+	try {
+		const res = await service.customer_pro.wxUser.getWxUserInfo({ userId: row.user_id });
+		row.subscribe = res.subscribe === 1 ? 1 : 0;
+		row._subscribeChecked = true;
+		ElMessage.success(row.subscribe === 1 ? "已关注" : "未关注");
+	} catch (e: any) {
+		ElMessage.error("查询失败");
+	} finally {
+		row._subscribeLoading = false;
+	}
+};
 
 // cl-upsert 配置
 const Upsert = useUpsert({
@@ -91,7 +118,19 @@ const Upsert = useUpsert({
 const Table = useTable({
 	columns: [
 		{ type: "selection" },
-		{ label: "id", prop: "id" },
+		// { label: "id", prop: "id" },
+		{
+			label: "公众号",
+			prop: "mp_id",
+			formatter(row) {
+				const map: Record<number, string> = {
+					1: "明鸿教育",
+					2: "同伈服务",
+					3: "炜创科技"
+				};
+				return map[row.mp_id] || row.mp_id;
+			}
+		},
 		{
 			label: "类型",
 			prop: "type",
@@ -109,15 +148,9 @@ const Table = useTable({
 		{ label: "头像", prop: "headimgurl", component: { name: "cl-image" } },
 		{ label: "用户", prop: "userName" },
 		{ label: "微信昵称", prop: "nickname" },
-		{
-			label: "关注公众号",
-			prop: "subscribe",
-			formatter(row, column, value, index) {
-				return value ? "已关注" : "未关注";
-			}
-		},
+		{ label: "关注公众号", prop: "subscribe" },
 
-		{ label: "unionid", prop: "unionid" },
+		// { label: "unionid", prop: "unionid" },
 		{ label: "openid", prop: "openid" },
 
 		// { label: "备注", prop: "remark", showOverflowTooltip: true },

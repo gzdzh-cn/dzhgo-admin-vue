@@ -184,7 +184,7 @@ const save = () => {
 
 // 获取账号信息
 const getUserInfo = async () => {
-	// userInfo.value = await service.customer_pro.comm.person();
+	userInfo.value = await service.customer_pro.comm.person();
 	// console.log("userInfo", user.info);
 	isAdmin.value = user.info.roleIds?.split(",").includes("1");
 };
