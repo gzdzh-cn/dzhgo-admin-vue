@@ -80,6 +80,8 @@ export async function createEps() {
 		for (const i in d) {
 			if (isArray(d[i])) {
 				d[i].forEach((e: any) => {
+					if (!e || !e.prefix) return;
+
 					// 分隔路径
 					const arr = e.prefix
 						.replace(/\//, "")
@@ -108,8 +110,8 @@ export async function createEps() {
 									});
 								}
 
-								// 创建方法
-								e.api.forEach((a: any) => {
+							// 创建方法
+							(e.api || []).forEach((a: any) => {
 									// 方法名
 									const n = a.path.replace("/", "");
 

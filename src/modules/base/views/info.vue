@@ -7,6 +7,9 @@
 				<cl-upload v-model="form.headImg" :before-upload="onBeforeUpload" />
 			</el-form-item>
 
+			<el-form-item label="姓名">
+				<el-input v-model="form.name" placeholder="请填写姓名" />
+			</el-form-item>
 			<el-form-item label="昵称">
 				<el-input v-model="form.nickName" placeholder="请填写昵称" />
 			</el-form-item>
@@ -32,6 +35,9 @@ import { cloneDeep } from "lodash-es";
 const { service } = useCool();
 const { user } = useBase();
 const msg = ref<MessageHandler | null>(null);
+
+console.log(user.info);
+
 // 表单数据
 const form = reactive<any>(cloneDeep(user.info));
 
@@ -40,13 +46,14 @@ const loading = ref(false);
 
 // 保存
 async function save() {
-	const { headImg, nickName, password } = form;
+	const { headImg, nickName, password, name } = form;
 
 	loading.value = true;
 
 	await service.base.comm
 		.personUpdate({
 			headImg,
+			name,
 			nickName,
 			password
 		})
@@ -77,7 +84,6 @@ watch(
 
 function onBeforeUpload() {
 	msg.value = ElMessage.warning("文件上传中");
-
 	loading.value = true;
 	return true;
 }
