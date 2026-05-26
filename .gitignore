@@ -54,3 +54,4 @@ frontend/dist/
 frontend/node_modules/
 .codebuddy
 src/modules/customerPro
+sync_code.sh
