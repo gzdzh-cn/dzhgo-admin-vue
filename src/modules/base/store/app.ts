@@ -12,7 +12,7 @@ export const useAppStore = defineStore("app", function () {
 	});
 
 	// 是否折叠
-	const isFold = ref(false);
+	const isFold = ref(true);
 
 	// 事件
 	const events = reactive<{ [key: string]: any[] }>({
@@ -57,7 +57,7 @@ export const useAppStore = defineStore("app", function () {
 
 	// 监听屏幕变化
 	onScreenChange(() => {
-		isFold.value = browser.isMini;
+		// isFold.value = browser.isMini;
 	});
 
 	return {

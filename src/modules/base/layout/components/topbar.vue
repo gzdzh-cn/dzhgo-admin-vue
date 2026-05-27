@@ -2,14 +2,12 @@
 	<a-menu v-if="app.info.menu.isGroup" />
 
 	<div class="app-topbar">
-		<div
-			class="app-topbar__collapse"
-			:class="{
-				unfold: !app.isFold
-			}"
-			@click="app.fold()"
-		>
-			<el-icon><operation /></el-icon>
+		<div class="app-topbar__collapse" :class="{
+			unfold: !app.isFold
+		}" @click="app.fold()">
+			<el-icon>
+				<operation />
+			</el-icon>
 		</div>
 
 		<!-- 路由导航 -->
@@ -123,7 +121,7 @@ onMounted(() => {
 		display: flex;
 		margin-right: 20px;
 
-		& > li {
+		&>li {
 			display: flex;
 			justify-content: center;
 			align-items: center;

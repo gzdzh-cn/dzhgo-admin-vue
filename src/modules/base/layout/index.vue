@@ -81,6 +81,7 @@ const { app } = useBase();
 	}
 
 	@media only screen and (min-width: 768px) {
+
 		.app-layout__left,
 		.app-layout__right {
 			transition: width 0.2s ease-in-out;
