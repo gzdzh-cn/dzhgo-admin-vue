@@ -15,7 +15,7 @@ export default defineComponent({
 	emits: ["update:modelValue", "change"],
 
 	setup(props, { emit, expose }) {
-		const global = inject("globalOptions") as any;
+		const global = inject("globalOptions", {}) as any;
 		provide("globalOptions", {
 			...(global || {}),
 			style: { ...(global?.style || {}), size: "small" } // 仅调整当前子树 cl 组件尺寸

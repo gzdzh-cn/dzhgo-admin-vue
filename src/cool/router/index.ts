@@ -164,7 +164,7 @@ async function register(path: string) {
 }
 
 // 路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
 	// 数据缓存
 	const { user, process } = useBase();
 
@@ -173,11 +173,11 @@ router.beforeEach(async (to, from, next) => {
 
 	// 组件不存在、路由不存在
 	if (!route?.components) {
-		next(user.token ? "/404" : "/login");
+		return user.token ? "/404" : "/login";
 	} else {
 		// 注册后重定向
 		if (isReg) {
-			next({ ...to, path: route.path });
+			return { ...to, path: route.path };
 		} else {
 			// 登录成功
 			if (user.token) {
@@ -186,7 +186,7 @@ router.beforeEach(async (to, from, next) => {
 					// Token 未过期
 					if (!storage.isExpired("token")) {
 						// 回到首页
-						return next("/");
+						return "/";
 					}
 				} else {
 					// 添加路由进程
@@ -195,10 +195,10 @@ router.beforeEach(async (to, from, next) => {
 			} else {
 				// 忽略部分 Token 验证
 				if (!config.ignore.token.find((e) => to.path == e)) {
-					return next("/login");
+					return "/login";
 				}
 			}
-			next();
+			return true;
 		}
 	}
 });

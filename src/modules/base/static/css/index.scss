@@ -1,3 +1,5 @@
+@use "./theme.scss";
+
 * {
 	padding: 0;
 	margin: 0;
@@ -42,5 +44,3 @@ input {
 		box-shadow: 0 0 0px 1000px white inset;
 	}
 }
-
-@import "./theme.scss";

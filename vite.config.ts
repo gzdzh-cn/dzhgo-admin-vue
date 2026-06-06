@@ -30,7 +30,8 @@ export default (): UserConfig => {
 		css: {
 			preprocessorOptions: {
 				scss: {
-					charset: false
+					charset: false,
+					api: "modern-compiler"
 				}
 			}
 		},
