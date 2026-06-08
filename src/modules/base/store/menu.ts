@@ -20,6 +20,9 @@ export const useMenuStore = defineStore("menu", function () {
 	// 顶部菜单序号
 	const index = ref<number>(0);
 
+	// 缩进模式下当前选中的一级菜单索引
+	const foldActiveIndex = ref<number>(0);
+
 	// 左侧菜单列表
 	const list = ref<Menu.List>([]);
 
@@ -161,6 +164,7 @@ export const useMenuStore = defineStore("menu", function () {
 		routes,
 		group,
 		index,
+		foldActiveIndex,
 		list,
 		perms,
 		get,

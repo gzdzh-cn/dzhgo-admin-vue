@@ -8,8 +8,16 @@
 
 		<div class="app-layout__right">
 			<topbar />
-			<process />
-			<views />
+			<div class="app-layout__main">
+				<!-- 缩进模式下的二级菜单 -->
+				<div class="app-layout__sub-menu" v-if="app.isFold && !browser.isMini">
+					<sub-menu />
+				</div>
+				<div class="app-layout__content">
+					<process />
+					<views />
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -17,11 +25,14 @@
 <script lang="ts" setup>
 import Topbar from "./components/topbar.vue";
 import Slider from "./components/slider.vue";
+import SubMenu from "./components/sub-menu.vue";
 import process from "./components/process.vue";
 import Views from "./components/views.vue";
 import { useBase } from "/$/base";
+import { useBrowser } from "/@/cool";
 
 const { app } = useBase();
+const { browser } = useBrowser();
 </script>
 
 <style lang="scss" scoped>
@@ -44,6 +55,28 @@ const { app } = useBase();
 		flex-direction: column;
 		height: 100%;
 		width: calc(100% - 225px);
+		transition: width 0.2s ease-in-out;
+	}
+
+	&__main {
+		display: flex;
+		flex: 1;
+		overflow: hidden;
+	}
+
+	&__sub-menu {
+		overflow: hidden;
+		height: 100%;
+		width: 140px;
+		transition: width 0.2s ease-in-out;
+		flex-shrink: 0;
+	}
+
+	&__content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	&__mask {
@@ -65,8 +98,16 @@ const { app } = useBase();
 				box-shadow 0.3s cubic-bezier(0.7, 0.3, 0.1, 1);
 		}
 
+		.app-layout__sub-menu {
+			display: none;
+		}
+
 		.app-layout__right {
 			width: 100%;
+		}
+
+		.app-layout__main {
+			flex-direction: column;
 		}
 
 		&.collapse {
@@ -94,6 +135,10 @@ const { app } = useBase();
 		&.collapse {
 			.app-layout__left {
 				width: 64px;
+			}
+
+			.app-layout__sub-menu {
+				width: 140px;
 			}
 
 			.app-layout__right {

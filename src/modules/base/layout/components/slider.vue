@@ -212,5 +212,62 @@ onMounted(() => {
 			}
 		}
 	}
+
+	// 缩进模式：只显示一级菜单
+	&__menu--fold {
+		display: flex;
+		height: 100%;
+
+		.menu-level1 {
+			width: 65px;
+			min-width: 65px;
+			background-color: rgba(0, 0, 0, 0.2);
+			overflow-y: auto;
+
+			&::-webkit-scrollbar {
+				width: 0;
+				height: 0;
+			}
+
+			&-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				padding: 10px 4px;
+				cursor: pointer;
+				color: #eee;
+				transition: background-color 0.2s;
+
+				&:hover {
+					background-color: rgba(255, 255, 255, 0.1);
+				}
+
+				&.is-active {
+					background-color: var(--color-primary);
+
+					.cl-svg,
+					span {
+						color: #fff;
+					}
+				}
+
+				.cl-svg {
+					font-size: 18px;
+					margin-bottom: 4px;
+				}
+
+				span {
+					font-size: 11px;
+					line-height: 1.2;
+					text-align: center;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					max-width: 100%;
+				}
+			}
+		}
+	}
 }
 </style>

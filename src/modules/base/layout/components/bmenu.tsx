@@ -1,4 +1,4 @@
-import { defineComponent, h } from "vue";
+import { defineComponent, h, watch } from "vue";
 import { useStore } from "../../store";
 import { Menu } from "../../types";
 import { useCool } from "/@/cool";
@@ -32,7 +32,42 @@ export default defineComponent({
 			}
 		}
 
-		// 渲染子菜单
+		// 初始化当前选中一级菜单
+		function initActiveIndex() {
+			if (!app.isFold || browser.isMini) return;
+			const idx = menu.list.findIndex((e) => hasActiveChild(e));
+			if (idx >= 0) {
+				menu.foldActiveIndex = idx;
+			}
+		}
+
+		// 监听路由变化，更新 foldActiveIndex
+		watch(() => route.path, initActiveIndex, { immediate: true });
+
+		// 渲染一级菜单（缩进模式下）
+		function renderLevel1() {
+			return menu.list
+				.filter((e) => e.isShow)
+				.map((e, index) => {
+					const isActive = menu.foldActiveIndex === index;
+					return h(
+						"div",
+						{
+							key: e.id,
+							class: ["menu-level1-item", isActive ? "is-active" : ""],
+							onClick: () => {
+								menu.foldActiveIndex = index;
+							}
+						},
+						[
+							h(<cl-svg name={e.icon} />),
+							h("span", { class: "menu-label" }, e.name)
+						]
+					);
+				});
+		}
+
+		// 原始递归渲染菜单（非缩进模式下）
 		function renderMenu() {
 			function deep(list: Menu.Item[], index: number) {
 				return list
@@ -51,16 +86,16 @@ export default defineComponent({
 									class: { "is-active-parent": isActive }
 								},
 								{
-							title() {
-								return (
-									<div class={["wrap", app.isFold && index === 1 ? "wrap--vertical" : "", isActive ? "wrap--active" : ""]}>
-										<cl-svg name={e.icon} />
-										<span>
-											{e.name}
-										</span>
-									</div>
-								);
-							},
+									title() {
+										return (
+											<div class={["wrap", app.isFold && index === 1 ? "wrap--vertical" : "", isActive ? "wrap--active" : ""]}>
+												<cl-svg name={e.icon} />
+												<span>
+													{e.name}
+												</span>
+											</div>
+										);
+									},
 									default() {
 										return deep(e.children || [], index + 1);
 									}
@@ -95,6 +130,18 @@ export default defineComponent({
 		}
 
 		return () => {
+			// 缩进模式：只显示一级菜单
+			if (app.isFold && !browser.isMini) {
+				return (
+					<div class="app-slider__menu app-slider__menu--fold">
+						<div class="menu-level1">
+							{renderLevel1()}
+						</div>
+					</div>
+				);
+			}
+
+			// 非缩进模式：原有菜单
 			return (
 				<div class="app-slider__menu">
 					<el-menu

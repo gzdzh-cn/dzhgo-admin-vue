@@ -1,5 +1,5 @@
 import { Merge, ModuleConfig } from "/@/cool";
-import { Crud } from "@cool-vue/crud";
+import Crud from "@cool-vue/crud";
 import "@cool-vue/crud/dist/index.css";
 
 // 自定义
