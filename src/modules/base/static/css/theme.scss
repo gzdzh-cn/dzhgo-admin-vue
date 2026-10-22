@@ -20,6 +20,17 @@
 }
 
 // Element-plus
+// CRUD 依赖的旧版 Message 没有 placement 类，兼容新版全局样式。
+.el-message:not(.is-left):not(.is-right):not(.is-center) {
+	left: 50%;
+	transform: translateX(-50%);
+
+	&.el-message-fade-enter-from,
+	&.el-message-fade-leave-to {
+		transform: translate(-50%, -100%);
+	}
+}
+
 .el-input-number {
 	.el-input-number__decrease,
 	.el-input-number__increase {

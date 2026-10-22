@@ -58,10 +58,11 @@ const { ViewGroup } = useViewGroup();
 // cl-upsert 配置
 const Upsert = useUpsert({
 	dialog: {
-		width: "600px"
+		width: "600px",
+		customClass: "dict-upsert-dialog"
 	},
 	props: {
-		labelWidth: "100px"
+		labelWidth: "80px"
 	},
 	items: [
 		{
@@ -115,6 +116,7 @@ const Upsert = useUpsert({
 		{
 			label: "值",
 			prop: "value",
+			required: true,
 			component: { name: "el-input" }
 		},
 		{
@@ -207,3 +209,20 @@ function append(row: any) {
 	});
 }
 </script>
+
+<style lang="scss">
+.dict-upsert-dialog {
+	.el-form-item {
+		.el-form-item__label {
+			width: 80px !important;
+			min-width: 80px !important;
+			max-width: 80px !important;
+			flex: 0 0 80px !important;
+			justify-content: flex-end !important;
+			text-align: right !important;
+			padding-right: 12px;
+			box-sizing: border-box;
+		}
+	}
+}
+</style>

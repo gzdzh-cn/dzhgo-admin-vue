@@ -115,6 +115,9 @@ const Upsert = useUpsert({
 			value: [],
 			component: {
 				vm: DeptCheck,
+				props: {
+					checkStrictly: true
+				},
 				style: {
 					marginTop: "-10px"
 				}

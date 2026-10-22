@@ -68,7 +68,7 @@ const Table = useTable({
 // cl-crud 配置
 const Crud = useCrud(
 	{
-		service: service.base.sys.addonsType
+		service: service.base.sys.addonsTypes
 	},
 	(app) => {
 		app.refresh();

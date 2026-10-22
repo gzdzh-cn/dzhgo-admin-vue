@@ -7,6 +7,10 @@ export const isDev = import.meta.env.MODE === "development";
 // 配置
 export const config = {
 	eps: true,
+	// 临时关闭设备状态连接；恢复 customer_pro 后可改为 true。
+	deviceWs: {
+		enabled: false
+	},
 	// 项目信息
 	app: {
 		name: "dzhgo管理系统",

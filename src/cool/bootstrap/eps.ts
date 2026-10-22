@@ -79,8 +79,11 @@ export async function createEps() {
 
 		for (const i in d) {
 			if (isArray(d[i])) {
-				d[i].forEach((e: any) => {
-					if (!e || !e.prefix) return;
+				const entries = d[i]
+					.filter((e: any) => e && typeof e.prefix == "string" && e.prefix)
+					.sort((a: any, b: any) => a.prefix.split("/").length - b.prefix.split("/").length);
+
+				entries.forEach((e: any) => {
 
 					// 分隔路径
 					const arr = e.prefix
@@ -111,7 +114,8 @@ export async function createEps() {
 								}
 
 							// 创建方法
-							(e.api || []).forEach((a: any) => {
+								(e.api || []).forEach((a: any) => {
+									if (!a || typeof a.path != "string" || !a.path) return;
 									// 方法名
 									const n = a.path.replace("/", "");
 
@@ -135,13 +139,14 @@ export async function createEps() {
 								});
 
 								// 创建权限
-								if (!d[k].permission) {
+								const namespace = typeof d[k].namespace == "string" ? d[k].namespace : "";
+								if (!d[k].permission && namespace) {
 									d[k].permission = {};
 
 									const ks = Array.from(new Set([...names, ...getNames(d[k])]));
 
 									ks.forEach((e) => {
-										d[k].permission[e] = `${d[k].namespace.replace(
+									d[k].permission[e] = `${namespace.replace(
 											"admin/",
 											""
 										)}/${e}`.replace(/\//g, ":");
@@ -161,7 +166,11 @@ export async function createEps() {
 		// 缓存数据
 		Data.set("service", service);
 
-		createDts(list);
+		try {
+			await createDts(list);
+		} catch (err) {
+			console.warn("[Eps] 本地接口类型文件生成失败", err);
+		}
 	}
 
 	// 获取
@@ -183,19 +192,23 @@ export async function createEps() {
 
 			// 接口数据
 			if (isDev && config.eps) {
-				await service
-					.request({
+				try {
+					const res = await service.request({
 						url: "/admin/base/open/eps"
-					})
-					.then((res) => {
-						if (!isEmpty(res)) {
-							list = res;
-						}
 					});
+					if (!isEmpty(res)) {
+						list = res;
+					}
+				} catch (err) {
+					console.warn(
+						"[Eps] 远程接口描述获取失败，使用本地描述；请检查后端服务和开发代理",
+						err
+					);
+				}
 			}
 
 			if (list) {
-				set(list);
+				await set(list);
 			}
 		} catch (err) {
 			console.error("[Eps] 获取失败！", err);

@@ -55,6 +55,7 @@
 									<el-button
 										v-permission="
 											service.base.sys.user.permission.delete &&
+											scope.row.roleIdList &&
 											scope.row.roleIdList.length > 0 &&
 											!scope.row.roleIdList.includes('1')
 										"
@@ -174,8 +175,10 @@ const Upsert = useUpsert({
 				hidden: ({ scope }) => {
 					//超管角色不可更改
 					return (
-						!checkPerm(perm.list) ||
-						(scope.roleIdList.length > 0 && scope.roleIdList.includes("1"))
+							!checkPerm(perm.list) ||
+							(scope.roleIdList &&
+								scope.roleIdList.length > 0 &&
+								scope.roleIdList.includes("1"))
 					);
 				},
 				component: {

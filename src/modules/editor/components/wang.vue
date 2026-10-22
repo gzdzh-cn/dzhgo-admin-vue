@@ -64,7 +64,7 @@ export default defineComponent({
 
 	emits: ["update:modelValue", "change", "focus", "blur"],
 
-	setup(props, { emit }) {
+	setup(props, { emit, expose }) {
 		const { refs, setRefs } = useCool();
 
 		// 编辑器
@@ -138,6 +138,12 @@ export default defineComponent({
 			emit("update:modelValue", value.value);
 			emit("change", value.value);
 		}
+
+		function getHtml(): string {
+			return Editor.value?.getHtml?.() ?? value.value ?? "";
+		}
+
+		expose({ getHtml });
 
 		function onFileConfirm(files: any[]) {
 			if (files.length > 0) {

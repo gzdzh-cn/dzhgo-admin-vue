@@ -9,6 +9,7 @@
 		"lint:eslint": "eslint \"{src,mock}/**/*.{vue,ts,tsx}\" --fix"
 	},
 	"dependencies": {
+		"@audio/amr-decode": "1.0.0",
 		"@cool-vue/crud": "^6.0.3",
 		"@element-plus/icons-vue": "^2.0.10",
 		"@vueuse/core": "^9.1.0",

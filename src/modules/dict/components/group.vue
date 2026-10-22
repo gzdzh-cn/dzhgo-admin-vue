@@ -129,12 +129,24 @@ function edit(item?: Eps.DictTypeEntity) {
 				required: true
 			},
 			{
-				prop: "addonsName",
 				label: "插件",
+				prop: "addonsName",
 				component: {
 					name: "el-input"
 				},
 				required: true
+			},
+			{
+				label: "是否公开",
+				prop: "isPublic",
+				component: {
+					name: "el-select",
+					options: [
+						{ label: "是", value: 1 },
+						{ label: "否", value: 0 }
+					]
+				},
+				value: 0
 			}
 		],
 		form: {

@@ -60,23 +60,11 @@ export default (): UserConfig => {
 			},
 			sourcemap: false,
 			rollupOptions: {
+				// 由 Rollup 按依赖关系分包，避免 Vue 与 UI 库跨包循环导致初始化失败。
 				output: {
 					chunkFileNames: "static/js/[name]-[hash].js",
 					entryFileNames: "static/js/[name]-[hash].js",
-					assetFileNames: "static/[ext]/[name]-[hash].[ext]",
-					manualChunks(id) {
-						if (id.includes("node_modules")) {
-							if (!["@cool-vue/crud"].find((e) => id.includes(e))) {
-								let str = id.toString().split("node_modules/")[1];
-
-								if (str[0] == "@") {
-									str = str.replace("/", ".");
-								}
-
-								return str.split("/")[0].toString();
-							}
-						}
-					}
+					assetFileNames: "static/[ext]/[name]-[hash].[ext]"
 				}
 			}
 		}

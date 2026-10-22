@@ -6,7 +6,7 @@ import { Data } from "../utils";
 import { useBrowser } from "./browser";
 
 export function useService(): Eps.Service {
-	return Data.get("service" || service);
+	return Data.get("service", service);
 }
 
 export function useRefs() {

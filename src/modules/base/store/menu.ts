@@ -47,16 +47,18 @@ export const useMenuStore = defineStore("menu", function () {
 	// 设置权限
 	function setPerms(list: Menu.List) {
 		function deep(d: any) {
-			if (typeof d == "object") {
-				if (d.permission) {
+			if (d && typeof d == "object") {
+				if (d.permission && typeof d.permission == "object") {
 					d._permission = {};
 					for (const i in d.permission) {
+						const namespace = typeof d.namespace == "string" ? d.namespace : "";
 						d._permission[i] =
-							list.findIndex((e: any) =>
-								e
-									.replace(/:/g, "/")
-									.includes(`${d.namespace.replace("admin/", "")}/${i}`)
-							) >= 0;
+							namespace &&
+							list.some(
+								(e: any) =>
+									typeof e == "string" &&
+									e.replace(/:/g, "/").includes(`${namespace.replace("admin/", "")}/${i}`)
+							);
 					}
 				} else {
 					for (const i in d) {
@@ -80,6 +82,9 @@ export const useMenuStore = defineStore("menu", function () {
 	// 设置菜单组
 	function setGroup(list: Menu.List) {
 		group.value = orderBy(list, "orderNum").filter((e) => e.isShow && e.isInstall);
+		if (index.value >= group.value.length) {
+			index.value = 0;
+		}
 		storage.set("menu.group", group.value);
 	}
 

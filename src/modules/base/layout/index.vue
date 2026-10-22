@@ -65,11 +65,10 @@ const { browser } = useBrowser();
 	}
 
 	&__sub-menu {
-		overflow: hidden;
+		overflow: visible;
 		height: 100%;
-		width: 140px;
-		transition: width 0.2s ease-in-out;
 		flex-shrink: 0;
+		align-self: stretch;
 	}
 
 	&__content {
@@ -135,10 +134,6 @@ const { browser } = useBrowser();
 		&.collapse {
 			.app-layout__left {
 				width: 64px;
-			}
-
-			.app-layout__sub-menu {
-				width: 140px;
 			}
 
 			.app-layout__right {
