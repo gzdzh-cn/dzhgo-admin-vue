@@ -7,7 +7,19 @@
 			:closable="false"
 			show-icon
 		/>
+		<el-alert
+			title="无需发布版本即可接收崩溃；匿名设备也会记录崩溃；班刻仅补报异常类型与脱敏代码堆栈，不包含异常消息及排班内容。"
+			type="info"
+			:closable="false"
+			show-icon
+		/>
 		<div class="toolbar">
+			<app-management
+				:groups="appGroups"
+				:loading="groupsLoading"
+				:error="groupsError"
+				@refresh="refreshManagedApps"
+			/>
 			<el-select
 				v-model="appChoice"
 				class="app-selector"
@@ -37,6 +49,12 @@
 					}）`"
 					:value="appIdentity(app)"
 				/>
+			</el-select>
+			<el-select v-model="query.anonymous" placeholder="上报身份" clearable @change="search">
+				<el-option label="全部身份" value="" /><el-option
+					label="匿名设备"
+					value="true"
+				/><el-option label="会员设备" value="false" />
 			</el-select>
 			<el-input-number
 				v-model="query.versionCode"
@@ -107,6 +125,11 @@
 				><template #default="{ row }"
 					>{{ text(row.version_name, "-") }} / {{ row.version_code || 0 }}</template
 				></el-table-column
+			>
+			<el-table-column label="上报身份" width="110"
+				><template #default="{ row }">{{
+					row.user_id ? "会员设备" : "匿名设备"
+				}}</template></el-table-column
 			>
 			<el-table-column label="设备" min-width="170"
 				><template #default="{ row }"
@@ -179,6 +202,12 @@
 			destroy-on-close
 		>
 			<el-descriptions :column="2" border>
+				<el-descriptions-item label="上报身份">{{
+					detail.user_id ? "会员设备" : "匿名设备"
+				}}</el-descriptions-item>
+				<el-descriptions-item label="设备标识哈希">{{
+					detail.device_id || "-"
+				}}</el-descriptions-item>
 				<el-descriptions-item label="平台">{{
 					detail.platform || "-"
 				}}</el-descriptions-item>
@@ -228,6 +257,7 @@
 </template>
 
 <script lang="ts" setup>
+import AppManagement from "../components/app-management.vue";
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { request } from "/@/cool/service/request";
@@ -239,8 +269,12 @@ import {
 	useAppOptions,
 	useAppGroups
 } from "../service";
+async function refreshManagedApps() {
+	await Promise.all([loadAppOptions(), loadAppGroups()]);
+	await load();
+}
 const { appOptions, optionsError, optionsLoading, loadAppOptions } = useAppOptions("crash");
-const { appGroups, groupsError, loadAppGroups } = useAppGroups("crash");
+const { appGroups, groupsError, groupsLoading, loadAppGroups } = useAppGroups("crash");
 const rows = ref<any[]>([]);
 const total = ref(0);
 const loading = ref(false);
@@ -250,6 +284,7 @@ const detailLoading = ref(false);
 const deleteId = ref("");
 const dateRange = ref<string[]>([]);
 const query = reactive({
+	anonymous: "",
 	page: 1,
 	size: 20,
 	keyword: "",

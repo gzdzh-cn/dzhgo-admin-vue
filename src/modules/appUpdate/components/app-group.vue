@@ -30,7 +30,7 @@
 					>
 						<div class="row-copy">
 							<strong>全部 App</strong>
-							<small>查看所有版本</small>
+							<small>查看所有应用</small>
 						</div>
 						<el-icon v-if="!selectedAppId && !selectedPackage && !unassigned"
 							><arrow-right-bold
@@ -117,6 +117,12 @@
 			:show-close="!busy"
 			append-to-body
 		>
+			<el-alert
+				title="登记平台身份即可接收统计；iOS 与鸿蒙不需要上传版本或填写地址。"
+				type="info"
+				:closable="false"
+				show-icon
+			/>
 			<el-form label-width="100px" :disabled="busy"
 				><el-form-item v-if="editing && form.id" label="App ID"
 					><el-input :model-value="form.id" readonly>

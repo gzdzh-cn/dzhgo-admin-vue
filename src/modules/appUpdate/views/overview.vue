@@ -8,6 +8,7 @@
 			show-icon
 		>
 			<template #title>部分统计接口加载失败：{{ requestErrors.join("、") }}</template>
+			<el-button size="small" :loading="loading" @click="refresh">重试加载</el-button>
 		</el-alert>
 		<el-alert
 			v-if="optionsError || groupsError"
@@ -18,12 +19,29 @@
 		/>
 		<el-alert
 			v-if="!loading && !optionsLoading && !optionsError && !appOptions.length"
-			title="暂无 App 数据。请先在版本列表上传新 App，或等待设备、事件、崩溃上报。"
+			title="暂无 App 档案。请通过“应用管理”登记名称、平台和应用标识；无需上传版本即可接收统计。"
+			type="info"
+			:closable="false"
+			show-icon
+		/>
+		<el-alert
+			v-if="!loading && summaryReady && displayNumber(summary.totalDevices) === 0"
+			:title="
+				displayNumber(summary.reportedDevices) === 0
+					? '尚未收到此 App 的设备上报。请确认新版 App 已安装、统计已开启，且后台已部署统计接口。仅检查更新不会产生设备记录。'
+					: '当前筛选条件下没有设备，请清除版本、品牌、机型或在线筛选后重试。'
+			"
 			type="info"
 			:closable="false"
 			show-icon
 		/>
 		<div class="toolbar">
+			<app-management
+				:groups="appGroups"
+				:loading="groupsLoading"
+				:error="groupsError"
+				@refresh="refreshManagedApps"
+			/>
 			<el-select v-model="filters.range" @change="changeFilters"
 				><el-option label="今日" value="today" /><el-option
 					label="近7天"
@@ -68,6 +86,7 @@
 				clearable
 				@change="changeFilters"
 			>
+				<el-option label="全部版本" :value="0" />
 				<el-option
 					v-for="item in versionOptions"
 					:key="item.value"
@@ -102,27 +121,37 @@
 		</div>
 
 		<div class="scope-tip">
-			{{ filters.packageName || "全部 App" }}：设备按 App 安装实例统计；待升级及覆盖率按各 App
-			的后台最新版本分别计算（含草稿和已上传版本）。
+			{{ filters.packageName || "全部 App" }}：设备按 App
+			与设备标识去重统计；iOS/鸿蒙不提供市场最新版基准。后台版本、待升级、覆盖率及 APK
+			指标仅适用于 Android。 最近上报：{{
+				summaryReady ? displayText(summary.lastReportedAt, "暂无上报") : "暂不可用"
+			}}。 活跃趋势按北京时间自然日去重，自接入新版后累积，历史未上报日期不补造。
 		</div>
 		<div class="cards" v-loading="loading">
 			<div v-for="item in cards" :key="item.key" class="stat-card">
 				<div class="stat-label">{{ item.label }}</div>
-				<div class="stat-value">{{ item.value }}</div>
+				<div class="stat-value">{{ summaryReady ? item.value : "—" }}</div>
 				<div class="stat-tip">{{ item.tip }}</div>
 			</div>
 		</div>
 		<div class="charts">
 			<div class="chart-card">
-				<div class="chart-title">活跃设备趋势</div>
+				<div class="chart-title">每日活跃设备趋势（北京时间）</div>
 				<div ref="activeChart" class="chart" />
 			</div>
 			<div class="chart-card">
-				<div class="chart-title">APK下载趋势</div>
-				<div ref="downloadChart" class="chart" />
+				<div class="chart-title">APK下载趋势（仅 Android）</div>
+				<div v-if="!metricAvailable(summary, 'downloads')">
+					不适用：{{ metricReason(summary, "downloads") }}
+				</div>
+				<div
+					v-show="metricAvailable(summary, 'downloads')"
+					ref="downloadChart"
+					class="chart"
+				/>
 			</div>
 			<div class="chart-card">
-				<div class="chart-title">商店打开趋势</div>
+				<div class="chart-title">历史市场打开事件</div>
 				<div ref="storeChart" class="chart" />
 			</div>
 			<div class="chart-card">
@@ -139,7 +168,7 @@
 			</div>
 		</div>
 		<div class="funnel-card">
-			<div class="chart-title">更新漏斗</div>
+			<div class="chart-title">更新事件（下载阶段仅 Android）</div>
 			<div class="funnel">
 				<div v-for="item in funnelItems" :key="item.key" class="funnel-item">
 					<span>{{ item.label }}</span
@@ -164,7 +193,11 @@
 						></template
 					></el-table-column
 				>
-				<el-table-column prop="platform" label="平台" width="90" />
+				<el-table-column label="平台" width="90"
+					><template #default="{ row }">{{
+						platformLabel(displayText(row.platform))
+					}}</template></el-table-column
+				>
 				<el-table-column
 					prop="package_name"
 					label="应用标识"
@@ -173,7 +206,7 @@
 				/>
 				<el-table-column label="用户" min-width="150"
 					><template #default="{ row }">{{
-						displayText(row.user_name, row.userName, row.USER_NAME, "未关联用户")
+						displayText(row.user_name, row.userName, row.USER_NAME, "匿名设备")
 					}}</template></el-table-column
 				>
 				<el-table-column label="品牌/机型" min-width="220">
@@ -243,6 +276,7 @@
 </template>
 
 <script lang="ts" setup>
+import AppManagement from "../components/app-management.vue";
 import {
 	computed,
 	nextTick,
@@ -256,8 +290,12 @@ import {
 import * as echarts from "echarts";
 import { request } from "/@/cool/service/request";
 import { apiUrl, appIdentity, platformLabel, useAppOptions, useAppGroups } from "../service";
+async function refreshManagedApps() {
+	await Promise.all([loadAppOptions(), loadAppGroups()]);
+	await refresh();
+}
 const { appOptions, optionsError, optionsLoading, loadAppOptions } = useAppOptions("overview");
-const { appGroups, groupsError, loadAppGroups } = useAppGroups("overview");
+const { appGroups, groupsError, groupsLoading, loadAppGroups } = useAppGroups("overview");
 const filters = reactive({
 	range: "7d",
 	packageName: "",
@@ -275,6 +313,7 @@ const versionOptions = ref<{ label: string; value: number }[]>([]);
 const loading = ref(false);
 const deviceLoading = ref(false);
 const summary = ref<any>({});
+const summaryReady = ref(false);
 const devices = ref<any[]>([]);
 const deviceTotal = ref(0);
 const funnel = ref<any>({});
@@ -343,12 +382,22 @@ function deviceDetail(row: any) {
 	].filter(Boolean);
 	return values.join("\n");
 }
+function metricAvailable(data: any, key: string): boolean {
+	return data?.metricAvailability?.[key]?.available === true;
+}
+function metricReason(data: any, key: string): string {
+	return data?.metricAvailability?.[key]?.reason || "指标适用状态尚未返回";
+}
+function metricValue(data: any, key: string, value: any): any {
+	const state = data?.metricAvailability?.[key];
+	return !state ? "暂不可用" : state.available ? value : "不适用";
+}
 const cards = computed(() => [
 	{
 		key: "total",
 		label: "设备总数",
 		value: displayNumber(summary.value.totalDevices),
-		tip: "按 App 安装实例"
+		tip: "同一 App 按设备标识去重"
 	},
 	{
 		key: "online",
@@ -364,65 +413,108 @@ const cards = computed(() => [
 	},
 	{
 		key: "version",
-		label: "后台最新版本",
-		value: filters.packageName
-			? displayText(summary.value.latestVersion, "-")
-			: "选择 App 查看",
-		tip:
-			filters.packageName && summary.value.latestVersionCode
-				? `Code ${displayNumber(summary.value.latestVersionCode)}`
-				: "各 App 版本独立"
+		label: "Android 后台最新版本",
+		value: metricValue(
+			summary.value,
+			"latestVersion",
+			displayText(summary.value.latestVersion, "-")
+		),
+		tip: metricAvailable(summary.value, "latestVersion")
+			? `Code ${displayNumber(summary.value.latestVersionCode)}`
+			: metricReason(summary.value, "latestVersion")
 	},
 	{
 		key: "coverage",
 		label: "最新版本覆盖率",
-		value: `${displayNumber(summary.value.latestCoverage).toFixed(1)}%`,
-		tip: "各 App 最新版本的24小时活跃安装占比"
+		value: metricValue(
+			summary.value,
+			"latestCoverage",
+			`${displayNumber(summary.value.latestCoverage).toFixed(1)}%`
+		),
+		tip: metricAvailable(summary.value, "latestCoverage")
+			? "仅 Android：有后台版本基准的24小时活跃设备"
+			: metricReason(summary.value, "latestCoverage")
 	},
 	{
 		key: "pending",
 		label: "待升级设备",
-		value: displayNumber(summary.value.pendingUpgrade),
-		tip: "低于所属 App 后台最新版本"
+		value: metricValue(
+			summary.value,
+			"pendingUpgrade",
+			displayNumber(summary.value.pendingUpgrade)
+		),
+		tip: metricAvailable(summary.value, "pendingUpgrade")
+			? "仅 Android：低于所属 App 后台版本"
+			: metricReason(summary.value, "pendingUpgrade")
 	},
 	{
 		key: "low",
 		label: "低于最低版本",
-		value: displayNumber(summary.value.belowMinimum),
-		tip: "按所属 App 最低支持版本"
+		value: metricValue(
+			summary.value,
+			"belowMinimum",
+			displayNumber(summary.value.belowMinimum)
+		),
+		tip: metricAvailable(summary.value, "belowMinimum")
+			? "仅 Android：所属 App 最低支持版本"
+			: metricReason(summary.value, "belowMinimum")
 	},
 	{
 		key: "download",
 		label: "APK下载",
-		value: displayNumber(summary.value.downloads),
-		tip: "所选 App 的下载统计"
+		value: metricValue(summary.value, "downloads", displayNumber(summary.value.downloads)),
+		tip: metricAvailable(summary.value, "downloads")
+			? "仅 Android APK 下载统计"
+			: metricReason(summary.value, "downloads")
 	},
 	{
 		key: "store",
-		label: "商店打开",
+		label: "历史市场打开",
 		value: displayNumber(summary.value.storeOpens),
-		tip: "iOS 与鸿蒙应用市场跳转"
+		tip: "仅实际记录的事件；官方更新弹窗不等于市场跳转"
 	},
 	{
 		key: "success",
-		label: "升级成功",
+		label: "观测到版本升级",
 		value: displayNumber(summary.value.upgradeSuccess),
-		tip: "安装成功事件"
+		tip: "快照版本代码升高；不能证明市场下载安装过程"
 	},
 	{
 		key: "failed",
 		label: "升级失败",
-		value: displayNumber(summary.value.upgradeFailed),
-		tip: "安装失败事件"
+		value: metricValue(
+			summary.value,
+			"upgradeFailed",
+			displayNumber(summary.value.upgradeFailed)
+		),
+		tip: metricAvailable(summary.value, "upgradeFailed")
+			? "仅 Android 安装失败事件"
+			: metricReason(summary.value, "upgradeFailed")
 	}
 ]);
 const funnelItems = computed(() => [
 	{ key: "check", label: "检查更新", value: displayNumber(funnel.value.check) },
 	{ key: "available", label: "发现新版本", value: displayNumber(funnel.value.update_available) },
-	{ key: "start", label: "开始下载", value: displayNumber(funnel.value.download_start) },
-	{ key: "download", label: "APK下载成功", value: displayNumber(funnel.value.download_success) },
-	{ key: "store", label: "商店打开", value: displayNumber(funnel.value.store_open) },
-	{ key: "install", label: "安装成功", value: displayNumber(funnel.value.install_success) }
+	{
+		key: "start",
+		label: "开始下载",
+		value: metricValue(
+			funnel.value,
+			"download_start",
+			displayNumber(funnel.value.download_start)
+		)
+	},
+	{
+		key: "download",
+		label: "APK下载成功",
+		value: metricValue(
+			funnel.value,
+			"download_success",
+			displayNumber(funnel.value.download_success)
+		)
+	},
+	{ key: "store", label: "历史市场打开", value: displayNumber(funnel.value.store_open) },
+	{ key: "install", label: "观测到版本升级", value: displayNumber(funnel.value.install_success) }
 ]);
 function queryParams(source = filters) {
 	return { ...source, online: source.online === "all" ? "" : source.online };
@@ -469,6 +561,7 @@ function changeApp(choice = appChoice.value) {
 function changeFilters() {
 	devicePage.page = 1;
 	summary.value = {};
+	summaryReady.value = false;
 	funnel.value = {};
 	devices.value = [];
 	deviceTotal.value = 0;
@@ -482,6 +575,21 @@ function changeDeviceSize() {
 function changeDevicePage() {
 	void loadDevices();
 }
+function statisticsError(error: any): string {
+	const message = String(error?.message || "");
+	if (
+		error?.code === 403 ||
+		error?.response?.status === 403 ||
+		/权限|无权|forbidden/i.test(message)
+	) {
+		return "无权访问，请检查统计权限";
+	}
+	if (/Illegal mix of collations|Error 1267/i.test(message)) {
+		return "数据库排序规则不兼容，请更新后台后重试";
+	}
+	if (Number(error?.code) >= 500) return "统计服务暂不可用，请稍后重试";
+	return message || "加载失败";
+}
 async function loadDevices(source = filters) {
 	const snapshot = queryParams(source);
 	const current = ++deviceGeneration;
@@ -489,6 +597,7 @@ async function loadDevices(source = filters) {
 	try {
 		const payload: any = await request({
 			url: apiUrl("overview/device/page"),
+			handleErrorLocally: true,
 			method: "POST",
 			data: { ...snapshot, page: devicePage.page, size: devicePage.size }
 		});
@@ -500,7 +609,7 @@ async function loadDevices(source = filters) {
 		devices.value = [];
 		deviceTotal.value = 0;
 		requestErrors.value = [
-			...new Set([...requestErrors.value, `设备列表：${error?.message || "加载失败"}`])
+			...new Set([...requestErrors.value, `设备列表：${statisticsError(error)}`])
 		];
 	} finally {
 		if (current === deviceGeneration) deviceLoading.value = false;
@@ -520,11 +629,20 @@ async function loadAll(refreshOptions = false) {
 		try {
 			return (await request({
 				url: apiUrl(`overview/${name}`),
+				handleErrorLocally: true,
 				method: "GET",
 				params: queryParams(source)
 			})) as any;
 		} catch (error: any) {
-			errors.push(`${name}：${error?.message || "加载失败"}`);
+			const labels: Record<string, string> = {
+				summary: "统计摘要",
+				trend: "活跃趋势",
+				"brand-distribution": "品牌分布",
+				"model-distribution": "机型分布",
+				"version-distribution": "版本分布",
+				"update-funnel": "升级漏斗"
+			};
+			errors.push(`${labels[name] || name}：${statisticsError(error)}`);
 			return null;
 		}
 	};
@@ -559,8 +677,9 @@ async function loadAll(refreshOptions = false) {
 			optionVersions
 		] = results;
 		summary.value = stats || {};
+		summaryReady.value = stats !== null;
 		funnel.value = events || {};
-		requestErrors.value = errors;
+		requestErrors.value = [...new Set(errors)];
 		brandOptions.value = [
 			...new Set(
 				rowsOf(optionBrands)

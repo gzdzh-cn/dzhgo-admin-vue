@@ -38,10 +38,16 @@
 						v-if="canOperate('version', 'save')"
 						type="primary"
 						@click="openCreate"
-						>上传新版本</el-button
+						>发布 Android 版本</el-button
 					>
 				</div>
 
+				<el-alert
+					title="iOS 与鸿蒙仅登记应用并接收统计；历史版本只读，不再用于更新分发。"
+					type="info"
+					:closable="false"
+					show-icon
+				/>
 				<div class="version-table">
 					<el-table v-loading="loading" :data="rows" height="100%" border stripe>
 						<el-table-column prop="platform" label="平台" width="90">
@@ -86,9 +92,7 @@
 										}}</small>
 									</template>
 								</template>
-								<a v-else :href="row.store_url" target="_blank" rel="noopener">{{
-									row.store_url
-								}}</a>
+								<span v-else>历史版本，不再用于更新分发</span>
 							</template>
 						</el-table-column>
 						<el-table-column label="存储" width="90">
@@ -109,15 +113,14 @@
 								<el-button
 									link
 									type="primary"
-									:disabled="
-										(row.status === 'published' &&
-											row.storage_type !== 'url') ||
-										saving ||
-										!!actionId
-									"
+									:disabled="saving || !!actionId"
 									v-if="canOperate('version', 'save')"
 									@click="openEdit(row)"
-									>编辑</el-button
+									>{{
+										row.platform !== "android" || row.status === "published"
+											? "查看"
+											: "编辑"
+									}}</el-button
 								>
 								<el-button
 									v-if="
@@ -133,18 +136,7 @@
 								>
 								<el-button
 									v-if="
-										row.platform !== 'android' &&
-										(row.status === 'draft' || row.status === 'withdrawn') &&
-										canOperate('version', 'publish')
-									"
-									link
-									:disabled="!!actionId || saving"
-									type="success"
-									@click="publish(row)"
-									>发布</el-button
-								>
-								<el-button
-									v-if="
+										row.platform === 'android' &&
 										row.status === 'published' &&
 										canOperate('version', 'revoke')
 									"
@@ -156,6 +148,7 @@
 								>
 								<el-button
 									v-if="
+										row.platform === 'android' &&
 										row.status !== 'published' &&
 										canOperate('version', 'delete')
 									"
@@ -184,8 +177,8 @@
 				<el-dialog
 					v-model="dialogVisible"
 					:title="
-						form.id && form.status === 'published' && form.storageType === 'url'
-							? '修改下载链接'
+						form.id && (form.status === 'published' || form.platform !== 'android')
+							? '版本详情'
 							: form.id
 							? '编辑版本'
 							: '新增版本'
@@ -196,7 +189,18 @@
 					:show-close="!saving"
 					destroy-on-close
 				>
-					<el-form :model="form" label-width="150px" :disabled="saving">
+					<el-alert
+						v-if="formReadOnly"
+						:title="
+							form.platform !== 'android'
+								? '历史版本，不再用于更新分发；本后台仅提供统计。'
+								: '已发布版本为只读，APK 下载链接及其他信息均不可修改；请先撤回后编辑并重新发布。'
+						"
+						type="info"
+						:closable="false"
+						show-icon
+					/>
+					<el-form :model="form" label-width="150px" :disabled="saving || formReadOnly">
 						<el-form-item label="所属 App" prop="packageName" required>
 							<el-select
 								v-model="formAppId"
@@ -209,7 +213,9 @@
 							>
 								<el-option
 									v-for="group in appGroups.filter(
-										(g) => !g.unassigned && g.platforms.length
+										(g) =>
+											!g.unassigned &&
+											g.platforms.some((p) => p.platform === 'android')
 									)"
 									:key="group.id"
 									:label="group.name"
@@ -217,7 +223,13 @@
 								/>
 							</el-select>
 							<div
-								v-if="!appGroups.some((g) => !g.unassigned && g.platforms.length)"
+								v-if="
+									!appGroups.some(
+										(g) =>
+											!g.unassigned &&
+											g.platforms.some((p) => p.platform === 'android')
+									)
+								"
 								class="existing-file-tip"
 							>
 								请先添加 App 和至少一个平台。
@@ -230,7 +242,9 @@
 								style="width: 100%"
 								@change="setFormPlatform"
 								><el-option
-									v-for="app in selectedFormGroup?.platforms || []"
+									v-for="app in (selectedFormGroup?.platforms || []).filter(
+										(item) => form.id || item.platform === 'android'
+									)"
 									:key="app.platform"
 									:label="`${platformLabel(app.platform)} · ${app.packageName}`"
 									:value="app.platform" /></el-select
@@ -300,7 +314,10 @@
 						>
 							<el-input
 								v-model="form.storeUrl"
-								:disabled="!!form.id && form.status === 'published'"
+								:disabled="
+									!!form.id &&
+									(form.status === 'published' || form.platform !== 'android')
+								"
 								maxlength="1024"
 								placeholder="请输入对应平台的 HTTPS 官方应用市场链接"
 							/>
@@ -308,19 +325,28 @@
 						<el-form-item v-else label="下载方式" required>
 							<el-radio-group
 								v-model="form.downloadMode"
-								:disabled="!!form.id && form.status === 'published'"
+								:disabled="
+									!!form.id &&
+									(form.status === 'published' || form.platform !== 'android')
+								"
 								@change="changeDownloadMode"
 							>
 								<el-radio value="apk">上传 APK</el-radio>
 								<el-radio value="url">输入下载链接</el-radio>
 							</el-radio-group>
 							<div v-if="form.id" class="existing-file-tip">
-								<template v-if="form.apkFileName && form.downloadMode === 'apk'">
+								<template v-if="formReadOnly">
+									{{
+										form.platform !== "android"
+											? "历史分发信息仅供查阅，不再使用。"
+											: "下载方式和下载链接已锁定，请先撤回后修改。"
+									}}
+								</template>
+								<template
+									v-else-if="form.apkFileName && form.downloadMode === 'apk'"
+								>
 									切换为外链后，当前 APK 将停用，App 签名校验记录保留；切回 APK
 									方式需重新上传。
-								</template>
-								<template v-else-if="form.status === 'published'">
-									已发布外链版本仅可修改下载链接。
 								</template>
 								<template v-else> 尚未上传 APK，可以切换下载方式。 </template>
 							</div>
@@ -332,6 +358,7 @@
 						>
 							<el-input
 								v-model="form.downloadUrl"
+								:disabled="form.status === 'published'"
 								maxlength="1024"
 								placeholder="请输入可直接下载 APK 的 HTTPS 地址"
 							/>
@@ -348,7 +375,11 @@
 							<input
 								ref="fileInput"
 								type="file"
-								:disabled="saving || !canOperate('version', 'upload')"
+								:disabled="
+									saving ||
+									form.status === 'published' ||
+									!canOperate('version', 'upload')
+								"
 								accept=".apk,application/vnd.android.package-archive"
 								@change="chooseFile"
 							/>
@@ -361,11 +392,12 @@
 						</el-form-item>
 					</el-form>
 					<template #footer>
-						<el-button :disabled="saving" @click="dialogVisible = false"
-							>取消</el-button
-						>
+						<el-button :disabled="saving" @click="dialogVisible = false">{{
+							form.status === "published" ? "关闭" : "取消"
+						}}</el-button>
 						<el-button
 							v-if="
+								form.platform === 'android' &&
 								form.status !== 'published' &&
 								canOperate('version', 'save') &&
 								canOperate('version', 'publish')
@@ -376,11 +408,18 @@
 							@click="save(true)"
 							>保存并发布</el-button
 						>
-						<el-button type="primary" :loading="saving" @click="save(false)">{{
-							form.id && form.status === "published" && form.storageType === "url"
-								? "保存下载链接"
-								: `保存${selectedFile ? "并上传" : ""}`
-						}}</el-button>
+						<el-button
+							v-if="
+								form.platform === 'android' &&
+								form.status !== 'published' &&
+								canOperate('version', 'save')
+							"
+							type="primary"
+							:loading="saving"
+							@click="save(false)"
+						>
+							{{ `保存${selectedFile ? "并上传" : ""}` }}
+						</el-button>
 					</template>
 				</el-dialog>
 			</div>
@@ -472,8 +511,11 @@ const emptyForm = () => ({
 	storeUrl: ""
 });
 const form = reactive<any>(emptyForm());
+const formReadOnly = computed(
+	() => form.status === "published" || (!!form.id && form.platform !== "android")
+);
 const canPublishForm = computed(() => {
-	if (form.platform !== "android") return !!String(form.storeUrl || "").trim();
+	if (form.platform !== "android") return false;
 	if (form.downloadMode === "url") return !!String(form.downloadUrl || "").trim();
 	return !!selectedFile.value || !!form.apkFileName;
 });
@@ -557,7 +599,7 @@ function focusFormVersion() {
 }
 function setFormGroup(id: string) {
 	const group = appGroups.value.find((g) => g.id === id);
-	const app = group?.platforms[0];
+	const app = group?.platforms.find((item) => item.platform === "android");
 	if (app) {
 		form.platform = app.platform;
 		setFormPlatform(app.platform);
@@ -578,11 +620,28 @@ function setFormPlatform(platform: string) {
 }
 function openCreate() {
 	if (saving.value) return;
-	if (!appGroups.value.some((g) => !g.unassigned && g.platforms.length)) {
-		ElMessage.warning(optionsError.value || "请先在左侧添加 App 平台");
+	if (
+		!appGroups.value.some(
+			(g) => !g.unassigned && g.platforms.some((p) => p.platform === "android")
+		)
+	) {
+		ElMessage.warning(
+			optionsError.value || "请先登记 Android 平台；iOS/鸿蒙只需登记即可接收统计"
+		);
 		return;
 	}
 	resetForm();
+	const group =
+		appGroups.value.find(
+			(g) => g.id === formAppId.value && g.platforms.some((p) => p.platform === "android")
+		) ||
+		appGroups.value.find(
+			(g) => !g.unassigned && g.platforms.some((p) => p.platform === "android")
+		);
+	if (group?.id) {
+		formAppId.value = group.id;
+		setFormGroup(group.id);
+	}
 	dialogVisible.value = true;
 }
 function openEdit(row: any) {
@@ -612,6 +671,14 @@ function changeDownloadMode(mode: string) {
 }
 async function save(publishAfterSave = false) {
 	if (saving.value) return;
+	if (form.platform !== "android") {
+		ElMessage.warning("iOS 与鸿蒙历史版本只读，无需发布版本即可统计");
+		return;
+	}
+	if (form.status === "published") {
+		ElMessage.warning("已发布版本不能修改，请先撤回");
+		return;
+	}
 	form.packageName = String(form.packageName || "").trim();
 	if (
 		!form.packageName ||
@@ -775,6 +842,10 @@ async function save(publishAfterSave = false) {
 	}
 }
 async function action(row: any, endpoint: string, message: string) {
+	if (row.platform !== "android") {
+		ElMessage.warning("市场平台历史版本只读");
+		return;
+	}
 	if (actionId.value) return;
 	actionId.value = String(row.id);
 	try {
@@ -797,7 +868,11 @@ async function action(row: any, endpoint: string, message: string) {
 	}
 }
 function publish(row: any) {
-	return action(row, "publish", "确定发布这个版本吗？发布后不能直接修改版本信息和下载来源。");
+	return action(
+		row,
+		"publish",
+		"确定发布这个版本吗？发布后版本信息、APK 下载链接和下载方式均锁定，修改需先撤回。"
+	);
 }
 function revoke(row: any) {
 	return action(row, "revoke", "确定撤回这个版本吗？");

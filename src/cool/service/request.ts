@@ -8,6 +8,14 @@ import { storage } from "/@/cool/utils";
 import { useBase } from "/$/base";
 import { router } from "../router";
 
+declare module "axios" {
+	// Keep Axios's original generic when merging its configuration type.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
+	interface AxiosRequestConfig<D = any> {
+		handleErrorLocally?: boolean;
+	}
+}
+
 const request = axios.create({
 	timeout: 30000,
 	withCredentials: false
@@ -134,6 +142,10 @@ request.interceptors.response.use(
 
 			if (status == 401) {
 				user.logout();
+			} else if (config.handleErrorLocally) {
+				// Opt-in pages keep partial results and offer an inline retry.
+				// Do not expose raw server response bodies (which may contain SQL).
+				return Promise.reject({ code: status, message: error.message });
 			} else {
 				if (isDev) {
 					ElMessage.error(`${config.url} ${status}`);

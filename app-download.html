@@ -22,10 +22,10 @@
       <div class="brand-copy"><h1 id="appName">App 下载中心</h1><p id="appDescription">选择适合你设备的版本</p></div>
       <aside class="qr-box" id="qrBox"><canvas id="qrCanvas" width="256" height="256" aria-label="下载页二维码"></canvas><p>手机扫码打开下载页</p></aside>
     </header>
-    <section class="intro"><span class="eyebrow">OFFICIAL DOWNLOAD</span><h2>选择适合你设备的版本</h2><p>Android、iOS 与 HarmonyOS，统一在这里获取</p></section>
+    <section class="intro"><span class="eyebrow">OFFICIAL DOWNLOAD</span><h2>选择适合你设备的版本</h2><p>Android 提供 APK 下载；iOS 与鸿蒙由各自应用市场管理</p></section>
     <div id="state" class="state" role="status" aria-live="polite"><p>正在获取最新版本…</p></div>
     <section id="platforms" class="platforms hidden" aria-live="polite"></section>
-    <aside class="notice"><span aria-hidden="true">ⓘ</span><div><strong>安装提示</strong><br>Android 下载 APK 后按系统提示完成安装；iOS 与鸿蒙将跳转至对应应用市场。打开应用市场不代表安装已完成。</div></aside>
+    <aside class="notice"><span aria-hidden="true">ⓘ</span><div><strong>安装提示</strong><br>Android 下载 APK 后按系统提示完成安装；iOS 与鸿蒙请使用官方应用市场，本页不提供这两个平台的下载或跳转入口。</div></aside>
     <footer class="footer">请通过官方渠道下载和更新应用</footer>
   </main>
   <script>
@@ -1113,17 +1113,6 @@ const QRCodeLimitLength = [
         icon.append(image);
       } else icon.textContent = name.slice(0, 1).toUpperCase();
     }
-    function officialStoreUrl(platform, value) {
-      try {
-        const url = new URL(value),
-          host = url.hostname.toLowerCase();
-        if (url.protocol !== "https:" || url.username || url.password) return "";
-        const allowedHost = (root) => host === root || host.endsWith(`.${root}`);
-        if (platform === "ios" && allowedHost("apps.apple.com")) return url.href;
-        if (platform === "harmonyos" && allowedHost("appgallery.huawei.com")) return url.href;
-      } catch (_) {}
-      return "";
-    }
     function isRecommended(platform) {
       const ua = navigator.userAgent.toLowerCase();
       if (/iphone|ipad|ipod/.test(ua) || (/macintosh/.test(ua) && navigator.maxTouchPoints > 1))
@@ -1162,6 +1151,7 @@ const QRCodeLimitLength = [
         if (matches.length !== 1 || typeof matches[0].available !== "boolean")
           throw new Error("下载信息中的平台缺失、重复或状态无效");
         const item = matches[0];
+        if (platform !== "android") return { platform, available: false };
         if (!item.available) {
           if (item.release != null) throw new Error("不可用平台包含异常版本信息");
           return item;
@@ -1193,8 +1183,7 @@ const QRCodeLimitLength = [
               !/^[a-f\d]{64}$/i.test(release.sha256 || ""))
           )
             throw new Error("Android APK 文件信息不完整");
-        } else if (release.updateMethod !== "store" || !officialStoreUrl(platform, release.storeUrl))
-          throw new Error(`${labels[platform][0]} 官方商店地址无效`);
+        }
         return item;
       });
     }
@@ -1202,7 +1191,8 @@ const QRCodeLimitLength = [
       const platform = item.platform,
         label = labels[platform] || [platform, "", "•"],
         release = item.release || {};
-      const available = item.available;
+      const available = platform === "android" && item.available;
+      const marketManaged = platform !== "android";
       const card = document.createElement("article");
       card.className = `platform-card${available ? "" : " developing"}${
         isRecommended(platform) ? " recommended" : ""
@@ -1244,8 +1234,8 @@ const QRCodeLimitLength = [
           );
         releaseMeta.textContent = detail.filter(Boolean).join(" · ");
       } else {
-        releaseName.textContent = "开发中";
-        releaseMeta.textContent = "该平台版本正在准备，敬请期待";
+        releaseName.textContent = marketManaged ? "应用市场分发" : "开发中";
+        releaseMeta.textContent = marketManaged ? "本插件仅提供统计" : "该平台版本正在准备，敬请期待";
       }
       releaseInfo.append(releaseName, releaseMeta);
       card.append(releaseInfo);
@@ -1253,24 +1243,19 @@ const QRCodeLimitLength = [
       note.className = "release-note";
       note.textContent = available
         ? release.content || "暂无更新说明"
-        : "我们正在为该平台准备应用版本，完成后会在这里提供下载。";
+        : marketManaged ? "请通过设备上的官方应用市场查找与更新应用；此处不提供安装包或版本信息。" : "我们正在为该平台准备应用版本，完成后会在这里提供下载。";
       card.append(note);
       const button = document.createElement(available ? "a" : "button");
       button.className = `action${available ? "" : " secondary"}`;
       if (!available) {
         button.type = "button";
         button.disabled = true;
-        button.textContent = "开发中";
+        button.textContent = marketManaged ? "请使用官方应用市场" : "开发中";
       } else if (platform === "android") {
         button.textContent = "下载 APK";
         button.href = apkDownloadUrl(release);
         button.rel = "noreferrer";
         button.referrerPolicy = "no-referrer";
-      } else {
-        button.textContent = platform === "ios" ? "前往 App Store" : "前往华为应用市场";
-        button.href = officialStoreUrl(platform, release.storeUrl);
-        button.target = "_blank";
-        button.rel = "noopener noreferrer";
       }
       card.append(button);
       return card;
