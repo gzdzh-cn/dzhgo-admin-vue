@@ -506,7 +506,9 @@
 		</el-tabs>
 
 		<el-form-item style="margin-top: 30px">
-			<el-button type="primary" :disabled="loading" @click="save">保存修改</el-button>
+			<el-button type="primary" :loading="saving" :disabled="loading || saving" @click="save"
+				>保存修改</el-button
+			>
 		</el-form-item>
 	</div>
 </template>
@@ -619,6 +621,9 @@ const getInfo = async () => {
 	const items: SettingKVItem[] = result?.items || [];
 	const values: Record<string, any> = {};
 	(items || []).forEach((item) => {
+		if (!item.key?.trim()) {
+			return;
+		}
 		values[item.key] = decodeSettingValue(item.key, item.value);
 	});
 	if (!values.ossAudioPath) {
@@ -644,6 +649,7 @@ const getExtModules = async () => {
 
 // 保存状态
 const loading = ref(false);
+const saving = ref(false);
 const loadingPage = ref();
 
 // 客户列表
@@ -683,13 +689,18 @@ const getIndex = (index: number) => {
 
 // 保存
 const save = async () => {
-	loading.value = false;
+	if (saving.value || loading.value) {
+		return;
+	}
+	saving.value = true;
 	basicForm.value.contactList = contactArr.value;
 	try {
-		const items: SettingKVItem[] = Object.keys(basicForm.value).map((key) => ({
-			key,
-			value: encodeSettingValue(key, basicForm.value[key])
-		}));
+		const items: SettingKVItem[] = Object.keys(basicForm.value)
+			.filter((key) => key.trim() !== "")
+			.map((key) => ({
+				key,
+				value: encodeSettingValue(key, basicForm.value[key])
+			}));
 		await service.base.sys.setting.kv.request({
 			url: "/save",
 			method: "POST",
@@ -706,6 +717,8 @@ const save = async () => {
 		ElMessage.success("更新成功");
 	} catch (error: any) {
 		ElMessage.error(error?.message || "保存失败");
+	} finally {
+		saving.value = false;
 	}
 };
 
