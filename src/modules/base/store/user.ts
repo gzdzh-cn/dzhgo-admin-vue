@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { storage } from "/@/cool/utils";
 import { service, config, router } from "/@/cool";
+import { clearPrivateFiles } from "/$/upload/private-files";
 
 // 本地缓存
 const data = storage.info();
@@ -54,6 +55,7 @@ export const useUserStore = defineStore("user", function () {
 
 	// 清除用户
 	function clear() {
+		clearPrivateFiles(config.baseUrl).catch(() => null);
 		storage.remove("userInfo");
 		storage.remove("token");
 		token.value = "";
@@ -61,10 +63,20 @@ export const useUserStore = defineStore("user", function () {
 	}
 
 	// 退出
+	let loggingOut = false;
 	async function logout() {
-		clear();
-		router.clear();
-		router.push("/login");
+		if (loggingOut) return;
+		loggingOut = true;
+		try {
+			if (token.value && !storage.isExpired("token")) await service.base.comm.logout();
+		} catch {
+			// An expired backend session must not prevent local logout.
+		} finally {
+			clear();
+			router.clear();
+			router.push("/login");
+			loggingOut = false;
+		}
 	}
 
 	async function getSetting() {

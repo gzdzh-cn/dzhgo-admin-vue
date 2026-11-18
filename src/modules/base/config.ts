@@ -1,5 +1,6 @@
 import { ModuleConfig, config, useCool } from "/@/cool";
 import { useStore } from "./store";
+import { mapPrivateFiles } from "/$/upload/private-files";
 
 import "./static/css/index.scss";
 
@@ -98,7 +99,9 @@ export default (): ModuleConfig => {
 
 			await hasToken(async () => {
 				// 获取用户信息
-				user.get();
+				await user.get();
+				await app.set({ logo: mapPrivateFiles(res.value?.logo || config.app.logo) });
+				document.querySelector("link[rel='icon']").href = app.info.logo;
 				// 获取菜单权限
 				await menu.get();
 			});

@@ -7,6 +7,7 @@ import { isDev, config } from "/@/cool";
 import { storage } from "/@/cool/utils";
 import { useBase } from "/$/base";
 import { router } from "../router";
+import { ensurePrivateFiles, mapPrivateFiles } from "/$/upload/private-files";
 
 declare module "axios" {
 	// Keep Axios's original generic when merging its configuration type.
@@ -30,10 +31,24 @@ let queue: Array<(token: string) => void> = [];
 
 // 是否刷新中
 let isRefreshing = false;
+let privateFileWarning = false;
+
+async function preparePrivateFiles(req: any, token: string) {
+	try {
+		await ensurePrivateFiles(token, config.baseUrl);
+		privateFileWarning = false;
+	} catch {
+		if (!privateFileWarning) ElMessage.warning("私有文件访问暂不可用，请稍后刷新重试");
+		privateFileWarning = true;
+	}
+	req.data = mapPrivateFiles(req.data, true);
+	req.params = mapPrivateFiles(req.params, true);
+	return req;
+}
 
 // 请求
 request.interceptors.request.use(
-	(req: any) => {
+	async (req: any) => {
 		const { user } = useBase();
 
 		if (req.url) {
@@ -98,13 +113,13 @@ request.interceptors.request.use(
 						if (req.headers) {
 							req.headers["Authorization"] = token;
 						}
-						resolve(req);
+						resolve(preparePrivateFiles(req, token));
 					});
 				});
 			}
 		}
 
-		return req;
+		return user.token ? preparePrivateFiles(req, user.token) : req;
 	},
 	(error) => {
 		return Promise.reject(error);
@@ -128,7 +143,7 @@ request.interceptors.response.use(
 
 		switch (code) {
 			case 1000:
-				return data;
+				return mapPrivateFiles(data);
 			default:
 				return Promise.reject({ code, message });
 		}
