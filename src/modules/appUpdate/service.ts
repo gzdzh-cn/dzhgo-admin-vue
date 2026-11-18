@@ -11,6 +11,8 @@ export interface AppOption {
 	name?: string;
 	packageName: string;
 	platform: string;
+	passwordConfigured?: boolean;
+	sourceUrl?: string;
 }
 export interface AppGroupOption {
 	id?: string;
@@ -19,8 +21,15 @@ export interface AppGroupOption {
 	unassigned?: boolean;
 }
 export const platformLabel = (platform: string) =>
-	(({ android: "Android", ios: "iOS", harmonyos: "鸿蒙" } as Record<string, string>)[platform] ||
-	platform);
+	((
+		{
+			android: "Android",
+			ios: "iOS",
+			harmonyos: "鸿蒙",
+			desktop: "桌面平台",
+			other: "其他平台"
+		} as Record<string, string>
+	)[platform] || platform);
 export const appIdentity = (app: Pick<AppOption, "packageName" | "platform">) =>
 	JSON.stringify([app.platform, app.packageName]);
 export const apiUrl = (path: string) => `${config.baseUrl}/admin/app_update/${path}`;
@@ -54,7 +63,8 @@ export function useAppOptions(scope: AppScope) {
 			if (!Array.isArray(result)) throw new Error("App 列表响应格式错误");
 			appOptions.value = result.filter(
 				(item) =>
-					item.packageName && ["android", "ios", "harmonyos"].includes(item.platform)
+					item.packageName &&
+					["android", "ios", "harmonyos", "desktop", "other"].includes(item.platform)
 			);
 			optionsError.value = "";
 		} catch (error: any) {

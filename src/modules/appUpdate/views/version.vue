@@ -40,7 +40,11 @@
 						@click="openCreate"
 						>发布 Android 版本</el-button
 					>
+					<el-button v-if="canOperate('version', 'save')" @click="genericRelease?.open()"
+						>发布桌面／其他版本</el-button
+					>
 				</div>
+				<generic-release ref="genericRelease" :apps="appOptions" @changed="refresh" />
 
 				<el-alert
 					title="iOS 与鸿蒙仅登记应用并接收统计；历史版本只读，不再用于更新分发。"
@@ -92,7 +96,9 @@
 										}}</small>
 									</template>
 								</template>
-								<span v-else>历史版本，不再用于更新分发</span>
+								<span v-else-if="['desktop', 'other'].includes(row.platform)"
+									>多包版本分发</span
+								><span v-else>历史版本，不再用于更新分发</span>
 							</template>
 						</el-table-column>
 						<el-table-column label="存储" width="90">
@@ -117,14 +123,15 @@
 									v-if="canOperate('version', 'save')"
 									@click="openEdit(row)"
 									>{{
-										row.platform !== "android" || row.status === "published"
+										!["android", "desktop", "other"].includes(row.platform) ||
+										row.status === "published"
 											? "查看"
 											: "编辑"
 									}}</el-button
 								>
 								<el-button
 									v-if="
-										row.platform === 'android' &&
+										['android', 'desktop', 'other'].includes(row.platform) &&
 										(row.status === 'uploaded' || row.status === 'withdrawn') &&
 										canOperate('version', 'publish')
 									"
@@ -136,7 +143,7 @@
 								>
 								<el-button
 									v-if="
-										row.platform === 'android' &&
+										['android', 'desktop', 'other'].includes(row.platform) &&
 										row.status === 'published' &&
 										canOperate('version', 'revoke')
 									"
@@ -148,7 +155,7 @@
 								>
 								<el-button
 									v-if="
-										row.platform === 'android' &&
+										['android', 'desktop', 'other'].includes(row.platform) &&
 										row.status !== 'published' &&
 										canOperate('version', 'delete')
 									"
@@ -434,6 +441,8 @@ import { request } from "/@/cool/service/request";
 import { useRoute } from "vue-router";
 import { apiUrl, canOperate, platformLabel, useAppOptions, useAppGroups } from "../service";
 import AppGroup from "../components/app-group.vue";
+import GenericRelease from "../components/generic-release.vue";
+const genericRelease = ref<InstanceType<typeof GenericRelease>>();
 import ClViewGroup from "/$/base/components/view/group.vue";
 const ViewGroup = ref<InstanceType<typeof ClViewGroup>>();
 
@@ -645,6 +654,10 @@ function openCreate() {
 	dialogVisible.value = true;
 }
 function openEdit(row: any) {
+	if (["desktop", "other"].includes(row.platform)) {
+		genericRelease.value?.open(row);
+		return;
+	}
 	if (saving.value) return;
 	resetForm(row);
 	dialogVisible.value = true;
@@ -842,7 +855,7 @@ async function save(publishAfterSave = false) {
 	}
 }
 async function action(row: any, endpoint: string, message: string) {
-	if (row.platform !== "android") {
+	if (!["android", "desktop", "other"].includes(row.platform)) {
 		ElMessage.warning("市场平台历史版本只读");
 		return;
 	}

@@ -118,7 +118,7 @@
 			append-to-body
 		>
 			<el-alert
-				title="登记平台身份即可接收统计；iOS 与鸿蒙不需要上传版本或填写地址。"
+				title="移动端保持原有流程；桌面平台支持多系统安装包，其他平台使用密码保护升级源。"
 				type="info"
 				:closable="false"
 				show-icon
@@ -154,16 +154,37 @@
 							style="width: 100%"
 							><el-option label="Android" value="android" /><el-option
 								label="iOS"
-								value="ios" /><el-option
-								label="鸿蒙"
-								value="harmonyos" /></el-select></el-form-item
-					><el-form-item :label="identityLabel(platform.platform)"
+								value="ios" /><el-option label="鸿蒙" value="harmonyos" /><el-option
+								label="桌面平台"
+								value="desktop" /><el-option
+								label="其他平台"
+								value="other" /></el-select></el-form-item
+					><el-form-item
+						v-if="platform.platform !== 'other'"
+						:label="identityLabel(platform.platform)"
 						><el-input
 							v-model="platform.packageName"
 							:disabled="platform.fixed || !canManageApp('save')"
 							maxlength="255"
 							:placeholder="identityPlaceholder(platform.platform)" /></el-form-item
-					><el-button
+					><el-form-item v-else label="访问密码" required
+						><el-input
+							v-model="platform.password"
+							type="password"
+							show-password
+							autocomplete="new-password"
+							maxlength="72"
+							:disabled="!canManageApp('save')"
+							:placeholder="platform.fixed ? '留空保留现有密码' : '12至72字节'"
+					/></el-form-item>
+					<el-button
+						v-if="platform.fixed && ['desktop', 'other'].includes(platform.platform)"
+						link
+						type="primary"
+						@click="copySource(platform)"
+						>复制接入地址</el-button
+					>
+					<el-button
 						v-if="!platform.fixed && canManageApp('save')"
 						link
 						type="danger"
@@ -184,13 +205,14 @@
 					>
 				</div>
 				<el-button
-					v-if="canManageApp('save') && form.platforms.length < 3"
+					v-if="canManageApp('save') && form.platforms.length < 5"
 					link
 					type="primary"
 					@click="
 						form.platforms.push({
 							platform: nextPlatform,
 							packageName: '',
+							password: '',
 							fixed: false
 						})
 					"
@@ -280,7 +302,12 @@ const visible = ref(false),
 const form = reactive({
 	id: "",
 	name: "",
-	platforms: [] as Array<{ platform: string; packageName: string; fixed: boolean }>
+	platforms: [] as Array<{
+		platform: string;
+		packageName: string;
+		password: string;
+		fixed: boolean;
+	}>
 });
 const moving = ref<AppOption>();
 const unassignedIdentity = ref("");
@@ -291,7 +318,7 @@ const unassignedApps = computed(
 );
 const nextPlatform = computed(
 	() =>
-		["android", "ios", "harmonyos"].find(
+		["android", "ios", "harmonyos", "desktop", "other"].find(
 			(p) => !form.platforms.some((x) => x.platform === p)
 		) || "android"
 );
@@ -304,13 +331,20 @@ function edit(group?: AppGroupOption) {
 			group?.platforms.map((p) => ({
 				platform: p.platform,
 				packageName: p.packageName,
+				password: "",
 				fixed: true
 			})) || []
 	});
 	visible.value = true;
 }
 function identityLabel(platform: string) {
-	return platform === "ios" ? "Bundle ID" : platform === "harmonyos" ? "bundleName" : "包名";
+	return platform === "desktop"
+		? "应用标识"
+		: platform === "ios"
+		? "Bundle ID"
+		: platform === "harmonyos"
+		? "bundleName"
+		: "包名";
 }
 function identityPlaceholder(platform: string) {
 	return `请输入${identityLabel(platform)}`;
@@ -322,11 +356,25 @@ async function save() {
 		ElMessage.warning("请输入 App 名称");
 		return;
 	}
-	const platforms = form.platforms
-		.filter((p) => p.packageName.trim())
-		.map((p) => ({ platform: p.platform, packageName: p.packageName.trim() }));
+	const platforms = form.platforms.map((p) => ({
+		platform: p.platform,
+		packageName: p.packageName.trim()
+	}));
 	if (
-		platforms.some((p) => !p.packageName) ||
+		form.platforms.some(
+			(p) =>
+				p.platform === "other" &&
+				((!p.fixed && !p.password) ||
+					(p.password &&
+						(new TextEncoder().encode(p.password).length < 12 ||
+							new TextEncoder().encode(p.password).length > 72)))
+		)
+	) {
+		ElMessage.warning("其他平台请设置12至72字节的访问密码；已有密码留空保留");
+		return;
+	}
+	if (
+		platforms.some((p) => p.platform !== "other" && !p.packageName) ||
 		new Set(platforms.map((p) => p.platform)).size !== platforms.length
 	) {
 		ElMessage.warning("每个平台只能配置一个有效应用标识");
@@ -337,7 +385,15 @@ async function save() {
 		await request({
 			url: apiUrl("app/group/save"),
 			method: "POST",
+			headers: {
+				"X-App-Update-Admin-Password": encodeURIComponent(
+					form.platforms.find((p) => p.platform === "other")?.password || ""
+				)
+			},
 			data: { id: form.id, name, platforms }
+		});
+		form.platforms.forEach((p) => {
+			p.password = "";
 		});
 		visible.value = false;
 		ElMessage.success("App 已保存");
@@ -346,6 +402,26 @@ async function save() {
 		ElMessage.error(e?.message || "保存 App 失败");
 	} finally {
 		busy.value = false;
+	}
+}
+async function copySource(platform: (typeof form.platforms)[number]) {
+	const profile = props.groups
+		.flatMap((g) => g.platforms)
+		.find((p) => p.platform === platform.platform && p.packageName === platform.packageName);
+	if (!profile?.sourceUrl) {
+		ElMessage.warning("请先保存平台并刷新");
+		return;
+	}
+	try {
+		await navigator.clipboard.writeText(
+			new URL(profile.sourceUrl, window.location.origin).href
+		);
+		ElMessage.success("接入地址已复制；其他平台请求需携带 X-App-Update-Password");
+	} catch {
+		ElMessageBox.alert(
+			new URL(profile.sourceUrl, window.location.origin).href,
+			"升级源接入地址"
+		);
 	}
 }
 async function copyAppId() {
