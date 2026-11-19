@@ -38,7 +38,9 @@ export const useUserStore = defineStore("user", function () {
 					resolve(res.token);
 				})
 				.catch((err) => {
-					logout();
+					clear();
+					router.clear();
+					router.push("/login");
 					reject(err);
 				});
 		});
@@ -58,6 +60,7 @@ export const useUserStore = defineStore("user", function () {
 		clearPrivateFiles(config.baseUrl).catch(() => null);
 		storage.remove("userInfo");
 		storage.remove("token");
+		storage.remove("refreshToken");
 		token.value = "";
 		info.value = null;
 	}

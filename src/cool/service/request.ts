@@ -7,7 +7,11 @@ import { isDev, config } from "/@/cool";
 import { storage } from "/@/cool/utils";
 import { useBase } from "/$/base";
 import { router } from "../router";
-import { ensurePrivateFiles, mapPrivateFiles } from "/$/upload/private-files";
+import {
+	ensurePrivateFiles,
+	isPrivateFileAuthError,
+	mapPrivateFiles
+} from "/$/upload/private-files";
 
 declare module "axios" {
 	// Keep Axios's original generic when merging its configuration type.
@@ -27,17 +31,34 @@ NProgress.configure({
 });
 
 // 请求队列
-let queue: Array<(token: string) => void> = [];
+let queue: Array<{ resume: (token: string) => void; reject: (error: any) => void }> = [];
 
 // 是否刷新中
 let isRefreshing = false;
 let privateFileWarning = false;
+let privateFileAuthHandled = false;
+
+function clearLocalSession() {
+	useBase().user.clear();
+	router.clear();
+	router.push("/login");
+}
 
 async function preparePrivateFiles(req: any, token: string) {
 	try {
 		await ensurePrivateFiles(token, config.baseUrl);
 		privateFileWarning = false;
-	} catch {
+		privateFileAuthHandled = false;
+	} catch (error) {
+		if (isPrivateFileAuthError(error)) {
+			if (!privateFileAuthHandled) {
+				privateFileAuthHandled = true;
+				ElMessage.warning("登录状态已更新，请重新登录");
+				// Clear only this browser. Global logout would revoke other devices.
+				clearLocalSession();
+			}
+			throw error;
+		}
 		if (!privateFileWarning) ElMessage.warning("私有文件访问暂不可用，请稍后刷新重试");
 		privateFileWarning = true;
 	}
@@ -86,34 +107,38 @@ request.interceptors.request.use(
 				// 判断 refreshToken 是否过期
 				if (storage.isExpired("refreshToken")) {
 					ElMessage.warning("登录已过期，请重新登录");
-					user.logout();
-					return req;
+					clearLocalSession();
+					throw new Error("登录已过期，请重新登录");
 				}
 				// 是否在刷新中
 				if (!isRefreshing) {
 					isRefreshing = true;
 					user.refreshToken()
 						.then((token: string) => {
-							queue.forEach((cb) => cb(token));
+							const waiting = queue;
 							queue = [];
 							isRefreshing = false;
+							waiting.forEach((entry) => entry.resume(token));
 						})
-						.catch((e: any) => {
-							console.info("catch", e);
-						})
-						.catch(() => {
-							user.clear();
+						.catch((error: any) => {
+							const waiting = queue;
+							queue = [];
+							isRefreshing = false;
+							waiting.forEach((entry) => entry.reject(error));
 						});
 				}
 
-				return new Promise((resolve) => {
+				return new Promise((resolve, reject) => {
 					// 继续请求
-					queue.push((token) => {
-						// 重新设置 token
-						if (req.headers) {
-							req.headers["Authorization"] = token;
-						}
-						resolve(preparePrivateFiles(req, token));
+					queue.push({
+						resume: (token) => {
+							// 重新设置 token
+							if (req.headers) {
+								req.headers["Authorization"] = token;
+							}
+							resolve(preparePrivateFiles(req, token));
+						},
+						reject
 					});
 				});
 			}
@@ -153,10 +178,8 @@ request.interceptors.response.use(
 
 		if (error.response) {
 			const { status, config } = error.response;
-			const { user } = useBase();
-
 			if (status == 401) {
-				user.logout();
+				clearLocalSession();
 			} else if (config.handleErrorLocally) {
 				// Opt-in pages keep partial results and offer an inline retry.
 				// Do not expose raw server response bodies (which may contain SQL).

@@ -19,6 +19,17 @@ let clearing: Promise<void> | undefined;
 const originals = new Map<string, string>();
 let retryAfter = 0;
 let failedToken = "";
+let failedAuth = false;
+
+export function isPrivateFileAuthError(error: any): boolean {
+	return error?.response?.status === 401 || error?.name === "PrivateFileAuthError";
+}
+
+function authError() {
+	const error = new Error("登录状态已更新，请重新登录");
+	error.name = "PrivateFileAuthError";
+	return error;
+}
 
 function validKey(key: string) {
 	return (
@@ -111,7 +122,8 @@ export async function ensurePrivateFiles(token: string, base: string): Promise<v
 		await pending;
 		if (token === activeToken) return;
 	}
-	if (failedToken === token && Date.now() < retryAfter) throw new Error("文件会话稍后重试");
+	if (failedToken === token && Date.now() < retryAfter)
+		throw failedAuth ? authError() : new Error("文件会话稍后重试");
 	const current = generation;
 	pending = (async () => {
 		const response = await axios.post(
@@ -130,6 +142,7 @@ export async function ensurePrivateFiles(token: string, base: string): Promise<v
 		activeToken = token;
 		retryAfter = 0;
 		failedToken = "";
+		failedAuth = false;
 		apiBase = base;
 		if (timer) clearTimeout(timer);
 		timer = setTimeout(() => {
@@ -143,7 +156,8 @@ export async function ensurePrivateFiles(token: string, base: string): Promise<v
 	} catch (error) {
 		retryAfter = Date.now() + 30000;
 		failedToken = token;
-		throw error;
+		failedAuth = isPrivateFileAuthError(error);
+		throw failedAuth ? authError() : error;
 	} finally {
 		pending = undefined;
 	}
