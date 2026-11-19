@@ -90,11 +90,9 @@
 								<!-- 文件 -->
 								<template v-else>
 									<!-- 文件名 -->
-									<span class="cl-upload__name"
-										>{{ fileName(item.preload) }}.{{
-											extname(item.preload)
-										}}</span
-									>
+									<span class="cl-upload__name">{{
+										fileName(item.preload)
+									}}</span>
 
 									<!-- 大小 -->
 									<span class="cl-upload__size">
@@ -157,7 +155,7 @@ import Draggable from "vuedraggable";
 import { ElMessage } from "element-plus";
 import { PictureFilled, ZoomIn, Delete } from "@element-plus/icons-vue";
 import { useCool, module } from "/@/cool";
-import { extname, uuid, isPromise } from "/@/cool/utils";
+import { uuid, isPromise } from "/@/cool/utils";
 import { useBase } from "/$/base";
 import { fileSize, fileName, fileType, getUrls } from "../utils";
 import { Upload } from "../types";

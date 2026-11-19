@@ -15,7 +15,7 @@
 			:close-on-click-modal="false"
 			append-to-body
 		>
-			<cl-upload-panel :limit="limit" :accept="accept" ref="Panel" />
+			<cl-upload-panel :limit="limit" :accept="accept" ref="Panel" selectable />
 
 			<template #footer>
 				<el-button @click="close">取消</el-button>

@@ -1,5 +1,5 @@
 import { last } from "lodash-es";
-import { filename, extname } from "/@/cool/utils";
+import { extname } from "/@/cool/utils";
 
 // 文件规则
 const fileRules = [
@@ -44,7 +44,13 @@ export function fileSize(size: number): string {
 
 // 文件名
 export function fileName(url: string) {
-	return filename(url.substring(url.indexOf("_") + 1));
+	try {
+		const parsed = new URL(url, window.location.origin);
+		const path = parsed.searchParams.get("key") || decodeURIComponent(parsed.pathname);
+		return path.split("/").pop() || "文件";
+	} catch {
+		return url.split("/").pop() || "文件";
+	}
 }
 
 // 类型信息

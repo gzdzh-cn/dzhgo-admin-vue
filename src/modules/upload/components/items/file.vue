@@ -32,7 +32,7 @@
 				<!-- 其他 -->
 				<template v-else>
 					<!-- 文件名 -->
-					<span class="item-file__name">{{ fileName(url) }}.{{ extname(url) }}</span>
+					<span class="item-file__name">{{ displayName }}</span>
 				</template>
 
 				<!-- 文件类型 -->
@@ -61,6 +61,26 @@
 				<span>{{ index + 1 }}</span>
 			</div>
 		</div>
+		<div class="item-file__caption" :title="displayName">{{ displayName }}</div>
+		<div class="item-file__actions" @click.stop>
+			<el-button text size="small" @click="preview">查看</el-button>
+			<el-button
+				v-if="trash && canRestore"
+				text
+				size="small"
+				type="primary"
+				@click="$emit('restore', info)"
+				>恢复</el-button
+			>
+			<el-button
+				v-else-if="canRemove && info.id"
+				text
+				size="small"
+				type="danger"
+				@click="remove"
+				>回收</el-button
+			>
+		</div>
 	</div>
 
 	<item-viewer ref="Viewer" />
@@ -69,7 +89,6 @@
 <script lang="ts" setup name="item-file">
 import { computed, PropType, ref } from "vue";
 import { ContextMenu } from "@cool-vue/crud";
-import { extname } from "/@/cool/utils";
 import { fileName, fileRule } from "../../utils";
 import { useClipboard } from "@vueuse/core";
 import { ElMessage } from "element-plus";
@@ -79,10 +98,13 @@ import ItemViewer from "./viewer.vue";
 
 const props = defineProps({
 	data: Object,
+	trash: Boolean,
+	canRemove: Boolean,
+	canRestore: Boolean,
 	list: Array as PropType<Eps.SpaceInfoEntity[]>
 });
 
-const emit = defineEmits(["select", "remove"]);
+const emit = defineEmits(["select", "remove", "restore"]);
 
 const { copy } = useClipboard();
 const { space } = useSpace();
@@ -102,6 +124,8 @@ const isSelected = computed(() => index.value >= 0);
 const url = computed(() => info.value.preload || info.value.url);
 
 // 类型
+const displayName = computed(() => (info.value as any).name || fileName(info.value.url || ""));
+
 const type = computed(() => fileRule(info.value.type || ""));
 
 // 选择
@@ -114,55 +138,64 @@ function remove() {
 	emit("remove", info.value);
 }
 
-// 右键菜单
+function preview() {
+	if (!info.value.url || info.value.error) return;
+	if (info.value.type === "image") {
+		Viewer.value?.open(
+			info.value.url,
+			props.list?.filter((e) => e.type === "image" && !e.error).map((e) => e.url) || [
+				info.value.url
+			]
+		);
+	} else {
+		window.open(info.value.url, "_blank", "noopener,noreferrer");
+	}
+}
+// Keep keyboard/touch actions available alongside the existing context menu.
 function onContextMenu(e: any) {
-	ContextMenu.open(e, {
-		hover: {
-			target: "item-file__wrap"
-		},
-		list: [
-			{
-				label: "预览",
-				callback(done) {
-					if (info.value.type == "image") {
-						Viewer.value?.open(
-							info.value.url,
-							props.list?.filter((e) => e.type == "image").map((e) => e.url)
-						);
-					} else {
-						window.open(info.value.url);
-					}
-
-					done();
-				}
-			},
-			{
-				label: "复制地址",
-				callback(done) {
-					if (info.value.url) {
-						copy(info.value.url);
-						ElMessage.success("复制成功");
-					}
-
-					done();
-				}
-			},
-			{
-				label: isSelected.value ? "取消选中" : "选中",
-				callback(done) {
-					select();
-					done();
-				}
-			},
-			{
-				label: "删除",
-				callback(done) {
-					remove();
-					done();
-				}
+	const actions: any[] = [
+		{
+			label: "查看 / 下载",
+			callback(done: any) {
+				preview();
+				done();
 			}
-		]
-	});
+		},
+		{
+			label: "复制地址",
+			callback(done: any) {
+				if (info.value.url) {
+					copy(info.value.url);
+					ElMessage.success("复制成功");
+				}
+				done();
+			}
+		},
+		{
+			label: isSelected.value ? "取消选中" : "选中",
+			callback(done: any) {
+				select();
+				done();
+			}
+		}
+	];
+	if (props.trash && props.canRestore)
+		actions.push({
+			label: "恢复",
+			callback(done: any) {
+				emit("restore", info.value);
+				done();
+			}
+		});
+	else if (!props.trash && props.canRemove && info.value.id)
+		actions.push({
+			label: "移入回收站",
+			callback(done: any) {
+				remove();
+				done();
+			}
+		});
+	ContextMenu.open(e, { hover: { target: "item-file__wrap" }, list: actions });
 }
 </script>
 
@@ -172,15 +205,33 @@ function onContextMenu(e: any) {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	height: 100%;
+	height: calc(100% - 48px);
 	width: 100%;
 	cursor: pointer;
 	border-radius: 5px;
 	overflow: hidden;
 	box-sizing: border-box;
 	background-color: rgba(0, 0, 0, 0.1);
-	margin-bottom: 10px;
+	margin-bottom: 0;
 
+	&__caption {
+		font-size: 12px;
+		height: 20px;
+		line-height: 20px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		padding: 0 4px;
+	}
+	&__actions {
+		height: 28px;
+		display: flex;
+		justify-content: center;
+		gap: 8px;
+		.el-button {
+			margin: 0;
+		}
+	}
 	&__wrap {
 		position: absolute;
 		left: 0;

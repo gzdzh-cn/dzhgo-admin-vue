@@ -2,7 +2,9 @@
 	<div class="item-category">
 		<div class="item-category__head">
 			<span>类型</span>
-			<el-button type="success" bg size="small" @click="edit()">添加</el-button>
+			<el-button v-if="can('add')" type="success" bg size="small" @click="edit()"
+				>添加</el-button
+			>
 		</div>
 
 		<div class="item-category__list">
@@ -40,12 +42,14 @@ import { computed, onMounted, ref } from "vue";
 import { useCool } from "/@/cool";
 import { ContextMenu, useForm } from "@cool-vue/crud";
 import { useViewGroup } from "/$/base";
+import { checkPerm } from "/$/base/common/permission";
 import { useSpace } from "../../hooks";
 
 const { service } = useCool();
 const { space } = useSpace();
 const { ViewGroup } = useViewGroup();
 const Form = useForm();
+const can = (action: string) => checkPerm(`space:type:${action}`);
 
 // 数据列表
 const list = ref<Eps.SpaceTypeEntity[]>([]);
@@ -60,6 +64,11 @@ const flist = computed(() => {
 
 // 刷新分类
 async function refresh() {
+	if (!can("list")) {
+		list.value = [{ name: "全部文件", id: undefined }];
+		select(list.value[0]);
+		return;
+	}
 	return service.space.type
 		.list({
 			order: "createTime",
@@ -167,6 +176,7 @@ function onContextMenu(e: any, { id, name }: Eps.SpaceTypeEntity) {
 			},
 			{
 				label: "编辑",
+				hidden: !can("update"),
 				callback(done) {
 					edit({ id, name });
 					done();
@@ -174,10 +184,15 @@ function onContextMenu(e: any, { id, name }: Eps.SpaceTypeEntity) {
 			},
 			{
 				label: "删除",
+				hidden: !can("delete"),
 				callback(done) {
-					ElMessageBox.confirm(`此操作将删除【${name}】下的文件, 是否继续?`, "提示", {
-						type: "warning"
-					})
+					ElMessageBox.confirm(
+						`仅删除分类【${name}】，其中的文件仍保留在“全部文件”，是否继续?`,
+						"提示",
+						{
+							type: "warning"
+						}
+					)
 						.then(() => {
 							service.space.type
 								.delete({
