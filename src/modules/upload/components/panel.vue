@@ -39,6 +39,15 @@
 
 					<!-- 文件区域 -->
 					<el-scrollbar class="cl-upload-panel__file" v-loading="loading">
+						<el-alert
+							v-if="loadError"
+							:title="loadError"
+							type="error"
+							:closable="false"
+							show-icon
+						>
+							<el-button text @click="refresh({ page: 1 })">重新加载</el-button>
+						</el-alert>
 						<div v-infinite-scroll="loadmore" :infinite-scroll-immediate="false">
 							<!-- 文件列表 -->
 							<template v-if="list.length > 0">
@@ -109,6 +118,7 @@ const Content = ref();
 
 // 是否加载中
 const loading = ref(false);
+const loadError = ref("");
 
 // 已选列表
 const selection = ref<Eps.SpaceInfoEntity[]>([]);
@@ -170,19 +180,17 @@ async function refresh(params?: any) {
 		loading.value = true;
 	}
 
-	await service.space.info.page(reqParams).then((res) => {
-		// 合并分页
+	loadError.value = "";
+	try {
+		const res = await service.space.info.page(reqParams);
 		Object.assign(pagination, res.pagination);
-
-		if (reqParams.page == 1) {
-			list.value = [];
-		}
-
+		if (reqParams.page == 1) list.value = [];
 		list.value.push(...res.list);
-	});
-
-	// 加载完成
-	loading.value = false;
+	} catch (err: any) {
+		loadError.value = err?.message || "文件列表加载失败，请重试";
+	} finally {
+		loading.value = false;
+	}
 }
 
 // 选择
@@ -246,7 +254,12 @@ watch(
 
 // 加载更多
 function loadmore() {
-	if (list.value.length && list.value.length < pagination.total) {
+	if (
+		!loading.value &&
+		!loadError.value &&
+		list.value.length &&
+		list.value.length < pagination.total
+	) {
 		refresh({
 			page: pagination.page + 1
 		});
