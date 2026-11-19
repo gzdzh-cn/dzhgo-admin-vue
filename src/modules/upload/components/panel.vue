@@ -146,7 +146,7 @@
 </template>
 
 <script lang="ts" setup name="cl-upload-panel">
-import { onBeforeUnmount, provide, reactive, ref, watch } from "vue";
+import { onBeforeUnmount, provide, reactive, ref, toRaw, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { UploadFilled } from "@element-plus/icons-vue";
 import { spaceRequest } from "../service";
@@ -277,12 +277,14 @@ function onSuccess(data: any) {
 		classifyId: ViewGroup.value?.selected?.id,
 		...data
 	})
-		.then((res) => {
+		.then(async (res) => {
+			if (disposed) return;
 			data.id = res.id;
 			if (res.trashed) {
-				list.value = list.value.filter((e) => e !== data);
+				list.value = list.value.filter((e) => toRaw(e) !== toRaw(data));
 				ElMessage.warning("该文件在回收站中，请先恢复");
 			}
+			if (can("page")) await refresh({ page: 1 }, true);
 		})
 		.catch((err) => {
 			data.error = "文件已上传，但登记失败，请同步历史文件";
@@ -301,14 +303,14 @@ const reqParams = {
 };
 
 // 刷新列表
-async function refresh(params?: any) {
+async function refresh(params?: any, preserveSelection = false) {
 	// Preserve direct upload in business selectors without file-library read permission.
 	if (!can("page")) {
 		loadError.value = "未授权浏览文件库，可直接上传本次使用的文件";
 		return;
 	}
-	// 清空选择
-	clear();
+	// 上传后重新查询当前筛选，保留业务选择窗口中已经选中的文件。
+	if (!preserveSelection) clear();
 
 	// 合并参数
 	Object.assign(reqParams, {
