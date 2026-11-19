@@ -31,6 +31,7 @@
 							<el-button
 								type="danger"
 								:disabled="selection.length == 0"
+								:loading="deleting"
 								@click="remove()"
 								>删除选中文件</el-button
 							>
@@ -119,6 +120,8 @@ const Content = ref();
 // 是否加载中
 const loading = ref(false);
 const loadError = ref("");
+const deleting = ref(false);
+let requestGeneration = 0;
 
 // 已选列表
 const selection = ref<Eps.SpaceInfoEntity[]>([]);
@@ -175,21 +178,21 @@ async function refresh(params?: any) {
 		...params
 	});
 
-	// 加载中
-	if (reqParams.page == 1) {
-		loading.value = true;
-	}
-
+	const current = ++requestGeneration;
+	const requestParams = { ...reqParams };
+	loading.value = true;
 	loadError.value = "";
 	try {
-		const res = await service.space.info.page(reqParams);
+		const res = await service.space.info.page(requestParams);
+		if (current !== requestGeneration) return;
 		Object.assign(pagination, res.pagination);
-		if (reqParams.page == 1) list.value = [];
+		if (requestParams.page == 1) list.value = [];
 		list.value.push(...res.list);
 	} catch (err: any) {
-		loadError.value = err?.message || "文件列表加载失败，请重试";
+		if (current === requestGeneration)
+			loadError.value = err?.message || "文件列表加载失败，请重试";
 	} finally {
-		loading.value = false;
+		if (current === requestGeneration) loading.value = false;
 	}
 }
 
@@ -211,34 +214,32 @@ function select(item: Eps.SpaceInfoEntity) {
 }
 
 // 删除选中
-function remove(item?: Eps.SpaceInfoEntity) {
-	// 已选文件 id
+async function remove(item?: Eps.SpaceInfoEntity) {
+	if (deleting.value) return;
 	const ids = item ? [item.id] : selection.value.map((e) => e.id);
-
-	ElMessageBox.confirm("此操作将删除文件, 是否继续?", "提示", {
-		type: "warning"
-	})
-		.then(() => {
-			ElMessage.success("删除成功");
-
-			// 删除文件及选择
-			ids.forEach((id) => {
-				[list.value, selection.value].forEach((list) => {
-					const index = list.findIndex((e) => e.id === id);
-					list.splice(index, 1);
-				});
+	if (!ids.length) return;
+	try {
+		await ElMessageBox.confirm("此操作将删除文件, 是否继续?", "提示", { type: "warning" });
+	} catch {
+		return;
+	}
+	if (deleting.value) return;
+	deleting.value = true;
+	try {
+		await service.space.info.delete({ ids });
+		ids.forEach((id) => {
+			[list.value, selection.value].forEach((items) => {
+				const index = items.findIndex((e) => e.id === id);
+				if (index >= 0) items.splice(index, 1);
 			});
-
-			// 删除请求
-			service.space.info
-				.delete({
-					ids
-				})
-				.catch((err) => {
-					ElMessage.error(err.message);
-				});
-		})
-		.catch(() => null);
+		});
+		pagination.total = Math.max(0, pagination.total - ids.length);
+		ElMessage.success("删除成功");
+	} catch (err: any) {
+		ElMessage.error(err?.message || "删除失败，请重试");
+	} finally {
+		deleting.value = false;
+	}
 }
 
 // 监听选择
