@@ -39,13 +39,13 @@
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Folder, FolderOpened } from "@element-plus/icons-vue";
 import { computed, onMounted, ref } from "vue";
-import { useCool } from "/@/cool";
+import { spaceRequest } from "../../service";
 import { ContextMenu, useForm } from "@cool-vue/crud";
 import { useViewGroup } from "/$/base";
 import { checkPerm } from "/$/base/common/permission";
 import { useSpace } from "../../hooks";
 
-const { service } = useCool();
+const typeRequest = (action: string, data: any) => spaceRequest("type", action, data);
 const { space } = useSpace();
 const { ViewGroup } = useViewGroup();
 const Form = useForm();
@@ -69,23 +69,21 @@ async function refresh() {
 		select(list.value[0]);
 		return;
 	}
-	return service.space.type
-		.list({
-			order: "createTime",
-			sort: "asc"
-		})
-		.then((res) => {
-			res.unshift({
-				name: "全部文件",
-				id: undefined
-			});
-
-			list.value = res;
-
-			if (!ViewGroup.value?.selected) {
-				select();
-			}
+	return typeRequest("list", {
+		order: "createTime",
+		sort: "asc"
+	}).then((res) => {
+		res.unshift({
+			name: "全部文件",
+			id: undefined
 		});
+
+		list.value = res;
+
+		if (!ViewGroup.value?.selected) {
+			select();
+		}
+	});
 }
 
 // 编辑分类
@@ -122,9 +120,9 @@ function edit(item: Eps.SpaceTypeEntity = {}) {
 				let next = null;
 
 				if (!item.id) {
-					next = service.space.type.add(data);
+					next = typeRequest("add", data);
 				} else {
-					next = service.space.type.update({
+					next = typeRequest("update", {
 						...data,
 						id: item.id
 					});
@@ -194,10 +192,9 @@ function onContextMenu(e: any, { id, name }: Eps.SpaceTypeEntity) {
 						}
 					)
 						.then(() => {
-							service.space.type
-								.delete({
-									ids: [id]
-								})
+							typeRequest("delete", {
+								ids: [id]
+							})
 								.then(() => {
 									ElMessage.success("删除成功");
 

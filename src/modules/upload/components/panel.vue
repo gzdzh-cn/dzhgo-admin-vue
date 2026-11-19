@@ -149,6 +149,7 @@
 import { onBeforeUnmount, provide, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { UploadFilled } from "@element-plus/icons-vue";
+import { spaceRequest } from "../service";
 import { useCool } from "/@/cool";
 import { checkPerm } from "/$/base/common/permission";
 import { useViewGroup } from "/$/base";
@@ -166,7 +167,7 @@ const props = defineProps({
 
 const emit = defineEmits(["selection-change"]);
 
-const { service, browser } = useCool();
+const { browser } = useCool();
 const { ViewGroup } = useViewGroup();
 
 // cl-upload
@@ -197,13 +198,7 @@ const kinds = [
 	{ label: "文件", value: "file" }
 ];
 const can = (action: string) => checkPerm(`space:info:${action}`);
-const fileRequest = (action: string, data: any) =>
-	service.request({
-		url: `/admin/space/info/${action}`,
-		method: "POST",
-		data,
-		handleErrorLocally: true
-	});
+const fileRequest = (action: string, data: any) => spaceRequest("info", action, data);
 function toggleTrash() {
 	trash.value = !trash.value;
 	refresh({ page: 1 });
@@ -278,11 +273,10 @@ function onSuccess(data: any) {
 		data.id = data.uid;
 		return;
 	}
-	service.space.info
-		.add({
-			classifyId: ViewGroup.value?.selected?.id,
-			...data
-		})
+	fileRequest("add", {
+		classifyId: ViewGroup.value?.selected?.id,
+		...data
+	})
 		.then((res) => {
 			data.id = res.id;
 			if (res.trashed) {
@@ -330,7 +324,7 @@ async function refresh(params?: any) {
 	loading.value = true;
 	loadError.value = "";
 	try {
-		const res = await service.space.info.page(requestParams);
+		const res = await fileRequest("page", requestParams);
 		if (current !== requestGeneration || disposed) return;
 		Object.assign(pagination, res.pagination);
 		if (requestParams.page == 1) list.value = [];
@@ -378,7 +372,7 @@ async function remove(item?: Eps.SpaceInfoEntity) {
 	if (deleting.value) return;
 	deleting.value = true;
 	try {
-		await service.space.info.delete({ ids });
+		await fileRequest("delete", { ids });
 		ids.forEach((id) => {
 			[list.value, selection.value].forEach((items) => {
 				const index = items.findIndex((e) => e.id === id);
